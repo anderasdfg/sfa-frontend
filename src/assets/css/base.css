@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-sf-green-light: #6dbd77;
+  --color-sf-green-normal: #3d614d;
+  --color-sf-green-dark: #2c4b3f;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+/* body {
+  @apply bg-sf-green-dark;
+}
+
+.center-elements {
+  @apply flex justify-center items-center;
+} */

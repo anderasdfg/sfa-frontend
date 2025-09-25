@@ -1,0 +1,55 @@
+{
+  "name": "sfa-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "type-check": "vue-tsc --noEmit",
+    "test:unit": "vitest",
+    "test:e2e": "playwright test",
+    "setup:dev": "npm run setup:folders && npm run setup:env",
+    "setup:folders": "node scripts/setup-folders.js",
+    "setup:env": "node scripts/setup-env.js"
+  },
+  "dependencies": {
+    "@heroicons/vue": "^2.2.0",
+    "@primeuix/themes": "^1.2.3",
+    "@tailwindcss/vite": "^4.1.13",
+    "@vee-validate/yup": "^4.15.1",
+    "axios": "^1.12.2",
+    "pinia": "^3.0.3",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.3.9",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@types/node": "^22.16.5",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.31.0",
+    "eslint-plugin-vue": "~10.3.0",
+    "jiti": "^2.4.2",
+    "npm-run-all2": "^8.0.4",
+    "postcss": "^8.4.31",
+    "prettier": "3.6.2",
+    "tailwindcss": "^4.1.13",
+    "typescript": "~5.8.0",
+    "vite": "^7.0.6",
+    "vite-plugin-vue-devtools": "^8.0.0",
+    "vue-tsc": "^3.0.4"
+  }
+}
