@@ -1,15 +1,18 @@
+import type { AppointmentModality, AppointmentStatus } from '@/types/enums'
+
 export interface Doctor {
   id: number
   name: string
   specialtyName: string
   cmp: string
-  consultationType: 'TELECONSULTA' | 'PRESENCIAL'
+  consultationType: AppointmentModality
   location: string
   avatar: string
   availableSlots: TimeSlot[]
 }
 
 export interface TimeSlot {
+  id: number
   time: string
   price: number
   available: boolean
@@ -17,16 +20,26 @@ export interface TimeSlot {
 }
 
 export interface AppointmentBooking {
+  patientId: number
   doctorId: number
-  doctorName: string
-  specialty: string
-  date: string
+  slotId: number
+  appointmentDate: string
+  status: AppointmentStatus
+  modality: AppointmentModality
+  scheduledAt: Date
+}
+
+export interface AppointmentSelection {
+  doctorId: number
+  patientId: number
+  slotId: number
+  appointmentDate: string
+  modality: AppointmentModality
+  // Información adicional para mostrar en UI
   time: string
   price: number
-  consultationType: 'TELECONSULTA' | 'PRESENCIAL'
-  location: string
-  patientName: string
-  patientEmail: string
-  patientPhone: string
-  status: 'pending' | 'confirmed' | 'cancelled'
+  doctorName: string
+  doctorSpecialty: string
+  doctorAvatar: string
+  doctorLocation: string
 }

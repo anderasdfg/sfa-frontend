@@ -69,7 +69,6 @@
   import { useSpecialties } from '@/core/composables/useSpecialties'
   import { useDoctors } from '@/core/composables/useDoctors'
   import type { AppointmentSlotQueryParams } from '@/types/slots.types'
-  import { AppointmentModality } from '@/types/enums'
   import { getCurrentDateInTimezone, formatDateToISO } from '@/shared/lib/formatters'
 
   // Props
@@ -136,7 +135,6 @@
         ? formatDateToISO(searchForm.value.date)
         : getCurrentDateInTimezone(),
       specialtyId: selectedSpecialty?.id || 0,
-      //modality: AppointmentModality.PRESENCIAL,
       doctorId: selectedDoctor?.id || null
     }
 

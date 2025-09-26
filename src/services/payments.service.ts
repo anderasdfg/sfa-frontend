@@ -1,7 +1,5 @@
-import axios from 'axios'
+import apiClient from '@/shared/lib/axios.config'
 import type { PaymentCreateRequest, PaymentResponse } from '@/types/payments.types'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL
 
 export class PaymentService {
   private static readonly BASE_PATH = '/payments'
@@ -9,8 +7,7 @@ export class PaymentService {
   /** Crea un pago */
   static async createPayment(payment: PaymentCreateRequest): Promise<PaymentResponse> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}/preference`
-      const response = await axios.post(url, payment)
+      const response = await apiClient.post(`${this.BASE_PATH}/preference`, payment)
       return response.data
     } catch (error) {
       console.error('Error creating payment:', error)

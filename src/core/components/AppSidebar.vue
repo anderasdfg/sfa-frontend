@@ -4,7 +4,7 @@
     <div class="sidebar-header">
       <div class="logo">
         <i class="pi pi-heart text-primary text-2xl"></i>
-        <span class="logo-text">ClínicaPro</span>
+        <span class="logo-text">San Miguel Arcangel</span>
       </div>
     </div>
 
@@ -33,6 +33,14 @@
   import Avatar from 'primevue/avatar'
   import { useAuthStore } from '@/stores/auth/authStore'
 
+  // Interface para los elementos del menú
+  interface MenuItem {
+    label: string
+    icon: string
+    command?: () => void | Promise<any>
+    items?: MenuItem[]
+  }
+
   const router = useRouter()
   const authStore = useAuthStore()
 
@@ -59,7 +67,7 @@
       }
     }
 
-    const items = [
+    const items: MenuItem[] = [
       {
         label: 'Dashboard',
         icon: 'pi pi-home',

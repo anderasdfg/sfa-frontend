@@ -2,8 +2,8 @@ import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
 
 export const authGuard = (
-  to: RouteLocationNormalized,
-  from: RouteLocationNormalized,
+  _to: RouteLocationNormalized,
+  _from: RouteLocationNormalized,
   next: NavigationGuardNext,
 ) => {
   const authStore = useAuthStore()
@@ -17,8 +17,8 @@ export const authGuard = (
 
 export const roleGuard = (allowedRoles: string[]) => {
   return (
-    to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
+    _to: RouteLocationNormalized,
+    _from: RouteLocationNormalized,
     next: NavigationGuardNext,
   ) => {
     const authStore = useAuthStore()

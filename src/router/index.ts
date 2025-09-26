@@ -11,6 +11,11 @@ const LoginView = () => import('@/modules/auth/views/LoginView.vue')
 const LandingView = () => import('@/modules/landing/views/LandingView.vue')
 const AppointmentBooking = () => import('@/modules/appointment-system/views/AppointmentBooking.vue')
 
+// Payment callback views
+const PaymentSuccess = () => import('@/modules/appointment-system/views/PaymentSuccess.vue')
+const PaymentPending = () => import('@/modules/appointment-system/views/PaymentPending.vue')
+const PaymentFailure = () => import('@/modules/appointment-system/views/PaymentFailure.vue')
+
 // Views por rol
 const PatientDashboard = () => import('@/modules/user-roles/patient/views/PatientDashboard.vue')
 const DoctorDashboard = () => import('@/modules/user-roles/doctor/views/DoctorDashboard.vue')
@@ -33,6 +38,22 @@ const routes: RouteRecordRaw[] = [
         path: 'appointment-booking',
         name: 'AppointmentBooking',
         component: AppointmentBooking
+      },
+      // Payment callback routes
+      {
+        path: 'payment/success',
+        name: 'PaymentSuccess',
+        component: PaymentSuccess
+      },
+      {
+        path: 'payment/pending',
+        name: 'PaymentPending',
+        component: PaymentPending
+      },
+      {
+        path: 'payment/failure',
+        name: 'PaymentFailure',
+        component: PaymentFailure
       }
     ]
   },
@@ -65,7 +86,7 @@ const routes: RouteRecordRaw[] = [
   // Ruta de redirección para dashboard
   {
     path: '/dashboard',
-    redirect: to => {
+    redirect: _to => {
       // Esta redirección se manejará en el guard de navegación
       return '/dashboard/patient' // fallback temporal
     }
@@ -260,7 +281,7 @@ const getDashboardRouteByRole = (role: string | null): string => {
 }
 
 // Guards de autenticación
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
   // Inicializar autenticación si no está inicializada

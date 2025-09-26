@@ -36,3 +36,9 @@ export interface AppointmentCreateRequest {
   modality: AppointmentModality
   scheduled_at: Date
 }
+
+export interface AppointmentCreateResponse {
+  success: boolean
+  data: Appointment
+  message: string
+}

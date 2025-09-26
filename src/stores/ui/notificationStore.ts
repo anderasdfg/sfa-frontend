@@ -80,7 +80,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     notifications.value = []
   }
 
-  // Métodos de conveniencia
+  // Métodos de conveniencia (solo para historial)
   const showSuccess = (title: string, message: string) => {
     return addNotification({
       title,

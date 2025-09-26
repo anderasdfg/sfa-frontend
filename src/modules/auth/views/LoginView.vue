@@ -101,7 +101,6 @@
   // Form state
   const email = ref('')
   const password = ref('')
-  const rememberMe = ref(false)
   const isLoading = ref(false)
   const error = ref('')
 
@@ -131,7 +130,6 @@
       const success = await authStore.login({
         username: email.value,
         password: password.value
-        //rememberMe: rememberMe.value
       })
 
       if (success) {
@@ -140,23 +138,31 @@
           `Hola ${authStore.user?.first_name}, has iniciado sesión correctamente`
         )
 
-        // Redirigir según el rol
-        const userRole = authStore.userRole
-        switch (userRole) {
-          case 'admin':
-            router.push('/dashboard/admin')
-            break
-          case 'doctor':
-            router.push('/dashboard/doctor')
-            break
-          case 'receptionist':
-            router.push('/dashboard/receptionist')
-            break
-          case 'patient':
-            router.push('/dashboard/patient')
-            break
-          default:
-            router.push('/dashboard')
+        // Verificar si hay una URL de redirección en los query params
+        const redirectUrl = router.currentRoute.value.query.redirect as string
+        
+        if (redirectUrl) {
+          // Redirigir a la URL especificada
+          router.push(decodeURIComponent(redirectUrl))
+        } else {
+          // Redirigir según el rol (comportamiento por defecto)
+          const userRole = authStore.userRole
+          switch (userRole) {
+            case 'admin':
+              router.push('/dashboard/admin')
+              break
+            case 'doctor':
+              router.push('/dashboard/doctor')
+              break
+            case 'receptionist':
+              router.push('/dashboard/receptionist')
+              break
+            case 'patient':
+              router.push('/dashboard/patient')
+              break
+            default:
+              router.push('/dashboard')
+          }
         }
       } else {
         error.value = authStore.error || 'Error al iniciar sesión'

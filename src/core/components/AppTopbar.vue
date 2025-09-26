@@ -66,7 +66,6 @@
 
   const userMenu = ref()
 
-  const user = computed(() => authStore.user)
   const notificationCount = computed(() => notificationStore.unreadCount)
   const userFullName = computed(() => authStore.getUserFullName)
   const userInitials = computed(() => authStore.getUserInitials)

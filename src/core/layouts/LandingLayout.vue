@@ -7,7 +7,11 @@
           <img src="https://www.clinicasanmiguel.pe/img/logo.png" alt="Logo" class="brand-logo" />
         </div>
         <div class="nav-actions">
-          <Button label="Iniciar Sesión" class="p-button-text" @click="navigateToLogin" />
+          <Button
+            :label="isAuthenticated ? userName : 'Iniciar Sesión'"
+            class="p-button-text"
+            @click="navigateToLogin"
+          />
         </div>
       </nav>
     </header>
@@ -60,12 +64,22 @@
 <script setup lang="ts">
   import { useRouter } from 'vue-router'
   import Button from 'primevue/button'
-
+  import { useAuthStore } from '@/stores/auth/authStore'
+  import { computed } from 'vue'
+  const useAuth = useAuthStore()
   const router = useRouter()
 
   const navigateToLogin = () => {
     router.push('/auth/login')
   }
+
+  const isAuthenticated = computed(() => {
+    return useAuth.isAuthenticated
+  })
+
+  const userName = computed(() => {
+    return useAuth.user?.first_name + ' ' + useAuth.user?.last_name
+  })
 </script>
 
 <style scoped>

@@ -1,0 +1,179 @@
+.confirmation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.appointment-summary {
+  background: #f8f9fa;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.doctor-avatar {
+  border: 3px solid var(--color-sf-green-light);
+}
+
+.doctor-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-sf-green-dark);
+  margin-bottom: 0.25rem;
+}
+
+.doctor-specialty {
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.appointment-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detail-icon {
+  color: var(--color-sf-green-normal);
+  font-size: 1.1rem;
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  display: block;
+  font-weight: 600;
+  color: var(--color-sf-green-dark);
+}
+
+.patient-form {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.form-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-sf-green-dark);
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.field-label {
+  font-weight: 600;
+  color: var(--color-sf-green-dark);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.terms-section {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.terms-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.terms-link {
+  color: var(--color-sf-green-normal);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.confirm-button {
+  background: var(--color-sf-green-normal);
+  border: none;
+}
+
+.confirm-button:hover {
+  background: var(--color-sf-green-dark);
+}
+
+/* Override PrimeVue styles */
+:deep(.p-dialog-header) {
+  background: var(--color-sf-green-normal);
+  color: white;
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+:deep(.p-dialog-title) {
+  font-weight: 600;
+}
+
+:deep(.p-inputtext:enabled:focus) {
+  border-color: var(--color-sf-green-normal);
+  box-shadow: 0 0 0 0.2rem rgba(109, 189, 119, 0.2);
+}
+
+:deep(.p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight) {
+  background: var(--color-sf-green-normal);
+  border-color: var(--color-sf-green-normal);
+}
+
+@media (max-width: 768px) {
+  .appointment-details {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}

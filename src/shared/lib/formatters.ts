@@ -99,3 +99,61 @@ export const formatDateToISO = (date: Date | string, timeZone = 'America/Lima'):
     day: '2-digit'
   }).format(dateObj)
 }
+
+/**
+ * Crea una fecha segura en el timezone especificado para evitar desfases
+ * @param dateString - String de fecha en formato ISO (YYYY-MM-DD)
+ * @param timeZone - Timezone IANA (ej: 'America/Lima')
+ * @returns Date object en el timezone especificado
+ */
+export const createSafeDateInTimezone = (dateString?: string, timeZone = 'America/Lima'): Date => {
+  if (dateString) {
+    // Crear fecha en timezone específico para evitar desfases
+    const offset = timeZone === 'America/Lima' ? '-05:00' : '+00:00'
+    return new Date(dateString + `T12:00:00${offset}`)
+  }
+  return new Date()
+}
+
+/**
+ * Genera información de fecha para mostrar en UI (día de semana y número)
+ * @param baseDate - Fecha base
+ * @param daysOffset - Días a sumar a la fecha base
+ * @param timeZone - Timezone IANA (ej: 'America/Lima')
+ * @returns Objeto con value (ISO), day (nombre corto) y number (día del mes)
+ */
+export const generateDateInfo = (baseDate: Date, daysOffset: number, timeZone = 'America/Lima') => {
+  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+  
+  const targetDate = new Date(baseDate)
+  targetDate.setDate(baseDate.getDate() + daysOffset)
+  
+  const isoDate = formatDateToISO(targetDate, timeZone)
+  const offset = timeZone === 'America/Lima' ? '-05:00' : '+00:00'
+  const displayDate = new Date(isoDate + `T12:00:00${offset}`)
+  
+  return {
+    value: isoDate,
+    day: dayNames[displayDate.getDay()],
+    number: displayDate.getDate().toString()
+  }
+}
+
+/**
+ * Genera un array de fechas disponibles para mostrar en calendarios/selectors
+ * @param selectedDate - Fecha seleccionada como base (opcional)
+ * @param daysCount - Número de días a generar (default: 7)
+ * @param timeZone - Timezone IANA (ej: 'America/Lima')
+ * @returns Array de objetos con información de fecha
+ */
+export const generateAvailableDates = (
+  selectedDate?: string, 
+  daysCount = 7, 
+  timeZone = 'America/Lima'
+) => {
+  const baseDate = createSafeDateInTimezone(selectedDate, timeZone)
+  
+  return Array.from({ length: daysCount }, (_, i) => 
+    generateDateInfo(baseDate, i, timeZone)
+  )
+}

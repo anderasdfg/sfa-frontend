@@ -53,9 +53,10 @@
 
     <!-- Appointment Confirmation Modal -->
     <AppointmentConfirmationModal
-      v-if="selectedAppointment"
+      v-if="slotsStore.getSelectedAppointment"
       :visible="showConfirmationModal"
-      :appointment="selectedAppointment"
+      :appointment="slotsStore.getSelectedAppointment"
+      :loading="appointmentsComposable.loading.value || paymentsComposable.loading.value"
       @confirm="confirmAppointment"
       @cancel="cancelAppointmentSelection"
     />
@@ -63,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, computed, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import ProgressSpinner from 'primevue/progressspinner'
   import Button from 'primevue/button'
@@ -71,74 +72,143 @@
   import DoctorAvailabilityCard from '../components/DoctorAvailabilityCard.vue'
   import AppointmentConfirmationModal from '../components/AppointmentConfirmationModal.vue'
   import type { AppointmentSlotQueryParams } from '@/types/slots.types'
-  import type { Doctor, TimeSlot } from '../types'
+  import type { AppointmentSelection, AppointmentBooking } from '../types'
   import { useAppoitmentSlots } from '../composables/useAppoitmentSlots'
+  import { useAppointments } from '../composables/useAppointments'
+  import { usePayments } from '../composables/usePayments'
+  import { useSlotsStore } from '../stores/slots.store'
+  import { useAuthStore } from '@/stores/auth/authStore'
+  import { useNotifications } from '@/composables/useNotifications'
 
   const router = useRouter()
 
+  // Composables (instanciados una sola vez)
+  const slotsComposable = useAppoitmentSlots()
+  const appointmentsComposable = useAppointments()
+  const paymentsComposable = usePayments()
+  const slotsStore = useSlotsStore()
+  const authStore = useAuthStore()
+  const notifications = useNotifications()
+
   // Reactive state
-  const searchLoading = ref(false)
-  const searchResults = ref<Doctor[]>([])
   const hasSearched = ref(false)
   const selectedDate = ref<string>('')
-  const selectedAppointment = ref<(TimeSlot & { doctor: Doctor }) | null>(null)
   const showConfirmationModal = ref(false)
+
+  // Computed properties que usan el estado del composable
+  const searchLoading = computed(() => slotsComposable.loading.value)
+  const searchResults = computed(() => slotsComposable.getAdaptedDoctors())
 
   // Methods
   const handleSearch = async (criteria: AppointmentSlotQueryParams) => {
-    searchLoading.value = true
     hasSearched.value = true
     selectedDate.value = criteria.date
 
+    console.log('Searching appointments with criteria:', criteria)
+
     try {
-      const slotsComposable = useAppoitmentSlots()
       await slotsComposable.loadSlots(criteria)
-      searchResults.value = slotsComposable.getAdaptedDoctors()
+      console.log('Search results:', searchResults.value)
     } catch (error) {
       console.error('Error searching appointments:', error)
-      searchResults.value = []
-    } finally {
-      searchLoading.value = false
     }
   }
 
-  const handleAppointmentSelection = (appointment: TimeSlot & { doctor: Doctor }) => {
-    selectedAppointment.value = appointment
+  const handleAppointmentSelection = (appointment: AppointmentSelection) => {
+    slotsStore.setSelectedAppointment(appointment)
+    console.log('Se acaba de seleccionar un slot')
+    console.log('Usuario autenticado?', authStore.isAuthenticated)
+
+    if (!authStore.isAuthenticated) {
+      // Redirigir al login con la URL actual para volver después del login
+      router.push('/auth/login?redirect=' + encodeURIComponent(router.currentRoute.value.fullPath))
+      return
+    }
+
     showConfirmationModal.value = true
   }
 
-  const confirmAppointment = async (appointmentData: any) => {
+  const confirmAppointment = async (appointmentData: AppointmentBooking) => {
     try {
-      // Aquí se haría la llamada a la API para confirmar la cita
-      console.log('Confirming appointment:', appointmentData)
+      console.log('Creating appointment:', appointmentData)
 
-      // Simular confirmación
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Usar el composable para crear la cita
+      const success = await appointmentsComposable.createAppointment(appointmentData)
+      console.log('Appointment created:', success)
+      if (success) {
+        // Mostrar notificación de éxito
+        notifications.showSuccess(
+          'Cita Confirmada',
+          'Tu cita médica ha sido reservada exitosamente. Redirigiendo al pago...'
+        )
 
-      // Redirigir a página de confirmación o dashboard
-      router.push('/auth/login?redirect=/patient/appointments')
+        // Procesar pago automáticamente
+        const appointment = appointmentsComposable.createdAppointment.value
+        console.log('🔍 Appointment for payment:', appointment)
+        
+        if (appointment) {
+          const paymentSuccess = await paymentsComposable.createAndRedirectToPayment(appointment)
+
+          if (paymentSuccess) {
+            // Limpiar estado después de redirección exitosa
+            slotsStore.clearSelectedAppointment()
+            appointmentsComposable.clearState()
+          } else {
+            // Mostrar error de pago pero mantener la cita creada
+            notifications.showError(
+              'Error en el Pago',
+              paymentsComposable.error.value ||
+                'No se pudo procesar el pago. La cita fue creada exitosamente.'
+            )
+          }
+        }
+      } else {
+        notifications.showError(
+          'Error al Confirmar Cita',
+          appointmentsComposable.error.value || 'No se pudo crear la cita'
+        )
+      }
     } catch (error) {
-      console.error('Error confirming appointment:', error)
+      console.error('Unexpected error confirming appointment:', error)
+      notifications.showError(
+        'Error Inesperado',
+        'Ocurrió un error inesperado. Por favor, intenta nuevamente.'
+      )
     } finally {
       showConfirmationModal.value = false
-      selectedAppointment.value = null
+      slotsStore.clearSelectedAppointment()
     }
   }
 
   const cancelAppointmentSelection = () => {
     showConfirmationModal.value = false
-    selectedAppointment.value = null
+    slotsStore.clearSelectedAppointment()
   }
 
   const resetSearch = () => {
     hasSearched.value = false
-    searchResults.value = []
+    //searchResults.value = []
     selectedDate.value = ''
   }
 
-  // Lifecycle
+  // Watcher para detectar cuando el usuario se autentica y hay una cita seleccionada
+  watch(
+    () => authStore.isAuthenticated,
+    isAuthenticated => {
+      if (isAuthenticated && slotsStore.hasSelectedAppointment) {
+        console.log('Usuario autenticado con cita seleccionada, abriendo modal')
+        showConfirmationModal.value = true
+      }
+    },
+    { immediate: true }
+  )
+
+  // Al montar el componente, verificar si hay una cita seleccionada y el usuario está autenticado
   onMounted(() => {
-    // Aquí se pueden cargar datos iniciales si es necesario
+    if (authStore.isAuthenticated && slotsStore.hasSelectedAppointment) {
+      console.log('Componente montado: Usuario autenticado con cita seleccionada')
+      showConfirmationModal.value = true
+    }
   })
 </script>
 

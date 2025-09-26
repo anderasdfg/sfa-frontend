@@ -7,4 +7,4 @@ export { default as DoctorAvailabilityCard } from './components/DoctorAvailabili
 export { default as AppointmentConfirmationModal } from './components/AppointmentConfirmationModal.vue'
 
 // Types
-export * from './types/appointment.types'
+export * from './types/index'

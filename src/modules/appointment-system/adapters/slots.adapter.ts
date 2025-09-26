@@ -3,8 +3,8 @@
  */
 
 import type { AppointmentSlot } from '@/types/slots.types'
-import { SlotStatus } from '@/types/enums'
 import type { Doctor, TimeSlot } from '../types'
+import { SlotStatus, AppointmentModality } from '@/types/enums'
 
 /**
  * Convierte un slot del API a formato de frontend
@@ -18,6 +18,7 @@ export const adaptSlotToTimeSlot = (slot: AppointmentSlot): TimeSlot => {
   })
 
   return {
+    id: slot.id,
     time: timeString,
     price: slot.price,
     available: slot.status === SlotStatus.DISPONIBLE,
@@ -36,7 +37,7 @@ export const adaptSlotToDoctor = (slot: AppointmentSlot): Omit<Doctor, 'availabl
     name: `${doctorData.first_name} ${doctorData.last_name}`,
     specialtyName: slot.specialty,
     cmp: `${doctorData.license_number}`,
-    consultationType: slot.schedule_modality === 'teleconsulta' ? 'TELECONSULTA' : 'PRESENCIAL',
+    consultationType: slot.schedule_modality === 'teleconsulta' ? AppointmentModality.TELECONSULTA : AppointmentModality.PRESENCIAL,
     location: slot.schedule_modality === 'teleconsulta' ? 'Virtual' : 'Los Olivos',
     avatar:
       'https://www.shutterstock.com/image-vector/default-placeholder-doctor-halflength-portrait-600nw-1058724875.jpg'

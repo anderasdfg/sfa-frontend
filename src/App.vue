@@ -15,29 +15,11 @@
   const layoutStore = useLayoutStore()
 
   onMounted(() => {
-    // Inicializar autenticación
     authStore.initializeAuth()
-
-    // Inicializar layout
     layoutStore.initializeLayout()
   })
 </script>
 
 <style>
-  * {
-    /*   margin: 0;
-    padding: 0; */
-    box-sizing: border-box;
-  }
-
-  #app {
-    font-family: 'Nunito', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-  }
-
-  .p-toast {
-    z-index: 9999;
-  }
+  @import '@/assets/css/base.css';
 </style>

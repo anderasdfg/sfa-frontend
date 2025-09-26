@@ -1,11 +1,10 @@
-import axios from 'axios'
+import apiClient from '@/shared/lib/axios.config'
 import type {
   Appointment,
   AppointmentCreateRequest,
+  AppointmentCreateResponse,
   AppointmentQueryParams
 } from '@/types/appointments.types'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL
 
 export class AppointmentService {
   private static readonly BASE_PATH = '/appointments'
@@ -15,8 +14,7 @@ export class AppointmentService {
     appointmentQueryParams: AppointmentQueryParams
   ): Promise<Appointment[]> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}`
-      const response = await axios.get(url, { params: appointmentQueryParams })
+      const response = await apiClient.get(this.BASE_PATH, { params: appointmentQueryParams })
       return response.data
     } catch (error) {
       console.error('Error fetching appointments:', error)
@@ -27,9 +25,17 @@ export class AppointmentService {
   /** Crea una cita médica */
   static async createAppointment(appointment: AppointmentCreateRequest): Promise<Appointment> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}`
-      const response = await axios.post(url, appointment)
-      return response.data
+      console.log('🚀 Sending appointment to API:', appointment)
+      const response = await apiClient.post<AppointmentCreateResponse>(this.BASE_PATH, appointment)
+      console.log('📥 API Response:', response.data)
+      
+      // El API devuelve { success, data, message }, necesitamos solo data
+      if (response.data.success && response.data.data) {
+        console.log('✅ Extracted appointment data:', response.data.data)
+        return response.data.data
+      } else {
+        throw new Error(response.data.message || 'Error en la respuesta del API')
+      }
     } catch (error) {
       console.error('Error creating appointment:', error)
       throw new Error('No se pudo crear la cita')
@@ -39,11 +45,16 @@ export class AppointmentService {
   /** Obtiene una cita por id */
   static async getAppointmentById(id: number): Promise<Appointment> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}/${id}`
-      const response = await axios.get(url)
-      return response.data
+      const response = await apiClient.get<AppointmentCreateResponse>(`${this.BASE_PATH}/${id}`)
+      
+      // El API devuelve { success, data, message }, necesitamos solo data
+      if (response.data.success && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data.message || 'Error en la respuesta del API')
+      }
     } catch (error) {
-      console.error('Error fetching appointment by id:', error)
+      console.error('Error fetching appointment:', error)
       throw new Error('No se pudo cargar la cita')
     }
   }

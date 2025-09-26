@@ -48,10 +48,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 
 import AppTopbar from '@/core/components/AppTopbar.vue'
 import AppSidebar from '@/core/components/AppSidebar.vue'
-import { useLayoutStore } from '@/stores/ui/layoutStore'
-
 const route = useRoute()
-const layoutStore = useLayoutStore()
 
 const sidebarVisible = ref(false)
 const isGlobalLoading = ref(false)
@@ -59,13 +56,13 @@ const isGlobalLoading = ref(false)
 const showBreadcrumb = computed(() => route.meta.showBreadcrumb !== false)
 
 const breadcrumbItems = computed(() => {
-  const items = []
+  const items: Array<{ label: string; route: string }> = []
 
   if (route.matched.length > 1) {
     route.matched.forEach((match, index) => {
       if (match.name && index > 0) {
         items.push({
-          label: match.meta?.title || match.name,
+          label: (match.meta?.title as string) || String(match.name),
           route: match.path,
         })
       }

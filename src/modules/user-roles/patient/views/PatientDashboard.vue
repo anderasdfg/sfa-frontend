@@ -128,6 +128,7 @@ import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { useAuthStore } from '@/stores/auth/authStore'
 import { formatTime, formatDate } from '@/shared/lib/formatters'
+import { AppointmentStatus } from '@/types/enums'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -186,21 +187,21 @@ const updateTime = () => {
 }
 
 const getStatusLabel = (status: string): string => {
-  const labels = {
-    'reservada': 'Reservada',
+  const labels: Record<string, string> = {
+    [AppointmentStatus.RESERVADA]: 'Reservada',
     'confirmada': 'Confirmada',
-    'finalizada': 'Completada',
-    'cancelada': 'Cancelada',
+    [AppointmentStatus.REALIZADA]: 'Completada',
+    [AppointmentStatus.CANCELADA]: 'Cancelada',
   }
   return labels[status] || status
 }
 
 const getStatusSeverity = (status: string): string => {
-  const severities = {
-    'reservada': 'info',
+  const severities: Record<string, string> = {
+    [AppointmentStatus.RESERVADA]: 'info',
     'confirmada': 'success',
-    'finalizada': 'success',
-    'cancelada': 'danger',
+    [AppointmentStatus.REALIZADA]: 'success',
+    [AppointmentStatus.CANCELADA]: 'danger',
   }
   return severities[status] || 'info'
 }
