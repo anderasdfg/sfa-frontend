@@ -20,13 +20,13 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    minify: 'terser',
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['vue', 'vue-router', 'pinia'],
           primevue: ['primevue/config', 'primevue/button', 'primevue/inputtext'],
-          utils: ['axios', '@vueuse/core', 'date-fns'],
+          utils: ['axios'],
         },
       },
     },
