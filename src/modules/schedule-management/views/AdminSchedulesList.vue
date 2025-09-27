@@ -203,6 +203,7 @@
     plugins: [timeGridPlugin, interactionPlugin],
     initialView: currentView.value,
     headerToolbar: false as const, // Usamos nuestro propio header
+    firstDay: 1,
     views: {
       timeGrid3Days: {
         type: 'timeGrid',
@@ -211,8 +212,8 @@
       }
     },
     height: 'auto',
-    slotMinTime: '07:00:00',
-    slotMaxTime: '19:00:00',
+    slotMinTime: '08:00:00',
+    slotMaxTime: '18:00:00',
     slotDuration: '00:20:00',
     slotLabelInterval: '01:00:00',
     allDaySlot: false,
