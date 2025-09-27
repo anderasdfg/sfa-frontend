@@ -82,7 +82,6 @@ export const validatePaymentRequest = (
     }
   }
 
-  // Extraer mensajes de error específicos de Zod
   const errors = result.error.issues.map(issue => {
     const field = issue.path.join('.')
     return `${field}: ${issue.message}`

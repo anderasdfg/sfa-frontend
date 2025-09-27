@@ -3,8 +3,9 @@
     <!-- Logo -->
     <div class="sidebar-header">
       <div class="logo">
-        <i class="pi pi-heart text-primary text-2xl"></i>
-        <span class="logo-text">San Miguel Arcangel</span>
+        <img src="https://www.clinicasanmiguel.pe/img/logo.png" alt="Logo" class="brand-logo" />
+        <!--  <i class="pi pi-heart text-primary text-2xl"></i>
+        <span class="logo-text">San Miguel Arcangel</span> -->
       </div>
     </div>
 
@@ -33,7 +34,6 @@
   import Avatar from 'primevue/avatar'
   import { useAuthStore } from '@/stores/auth/authStore'
 
-  // Interface para los elementos del menú
   interface MenuItem {
     label: string
     icon: string
@@ -50,7 +50,6 @@
   const userInitials = computed(() => authStore.getUserInitials)
 
   const menuItems = computed(() => {
-    // Obtener la ruta del dashboard según el rol del usuario
     const getDashboardRoute = () => {
       const role = authStore.userRole
       switch (role) {
@@ -134,6 +133,26 @@
           ]
         }
       )
+    }
+
+    // Sección específica para Médicos (solo admin)
+    if (authStore.hasRole('admin')) {
+      items.push({
+        label: 'Médicos',
+        icon: 'pi pi-user-md',
+        items: [
+          {
+            label: 'Lista de Médicos',
+            icon: 'pi pi-list',
+            command: () => router.push('/admin/doctors')
+          },
+          {
+            label: 'Horarios y Disponibilidad',
+            icon: 'pi pi-clock',
+            command: () => router.push('/admin/schedules')
+          }
+        ]
+      })
     }
 
     if (authStore.hasRole('doctor') || authStore.hasRole('admin')) {

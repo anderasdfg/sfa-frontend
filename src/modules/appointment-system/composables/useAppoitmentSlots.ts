@@ -58,9 +58,9 @@ export function useAppoitmentSlots() {
     return loadSlots(
       {
         date: new Date().toISOString(),
-        specialtyId: 1,
+        specialty_id: 1,
         modality: AppointmentModality.PRESENCIAL,
-        doctorId: null
+        doctor_id: null
       },
       true
     )

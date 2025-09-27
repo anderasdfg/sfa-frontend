@@ -143,7 +143,21 @@
   }
 
   const formatTime = (dateString: string | Date): string => {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString
+    let dateStr: string
+    if (typeof dateString === 'string') {
+      dateStr = dateString
+    } else {
+      dateStr = dateString.toISOString()
+    }
+
+    let date: Date
+    if (dateStr.endsWith('Z')) {
+      const localDateString = dateStr.replace('Z', '')
+      date = new Date(localDateString)
+    } else {
+      date = new Date(dateStr)
+    }
+
     return date.toLocaleTimeString('es-PE', {
       hour: '2-digit',
       minute: '2-digit'

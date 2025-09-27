@@ -14,7 +14,9 @@ export const AppointmentBookingSchema = z.object({
   patientId: z.number().positive('ID del paciente debe ser mayor a 0'),
   doctorId: z.number().positive('ID del doctor debe ser mayor a 0'),
   slotId: z.number().positive('ID del slot debe ser mayor a 0'),
-  appointmentDate: z.string().min(1, 'Fecha de la cita es requerida')
+  appointmentDate: z
+    .string()
+    .min(1, 'Fecha de la cita es requerida')
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha debe estar en formato YYYY-MM-DD'),
   status: z.nativeEnum(AppointmentStatus),
   modality: z.nativeEnum(AppointmentModality),
@@ -29,7 +31,9 @@ export type ValidatedAppointmentBooking = z.infer<typeof AppointmentBookingSchem
 /**
  * Convierte AppointmentBooking (frontend) a AppointmentCreateRequest (API)
  */
-export const adaptBookingToCreateRequest = (booking: AppointmentBooking): AppointmentCreateRequest => {
+export const adaptBookingToCreateRequest = (
+  booking: AppointmentBooking
+): AppointmentCreateRequest => {
   return {
     patient_id: booking.patientId,
     doctor_id: booking.doctorId,
@@ -46,13 +50,15 @@ export const adaptBookingToCreateRequest = (booking: AppointmentBooking): Appoin
  * @param booking - Datos del booking a validar
  * @returns Objeto con resultado de validación y errores específicos
  */
-export const validateBookingData = (booking: AppointmentBooking): { 
-  isValid: boolean; 
-  errors: string[];
-  data?: ValidatedAppointmentBooking;
+export const validateBookingData = (
+  booking: AppointmentBooking
+): {
+  isValid: boolean
+  errors: string[]
+  data?: ValidatedAppointmentBooking
 } => {
   const result = AppointmentBookingSchema.safeParse(booking)
-  
+
   if (result.success) {
     return {
       isValid: true,
@@ -60,13 +66,12 @@ export const validateBookingData = (booking: AppointmentBooking): {
       data: result.data
     }
   }
-  
-  // Extraer mensajes de error específicos de Zod
+
   const errors = result.error.issues.map(issue => {
     const field = issue.path.join('.')
     return `${field}: ${issue.message}`
   })
-  
+
   return {
     isValid: false,
     errors,
@@ -79,7 +84,9 @@ export const validateBookingData = (booking: AppointmentBooking): {
  * @param booking - Datos del booking
  * @returns Datos validados o lanza error con detalles
  */
-export const validateAndTransformBooking = (booking: AppointmentBooking): ValidatedAppointmentBooking => {
+export const validateAndTransformBooking = (
+  booking: AppointmentBooking
+): ValidatedAppointmentBooking => {
   const result = AppointmentBookingSchema.parse(booking) // Lanza error si falla
   return result
 }

@@ -10,7 +10,21 @@ import { SlotStatus, AppointmentModality } from '@/types/enums'
  * Convierte un slot del API a formato de frontend
  */
 export const adaptSlotToTimeSlot = (slot: AppointmentSlot): TimeSlot => {
-  const scheduledDate = new Date(slot.scheduled_at)
+  // Manejar zona horaria correctamente - igual que en useScheduleCalendar
+  const scheduledAtString = typeof slot.scheduled_at === 'string' 
+    ? slot.scheduled_at 
+    : slot.scheduled_at.toISOString()
+  
+  // Si viene con Z (UTC), convertir a fecha local manteniendo la hora
+  let scheduledDate: Date
+  if (scheduledAtString.endsWith('Z')) {
+    // Remover Z y tratar como hora local
+    const localDateString = scheduledAtString.replace('Z', '')
+    scheduledDate = new Date(localDateString)
+  } else {
+    scheduledDate = new Date(scheduledAtString)
+  }
+  
   const timeString = scheduledDate.toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit',

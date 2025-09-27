@@ -48,9 +48,6 @@
               </template>
               <template #content>
                 <p class="specialty-description">{{ specialty.description }}</p>
-                <div class="specialty-code">
-                  <Tag :value="specialty.code" severity="info" />
-                </div>
               </template>
               <template #footer>
                 <Button
@@ -146,7 +143,7 @@
       path: '/auth/login',
       query: {
         redirect: '/appointments/new',
-        specialty: specialty.code
+        specialty: specialty.id
       }
     })
   }
@@ -256,10 +253,6 @@
   .specialty-description {
     color: #718096;
     line-height: 1.6;
-    margin-bottom: 1rem;
-  }
-
-  .specialty-code {
     margin-bottom: 1rem;
   }
 

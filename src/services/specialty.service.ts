@@ -57,19 +57,6 @@ export class SpecialtyService {
   }
 
   /**
-   * Obtiene una especialidad por su código
-   */
-  static async getSpecialtyByCode(code: string): Promise<Specialty | null> {
-    try {
-      const specialties = await this.getSpecialties()
-      return specialties.find(specialty => specialty.code === code) || null
-    } catch (error) {
-      console.error(`Error fetching specialty with code ${code}:`, error)
-      throw new Error('No se pudo cargar la especialidad')
-    }
-  }
-
-  /**
    * Crea una nueva especialidad
    */
   static async createSpecialty(specialty: Specialty): Promise<Specialty | null> {

@@ -218,6 +218,23 @@ const routes: RouteRecordRaw[] = [
     ]
   },
 
+  // Rutas de administración
+  {
+    path: '/admin',
+    component: MainLayout,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    },
+    children: [
+      {
+        path: 'schedules',
+        name: 'Horarios Médicos',
+        component: () => import('@/modules/schedule-management/views/AdminSchedulesList.vue')
+      }
+    ]
+  },
+
   // Rutas de historial médico
   {
     path: '/medical-records',

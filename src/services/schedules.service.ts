@@ -1,12 +1,10 @@
-import axios from 'axios'
+import apiClient from '@/shared/lib/axios.config'
 import type {
   Schedule,
   ScheduleCreateRequest,
   ScheduleRequestQueryParams,
   ScheduleResponse
 } from '@/types/schedules.types'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL
 
 export class ScheduleService {
   private static readonly BASE_PATH = '/schedules'
@@ -16,8 +14,7 @@ export class ScheduleService {
    */
   static async getSchedules(queryParams: ScheduleRequestQueryParams): Promise<ScheduleResponse> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}`
-      const response = await axios.get(url, { params: queryParams })
+      const response = await apiClient.get(this.BASE_PATH, { params: queryParams })
       return response.data
     } catch (error) {
       console.error('Error fetching schedules:', error)
@@ -30,8 +27,7 @@ export class ScheduleService {
    */
   static async createSchedule(schedule: ScheduleCreateRequest): Promise<ScheduleResponse> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}`
-      const response = await axios.post(url, schedule)
+      const response = await apiClient.post(this.BASE_PATH, schedule)
       return response.data
     } catch (error) {
       console.error('Error creating schedule:', error)
@@ -44,8 +40,7 @@ export class ScheduleService {
    */
   static async updateSchedule(schedule: Schedule): Promise<ScheduleResponse> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}/${schedule.id}`
-      const response = await axios.put(url, schedule)
+      const response = await apiClient.put(`${this.BASE_PATH}/${schedule.id}`, schedule)
       return response.data
     } catch (error) {
       console.error('Error updating schedule:', error)
@@ -58,8 +53,7 @@ export class ScheduleService {
    */
   static async deleteSchedule(id: number): Promise<void> {
     try {
-      const url = `${API_BASE}${this.BASE_PATH}/${id}`
-      await axios.delete(url)
+      await apiClient.delete(`${this.BASE_PATH}/${id}`)
     } catch (error) {
       console.error('Error deleting schedule:', error)
       throw new Error('No se pudo eliminar el horario')

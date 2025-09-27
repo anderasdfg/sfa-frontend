@@ -13,8 +13,8 @@ export interface Schedule {
 }
 
 export interface ScheduleRequestQueryParams {
-  doctorId: number
-  scheduleDate: string
+  doctor_id: number
+  schedule_date: string
   modality: AppointmentModality
 }
 

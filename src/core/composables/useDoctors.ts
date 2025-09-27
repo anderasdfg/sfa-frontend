@@ -15,11 +15,11 @@ export function useDoctors() {
     return Date.now() - lastFetch.value < CACHE_DURATION
   })
 
-  // Computed para doctores con nombres completos
-  const doctorsWithFullNames = computed(() => 
+  const doctorsWithFullNames = computed(() =>
     doctors.value.map(doctor => ({
       ...doctor,
-      fullName: `Dr${doctor.gender === 'F' ? 'a' : ''}. ${doctor.first_name} ${doctor.last_name}`.trim(),
+      fullName:
+        `Dr${doctor.gender === 'F' ? 'a' : ''}. ${doctor.first_name} ${doctor.last_name}`.trim(),
       displayName: `${doctor.first_name} ${doctor.last_name}`.trim()
     }))
   )
@@ -62,8 +62,8 @@ export function useDoctors() {
   }
 
   const getDoctorsBySpecialtyName = (specialtyName: string) => {
-    return doctorsWithFullNames.value.filter(doctor => 
-      doctor.specialty_name.toLowerCase() === specialtyName.toLowerCase()
+    return doctorsWithFullNames.value.filter(
+      doctor => doctor.specialty_name.toLowerCase() === specialtyName.toLowerCase()
     )
   }
 

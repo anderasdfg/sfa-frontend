@@ -134,8 +134,8 @@
       date: searchForm.value.date
         ? formatDateToISO(searchForm.value.date)
         : getCurrentDateInTimezone(),
-      specialtyId: selectedSpecialty?.id || 0,
-      doctorId: selectedDoctor?.id || null
+      specialty_id: selectedSpecialty?.id || 0,
+      doctor_id: selectedDoctor?.id || null
     }
 
     emit('search', criteria)
