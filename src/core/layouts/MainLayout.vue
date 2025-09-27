@@ -36,36 +36,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted } from 'vue'
-  import { useRoute } from 'vue-router'
-  import Breadcrumb from 'primevue/breadcrumb'
+  import { ref, onMounted, onUnmounted } from 'vue'
   import ProgressSpinner from 'primevue/progressspinner'
 
   import AppTopbar from '@/core/components/AppTopbar.vue'
   import AppSidebar from '@/core/components/AppSidebar.vue'
-  const route = useRoute()
 
   const sidebarVisible = ref(false)
   const isGlobalLoading = ref(false)
-
-  const showBreadcrumb = computed(() => route.meta.showBreadcrumb !== false)
-
-  const breadcrumbItems = computed(() => {
-    const items: Array<{ label: string; route: string }> = []
-
-    if (route.matched.length > 1) {
-      route.matched.forEach((match, index) => {
-        if (match.name && index > 0) {
-          items.push({
-            label: (match.meta?.title as string) || String(match.name),
-            route: match.path
-          })
-        }
-      })
-    }
-
-    return items
-  })
 
   const toggleSidebar = () => {
     sidebarVisible.value = !sidebarVisible.value

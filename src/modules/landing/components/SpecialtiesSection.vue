@@ -76,7 +76,6 @@
   import { useRouter } from 'vue-router'
   import Card from 'primevue/card'
   import Button from 'primevue/button'
-  import Tag from 'primevue/tag'
   import Message from 'primevue/message'
   import ProgressSpinner from 'primevue/progressspinner'
   import Carousel from 'primevue/carousel'
