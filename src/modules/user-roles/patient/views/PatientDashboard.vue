@@ -63,9 +63,7 @@
                 {{ formatTime(appointment.appointment_date) }}
               </div>
               <div class="appointment-details">
-                <div class="appointment-doctor">
-                  Dr. {{ appointment.doctor_name }}
-                </div>
+                <div class="appointment-doctor">Dr. {{ appointment.doctor_name }}</div>
                 <div class="appointment-specialty">
                   {{ appointment.specialty }}
                 </div>
@@ -81,8 +79,8 @@
           <div v-else class="empty-state">
             <i class="pi pi-calendar text-4xl text-gray-300 mb-3"></i>
             <p class="text-gray-500">No tienes citas programadas</p>
-            <Button 
-              label="Agendar mi primera cita" 
+            <Button
+              label="Agendar mi primera cita"
               class="mt-3"
               @click="navigateToNewAppointment"
             />
@@ -121,253 +119,253 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Tag from 'primevue/tag'
-import { useAuthStore } from '@/stores/auth/authStore'
-import { formatTime, formatDate } from '@/shared/lib/formatters'
-import { AppointmentStatus } from '@/types/enums'
+  import { ref, computed, onMounted, onUnmounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import Card from 'primevue/card'
+  import Button from 'primevue/button'
+  import Tag from 'primevue/tag'
+  import { useAuthStore } from '@/stores/auth/authStore'
+  import { formatTime, formatDate } from '@/shared/lib/formatters'
+  import { AppointmentStatus } from '@/types/enums'
 
-const router = useRouter()
-const authStore = useAuthStore()
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-// Reactive data
-const currentTime = ref('')
-const currentDate = ref('')
-const myAppointments = ref<any[]>([])
+  // Reactive data
+  const currentTime = ref('')
+  const currentDate = ref('')
+  const myAppointments = ref<any[]>([])
 
-// Computed properties
-const userFullName = computed(() => authStore.getUserFullName)
+  // Computed properties
+  const userFullName = computed(() => authStore.getUserFullName)
 
-const welcomeMessage = computed(() => {
-  const hour = new Date().getHours()
-  let greeting = 'Buenos días'
-  if (hour >= 12 && hour < 18) greeting = 'Buenas tardes'
-  else if (hour >= 18) greeting = 'Buenas noches'
-  
-  return `${greeting}. Gestiona tus citas y consulta tu historial médico.`
-})
+  const welcomeMessage = computed(() => {
+    const hour = new Date().getHours()
+    let greeting = 'Buenos días'
+    if (hour >= 12 && hour < 18) greeting = 'Buenas tardes'
+    else if (hour >= 18) greeting = 'Buenas noches'
 
-const quickStats = computed(() => [
-  {
-    key: 'next-appointment',
-    icon: 'pi pi-calendar',
-    iconClass: 'bg-blue-100 text-blue-600',
-    label: 'Próxima Cita',
-    value: myAppointments.value.length > 0 ? 'Hoy 10:30' : 'Sin citas'
-  },
-  {
-    key: 'total-appointments',
-    icon: 'pi pi-clock',
-    iconClass: 'bg-green-100 text-green-600',
-    label: 'Citas Este Mes',
-    value: '3'
-  },
-  {
-    key: 'medical-records',
-    icon: 'pi pi-file',
-    iconClass: 'bg-purple-100 text-purple-600',
-    label: 'Consultas Realizadas',
-    value: '12'
-  }
-])
-
-// Methods
-const updateTime = () => {
-  const now = new Date()
-  currentTime.value = formatTime(now)
-  currentDate.value = formatDate(now, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    return `${greeting}. Gestiona tus citas y consulta tu historial médico.`
   })
-}
 
-const getStatusLabel = (status: string): string => {
-  const labels: Record<string, string> = {
-    [AppointmentStatus.RESERVADA]: 'Reservada',
-    'confirmada': 'Confirmada',
-    [AppointmentStatus.REALIZADA]: 'Completada',
-    [AppointmentStatus.CANCELADA]: 'Cancelada',
-  }
-  return labels[status] || status
-}
-
-const getStatusSeverity = (status: string): string => {
-  const severities: Record<string, string> = {
-    [AppointmentStatus.RESERVADA]: 'info',
-    'confirmada': 'success',
-    [AppointmentStatus.REALIZADA]: 'success',
-    [AppointmentStatus.CANCELADA]: 'danger',
-  }
-  return severities[status] || 'info'
-}
-
-const navigateToNewAppointment = () => {
-  router.push('/appointments/new')
-}
-
-const navigateToMedicalHistory = () => {
-  router.push(`/medical-records/patient/${authStore.user?.id}`)
-}
-
-const navigateToPrescriptions = () => {
-  router.push('/prescriptions')
-}
-
-const loadPatientData = async () => {
-  // Simular carga de datos del paciente
-  myAppointments.value = [
+  const quickStats = computed(() => [
     {
-      id: 1,
-      doctor_name: 'García',
-      specialty: 'Cardiología',
-      appointment_date: new Date(2025, 8, 24, 10, 30),
-      status: 'confirmada'
+      key: 'next-appointment',
+      icon: 'pi pi-calendar',
+      iconClass: 'bg-blue-100 text-blue-600',
+      label: 'Próxima Cita',
+      value: myAppointments.value.length > 0 ? 'Hoy 10:30' : 'Sin citas'
+    },
+    {
+      key: 'total-appointments',
+      icon: 'pi pi-clock',
+      iconClass: 'bg-green-100 text-green-600',
+      label: 'Citas Este Mes',
+      value: '3'
+    },
+    {
+      key: 'medical-records',
+      icon: 'pi pi-file',
+      iconClass: 'bg-purple-100 text-purple-600',
+      label: 'Consultas Realizadas',
+      value: '12'
     }
-  ]
-}
+  ])
 
-// Lifecycle
-let timeInterval: NodeJS.Timeout
-
-onMounted(async () => {
-  updateTime()
-  timeInterval = setInterval(updateTime, 1000)
-  await loadPatientData()
-})
-
-onUnmounted(() => {
-  if (timeInterval) {
-    clearInterval(timeInterval)
+  // Methods
+  const updateTime = () => {
+    const now = new Date()
+    currentTime.value = formatTime(now)
+    currentDate.value = formatDate(now, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
-})
+
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      [AppointmentStatus.RESERVADA]: 'Reservada',
+      confirmada: 'Confirmada',
+      [AppointmentStatus.REALIZADA]: 'Completada',
+      [AppointmentStatus.CANCELADA]: 'Cancelada'
+    }
+    return labels[status] || status
+  }
+
+  const getStatusSeverity = (status: string): string => {
+    const severities: Record<string, string> = {
+      [AppointmentStatus.RESERVADA]: 'info',
+      confirmada: 'success',
+      [AppointmentStatus.REALIZADA]: 'success',
+      [AppointmentStatus.CANCELADA]: 'danger'
+    }
+    return severities[status] || 'info'
+  }
+
+  const navigateToNewAppointment = () => {
+    router.push('/appointment-booking')
+  }
+
+  const navigateToMedicalHistory = () => {
+    router.push(`/medical-records/patient/${authStore.user?.id}`)
+  }
+
+  const navigateToPrescriptions = () => {
+    router.push('/prescriptions')
+  }
+
+  const loadPatientData = async () => {
+    // Simular carga de datos del paciente
+    myAppointments.value = [
+      {
+        id: 1,
+        doctor_name: 'García',
+        specialty: 'Cardiología',
+        appointment_date: new Date(2025, 8, 24, 10, 30),
+        status: 'confirmada'
+      }
+    ]
+  }
+
+  // Lifecycle
+  let timeInterval: NodeJS.Timeout
+
+  onMounted(async () => {
+    updateTime()
+    timeInterval = setInterval(updateTime, 1000)
+    await loadPatientData()
+  })
+
+  onUnmounted(() => {
+    if (timeInterval) {
+      clearInterval(timeInterval)
+    }
+  })
 </script>
 
 <style scoped>
-.dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.welcome-section {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 0.75rem;
-  color: white;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.stat-card {
-  position: relative;
-  overflow: visible;
-}
-
-.stat-icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  margin-right: 1rem;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.stat-label {
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-}
-
-.appointments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.appointment-item {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-}
-
-.appointment-item:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-}
-
-.appointment-time {
-  font-weight: 600;
-  color: #374151;
-  margin-right: 1rem;
-  min-width: 4rem;
-}
-
-.appointment-details {
-  flex: 1;
-}
-
-.appointment-doctor {
-  font-weight: 500;
-  color: #111827;
-}
-
-.appointment-specialty {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.quick-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.action-button {
-  justify-content: flex-start;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-}
-
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
+  .dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
   }
-}
 
-@media (max-width: 768px) {
+  .welcome-section {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0.75rem;
+    color: white;
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
   }
-}
+
+  .stat-card {
+    position: relative;
+    overflow: visible;
+  }
+
+  .stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 1rem;
+  }
+
+  .stat-content {
+    flex: 1;
+  }
+
+  .stat-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .stat-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .appointment-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .appointment-item:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  .appointment-time {
+    font-weight: 600;
+    color: #374151;
+    margin-right: 1rem;
+    min-width: 4rem;
+  }
+
+  .appointment-details {
+    flex: 1;
+  }
+
+  .appointment-doctor {
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .appointment-specialty {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .action-button {
+    justify-content: flex-start;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>

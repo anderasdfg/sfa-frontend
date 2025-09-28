@@ -51,7 +51,7 @@ export const createPaymentRequestFromAppointment = (
   appointment: Appointment,
   baseUrl: string = window.location.origin
 ): PaymentRequest => {
-  baseUrl = 'https://www.google.com'
+  baseUrl = 'https://sfa-frontend-five.vercel.app'
   const urls = generatePaymentUrls(appointment.id, baseUrl)
 
   return {
