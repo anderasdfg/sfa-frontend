@@ -74,13 +74,13 @@
   import { useAuthStore } from '@/stores/auth/authStore'
   import { useNotificationStore } from '@/stores/ui/notificationStore'
 
-  interface Props {
+  /*   interface Props {
     sidebarCollapsed?: boolean
-  }
+  } */
 
-  const props = withDefaults(defineProps<Props>(), {
+  /*   const props = withDefaults(defineProps<Props>(), {
     sidebarCollapsed: false
-  })
+  }) */
 
   // Emits
   defineEmits<{

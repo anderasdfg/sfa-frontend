@@ -371,10 +371,6 @@
     }
   }
 
-  const generateDefaultPassword = () => {
-    form.value.password = defaultPassword.value
-  }
-
   const resetForm = () => {
     form.value = {
       first_name: '',

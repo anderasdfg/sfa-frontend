@@ -19,7 +19,7 @@ export function useDoctors() {
     doctors.value.map(doctor => ({
       ...doctor,
       fullName:
-        `Dr${doctor.gender === 'F' ? 'a' : ''}. ${doctor.first_name} ${doctor.last_name}`.trim(),
+        `Dr${doctor.gender === 'femenino' ? 'a' : ''}. ${doctor.first_name} ${doctor.last_name}`.trim(),
       displayName: `${doctor.first_name} ${doctor.last_name}`.trim()
     }))
   )

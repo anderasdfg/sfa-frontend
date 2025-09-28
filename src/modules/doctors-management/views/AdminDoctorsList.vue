@@ -126,10 +126,7 @@
     </div>
 
     <!-- Create Doctor Modal -->
-    <CreateDoctorModal
-      v-model="showCreateModal"
-      @doctor-created="onDoctorCreated"
-    />
+    <CreateDoctorModal v-model="showCreateModal" @doctor-created="onDoctorCreated" />
   </div>
 </template>
 
@@ -141,7 +138,6 @@
   import Dropdown from 'primevue/dropdown'
   import ProgressSpinner from 'primevue/progressspinner'
   import Avatar from 'primevue/avatar'
-  import Tag from 'primevue/tag'
   import { useToast } from 'primevue/usetoast'
   import type { Doctor } from '@/types/doctor.types'
   import { DoctorService } from '@/services/doctors.service'
