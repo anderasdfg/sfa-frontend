@@ -1,24 +1,72 @@
 <template>
-  <div class="app-sidebar">
+  <div class="app-sidebar" :class="{ 'sidebar-collapsed': collapsed }">
     <!-- Logo -->
     <div class="sidebar-header">
       <div class="logo">
-        <img src="https://www.clinicasanmiguel.pe/img/logo.png" alt="Logo" class="brand-logo" />
-        <!--  <i class="pi pi-heart text-primary text-2xl"></i>
-        <span class="logo-text">San Miguel Arcangel</span> -->
+        <div class="logo-icon">
+          <img src="https://www.clinicasanmiguel.pe/img/logo.png" alt="Logo" class="brand-logo" />
+        </div>
       </div>
+
+      <!-- Collapse Toggle (Desktop only) -->
+      <button
+        v-if="!isMobile"
+        @click="$emit('toggle-collapse')"
+        class="collapse-toggle"
+        :class="{ collapsed: collapsed }"
+      >
+        <i class="pi pi-angle-left"></i>
+      </button>
     </div>
 
     <!-- Navigation Menu -->
     <div class="sidebar-content">
-      <PanelMenu :model="menuItems" class="sidebar-menu" />
+      <div class="sidebar-menu">
+        <template v-for="item in menuItems" :key="item.label">
+          <!-- Menu Item with Submenu -->
+          <div v-if="item.items" class="menu-group">
+            <div class="menu-group-header" :class="{ collapsed: collapsed }">
+              <i :class="item.icon" class="menu-icon"></i>
+              <span v-show="!collapsed" class="menu-label">{{ item.label }}</span>
+            </div>
+            <div v-show="!collapsed" class="menu-group-items">
+              <button
+                v-for="subItem in item.items"
+                :key="subItem.label"
+                @click="subItem.command?.()"
+                class="menu-item submenu-item"
+              >
+                <i :class="subItem.icon" class="menu-icon"></i>
+                <span class="menu-label">{{ subItem.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Single Menu Item -->
+          <button
+            v-else
+            @click="item.command?.()"
+            class="menu-item"
+            :class="{ collapsed: collapsed }"
+          >
+            <i :class="item.icon" class="menu-icon"></i>
+            <span v-show="!collapsed" class="menu-label">{{ item.label }}</span>
+          </button>
+        </template>
+      </div>
     </div>
 
     <!-- User Info -->
     <div class="sidebar-footer" v-if="user">
-      <div class="user-info">
-        <Avatar :label="userInitials" class="mr-2" shape="circle" size="normal" />
-        <div class="user-details">
+      <div class="user-info" :class="{ collapsed: collapsed }">
+        <Avatar
+          :label="userInitials"
+          class="user-avatar"
+          shape="circle"
+          size="normal"
+          :style="{ backgroundColor: '#059669', color: '#ffffff' }"
+        />
+        <div v-show="!collapsed" class="user-details">
           <div class="user-name">{{ userFullName }}</div>
           <div class="user-role">{{ userRole }}</div>
         </div>
@@ -30,7 +78,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
-  import PanelMenu from 'primevue/panelmenu'
   import Avatar from 'primevue/avatar'
   import { useAuthStore } from '@/stores/auth/authStore'
 
@@ -41,6 +88,18 @@
     items?: MenuItem[]
   }
 
+  interface Props {
+    collapsed?: boolean
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    collapsed: false
+  })
+
+  defineEmits<{
+    'toggle-collapse': []
+  }>()
+
   const router = useRouter()
   const authStore = useAuthStore()
 
@@ -48,6 +107,8 @@
   const userRole = computed(() => authStore.userRole)
   const userFullName = computed(() => authStore.getUserFullName)
   const userInitials = computed(() => authStore.getUserInitials)
+
+  const isMobile = computed(() => window.innerWidth <= 768)
 
   const menuItems = computed(() => {
     const getDashboardRoute = () => {
@@ -76,28 +137,98 @@
 
     // Menú específico por rol
     if (authStore.hasRole('admin')) {
+      // Gestión de Usuarios
       items.push({
-        label: 'Gestión',
-        icon: 'pi pi-cog',
+        label: 'Gestión de Usuarios',
+        icon: 'pi pi-users',
         items: [
           {
-            label: 'Usuarios',
+            label: 'Médicos',
             icon: 'pi pi-users',
-            command: () => router.push('/admin/users')
+            command: () => router.push('/admin/doctors')
           },
           {
-            label: 'Configuración',
-            icon: 'pi pi-sliders-h',
+            label: 'Pacientes',
+            icon: 'pi pi-users',
+            command: () => router.push('/patients')
+          }
+        ]
+      })
+
+      // Gestión de Citas
+      items.push({
+        label: 'Gestión de Citas',
+        icon: 'pi pi-calendar',
+        items: [
+          {
+            label: 'Calendario general',
+            icon: 'pi pi-calendar',
+            command: () => router.push('/admin/schedules')
+          },
+          {
+            label: 'Asignación de turnos',
+            icon: 'pi pi-clock',
+            command: () => router.push('/admin/schedules')
+          },
+          {
+            label: 'Reprogramaciones',
+            icon: 'pi pi-refresh',
+            command: () => router.push('/appointments')
+          },
+          {
+            label: 'Cancelaciones',
+            icon: 'pi pi-times',
+            command: () => router.push('/appointments')
+          }
+        ]
+      })
+
+      // Reportes y Analytics
+      items.push({
+        label: 'Reportes y Analytics',
+        icon: 'pi pi-chart-bar',
+        items: [
+          {
+            label: 'Productividad por médico',
+            icon: 'pi pi-chart-line',
+            command: () => router.push('/dashboard/admin')
+          },
+          {
+            label: 'Estadísticas de atención',
+            icon: 'pi pi-chart-pie',
+            command: () => router.push('/dashboard/admin')
+          },
+          {
+            label: 'Reportes financieros',
+            icon: 'pi pi-dollar',
+            command: () => router.push('/dashboard/admin')
+          },
+          {
+            label: 'Métricas de satisfacción',
+            icon: 'pi pi-thumbs-up',
+            command: () => router.push('/dashboard/admin')
+          }
+        ]
+      })
+
+      // Configuración del Sistema
+      items.push({
+        label: 'Configuración del Sistema',
+        icon: 'pi pi-sliders-h',
+        items: [
+          {
+            label: 'Parámetros generales',
+            icon: 'pi pi-cog',
             command: () => router.push('/admin/settings')
           }
         ]
       })
     }
 
+    // Menú para roles no-admin (doctor, receptionist)
     if (
-      authStore.hasRole('doctor') ||
-      authStore.hasRole('admin') ||
-      authStore.hasRole('receptionist')
+      (authStore.hasRole('doctor') || authStore.hasRole('receptionist')) &&
+      !authStore.hasRole('admin')
     ) {
       items.push(
         {
@@ -135,27 +266,8 @@
       )
     }
 
-    // Sección específica para Médicos (solo admin)
-    if (authStore.hasRole('admin')) {
-      items.push({
-        label: 'Médicos',
-        icon: 'pi pi-user-md',
-        items: [
-          {
-            label: 'Lista de Médicos',
-            icon: 'pi pi-list',
-            command: () => router.push('/admin/doctors')
-          },
-          {
-            label: 'Horarios y Disponibilidad',
-            icon: 'pi pi-clock',
-            command: () => router.push('/admin/schedules')
-          }
-        ]
-      })
-    }
-
-    if (authStore.hasRole('doctor') || authStore.hasRole('admin')) {
+    // Historial médico solo para doctores no-admin
+    if (authStore.hasRole('doctor') && !authStore.hasRole('admin')) {
       items.push({
         label: 'Historial Médico',
         icon: 'pi pi-file-medical',
@@ -182,70 +294,4 @@
   })
 </script>
 
-<style scoped>
-  .app-sidebar {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: #ffffff;
-  }
-
-  .sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .logo-text {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #495057;
-  }
-
-  .sidebar-content {
-    flex: 1;
-    padding: 1rem;
-    overflow-y: auto;
-  }
-
-  .sidebar-menu {
-    border: none;
-    width: 100%;
-  }
-
-  .sidebar-footer {
-    padding: 1rem;
-    border-top: 1px solid #e9ecef;
-    background: #f8f9fa;
-  }
-
-  .user-info {
-    display: flex;
-    align-items: center;
-  }
-
-  .user-details {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .user-name {
-    font-weight: 500;
-    color: #495057;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .user-role {
-    color: #6c757d;
-    font-size: 0.75rem;
-    text-transform: capitalize;
-  }
-</style>
+<style scoped src="./AppSidebar.css"></style>
