@@ -124,6 +124,12 @@
         @click="createDoctor"
       />
     </div>
+
+    <!-- Create Doctor Modal -->
+    <CreateDoctorModal
+      v-model="showCreateModal"
+      @doctor-created="onDoctorCreated"
+    />
   </div>
 </template>
 
@@ -146,6 +152,7 @@
     filterDoctorsBySpecialty,
     getUniqueSpecialties
   } from '../utils/doctor.utils'
+  import CreateDoctorModal from '../components/CreateDoctorModal.vue'
 
   const router = useRouter()
   const toast = useToast()
@@ -155,6 +162,7 @@
   const loading = ref(false)
   const searchQuery = ref('')
   const selectedSpecialty = ref('')
+  const showCreateModal = ref(false)
 
   // Computed
   const specialties = computed(() => {
@@ -199,12 +207,12 @@
   // Las funciones getDoctorInitials y getAvatarColor ahora se importan desde utils
 
   const createDoctor = () => {
-    toast.add({
-      severity: 'info',
-      summary: 'Próximamente',
-      detail: 'La funcionalidad de crear médico estará disponible pronto',
-      life: 3000
-    })
+    showCreateModal.value = true
+  }
+
+  const onDoctorCreated = () => {
+    // Recargar la lista de doctores después de crear uno nuevo
+    loadDoctors()
   }
 
   const viewDoctor = (id: string) => {

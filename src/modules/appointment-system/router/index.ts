@@ -1,0 +1,35 @@
+import type { RouteRecordRaw } from 'vue-router'
+
+// Layouts
+const MainLayout = () => import('@/core/layouts/MainLayout.vue')
+
+const appointmentRoutes: RouteRecordRaw[] = [
+  // Rutas privadas de gestión de citas (en MainLayout)
+  {
+    path: '/appointments',
+    component: MainLayout,
+    meta: { requiresAuth: true },
+    children: [
+      // Rutas futuras para gestión de citas
+      // {
+      //   path: '',
+      //   name: 'AppointmentsList',
+      //   component: () => import('../views/AppointmentsList.vue')
+      // },
+      // {
+      //   path: 'new',
+      //   name: 'CreateAppointment',
+      //   component: () => import('../views/CreateAppointment.vue'),
+      //   meta: { roles: ['doctor', 'admin', 'receptionist'] }
+      // },
+      // {
+      //   path: ':id',
+      //   name: 'AppointmentDetail',
+      //   component: () => import('../views/AppointmentDetail.vue'),
+      //   props: true
+      // }
+    ]
+  }
+]
+
+export default appointmentRoutes

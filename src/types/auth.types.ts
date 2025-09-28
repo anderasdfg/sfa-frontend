@@ -1,20 +1,4 @@
-export interface User {
-  username: string
-  first_name: string
-  last_name: string
-  gender: string
-  document_type: string
-  document_number: string
-  phone: string
-  photo: string
-  birth_date: Date
-  id: number
-  created_at: Date
-  status: 'activo' | 'inactivo'
-  patient_id?: number
-  doctor_id?: number
-  admin_id?: number
-}
+import type { User } from './user.types'
 
 export interface LoginCredentials {
   username: string

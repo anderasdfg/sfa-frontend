@@ -1,6 +1,5 @@
 import type { Doctor, DoctorResponse } from '@/types/doctor.types'
 import apiClient from '@/shared/lib/axios.config'
-const API_BASE = import.meta.env.VITE_API_BASE_URL
 
 export class DoctorService {
   private static readonly BASE_PATH = '/doctors'
@@ -28,8 +27,10 @@ export class DoctorService {
 
   static async getDoctorById(id: string): Promise<Doctor> {
     try {
-      const response = await apiClient.get<{success: boolean, data: Doctor}>(`${this.BASE_PATH}/${id}`)
-      
+      const response = await apiClient.get<{ success: boolean; data: Doctor }>(
+        `${this.BASE_PATH}/${id}`
+      )
+
       if (response.data.success && response.data.data) {
         return response.data.data
       } else {
@@ -44,8 +45,11 @@ export class DoctorService {
 
   static async updateDoctor(id: string, doctor: Doctor): Promise<Doctor> {
     try {
-      const response = await apiClient.put<{success: boolean, data: Doctor}>(`${this.BASE_PATH}/${id}`, doctor)
-      
+      const response = await apiClient.put<{ success: boolean; data: Doctor }>(
+        `${this.BASE_PATH}/${id}`,
+        doctor
+      )
+
       if (response.data.success && response.data.data) {
         return response.data.data
       } else {
