@@ -150,7 +150,7 @@
           {
             label: 'Pacientes',
             icon: 'pi pi-users',
-            command: () => router.push('/patients')
+            command: () => router.push('/admin/patients')
           }
         ]
       })

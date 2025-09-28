@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth/authStore'
+import doctorsRoutes from '@/modules/doctors-management/router'
 
 // Layouts
 const AuthLayout = () => import('@/core/layouts/AuthLayout.vue')
@@ -158,6 +159,17 @@ const routes: RouteRecordRaw[] = [
     ]
   },
 
+  // Rutas de gestión de médicos
+  {
+    path: '/admin',
+    component: MainLayout,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin']
+    },
+    children: doctorsRoutes
+  },
+
   // Rutas de gestión de pacientes
   {
     path: '/patients',
@@ -165,31 +177,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       roles: ['doctor', 'admin', 'receptionist']
-    },
-    children: [
-      /* {
-        path: '',
-        name: 'PatientsList',
-        component: () => import('@/modules/patient-management/views/PatientsList.vue')
-      },
-      {
-        path: 'new',
-        name: 'CreatePatient',
-        component: () => import('@/modules/patient-management/views/CreatePatient.vue')
-      },
-      {
-        path: ':id',
-        name: 'PatientDetail',
-        component: () => import('@/modules/patient-management/views/PatientDetail.vue'),
-        props: true
-      },
-      {
-        path: ':id/edit',
-        name: 'EditPatient',
-        component: () => import('@/modules/patient-management/views/EditPatient.vue'),
-        props: true
-      } */
-    ]
+    }
   },
 
   // Rutas de citas médicas
@@ -197,25 +185,7 @@ const routes: RouteRecordRaw[] = [
     path: '/appointments',
     component: MainLayout,
     meta: { requiresAuth: true },
-    children: [
-      /* {
-        path: '',
-        name: 'AppointmentsList',
-        component: () => import('@/modules/appointment-system/views/AppointmentsList.vue')
-      },
-      {
-        path: 'new',
-        name: 'CreateAppointment',
-        component: () => import('@/modules/appointment-system/views/CreateAppointment.vue'),
-        meta: { roles: ['doctor', 'admin', 'receptionist'] }
-      },
-      {
-        path: ':id',
-        name: 'AppointmentDetail',
-        component: () => import('@/modules/appointment-system/views/AppointmentDetail.vue'),
-        props: true
-      } */
-    ]
+    children: []
   },
 
   // Rutas de administración
@@ -243,33 +213,10 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['doctor', 'admin']
     },
-    children: [
-      /*  {
-        path: 'patient/:patientId',
-        name: 'PatientMedicalRecords',
-        component: () => import('@/modules/medical-records/views/PatientMedicalRecords.vue'),
-        props: true
-      },
-      {
-        path: 'new/:patientId',
-        name: 'CreateMedicalRecord',
-        component: () => import('@/modules/medical-records/views/CreateMedicalRecord.vue'),
-        props: true
-      } */
-    ]
+    children: []
   },
 
   // Rutas de error
-  /*   {
-    path: '/unauthorized',
-    name: 'Unauthorized',
-    component: () => import('@/views/error/UnauthorizedView.vue')
-  },
-  {
-    path: '/not-found',
-    name: 'NotFound',
-    component: () => import('@/views/error/NotFoundView.vue')
-  }, */
   {
     path: '/:pathMatch(.*)*',
     redirect: '/not-found'
