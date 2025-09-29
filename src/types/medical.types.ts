@@ -5,4 +5,5 @@ export interface Patient {
   document_type: string
   document_number: string
   photo: string
+  phone: string
 }

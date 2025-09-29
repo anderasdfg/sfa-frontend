@@ -155,15 +155,14 @@
         ]
       })
 
-      // Gestión de Citas
       items.push({
         label: 'Gestión de Citas',
         icon: 'pi pi-calendar',
         items: [
           {
-            label: 'Calendario general',
+            label: 'Calendario de citas',
             icon: 'pi pi-calendar',
-            command: () => router.push('/admin/schedules')
+            command: () => router.push('/appointments/calendar')
           },
           {
             label: 'Asignación de turnos',

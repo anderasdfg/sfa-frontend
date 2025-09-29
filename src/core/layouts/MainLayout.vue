@@ -204,7 +204,7 @@
     }
 
     .layout-content-inner {
-      padding: 2.5rem;
+      padding: 1rem;
       max-width: none;
     }
 

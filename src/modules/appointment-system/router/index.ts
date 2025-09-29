@@ -10,6 +10,15 @@ const appointmentRoutes: RouteRecordRaw[] = [
     component: MainLayout,
     meta: { requiresAuth: true },
     children: [
+      {
+        path: 'calendar',
+        name: 'AppointmentsCalendar',
+        component: () => import('../views/AppointmentsCalendar.vue'),
+        meta: { 
+          roles: ['doctor', 'admin', 'receptionist'],
+          title: 'Calendario de Citas'
+        }
+      }
       // Rutas futuras para gestión de citas
       // {
       //   path: '',
