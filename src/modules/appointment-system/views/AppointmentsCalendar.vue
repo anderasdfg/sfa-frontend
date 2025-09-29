@@ -326,7 +326,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { useAppointmentsCalendar } from '../composables/useAppointmentsCalendar'
   import FullCalendar from '@fullcalendar/vue3'
   import dayGridPlugin from '@fullcalendar/daygrid'
@@ -574,6 +574,15 @@
   // Lifecycle
   onMounted(() => {
     initializeData()
+    // Prevenir scroll del body
+    document.body.style.overflow = 'hidden'
+    document.body.style.height = '100vh'
+  })
+  
+  onUnmounted(() => {
+    // Restaurar scroll del body al salir
+    document.body.style.overflow = ''
+    document.body.style.height = ''
   })
 </script>
 
