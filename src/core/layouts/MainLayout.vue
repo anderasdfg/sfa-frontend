@@ -100,7 +100,7 @@
     display: flex;
     min-height: 100vh;
     position: relative;
-    background: #f8fafc;
+    background: #f0fdf4;
   }
 
   .layout-sidebar {
@@ -120,7 +120,6 @@
   .layout-sidebar-active {
     left: 0;
   }
-
 
   .layout-sidebar-mask {
     position: fixed;
@@ -151,7 +150,7 @@
 
   .layout-content {
     flex: 1;
-    background: #f8fafc;
+    background: #f0fdf4;
     overflow-y: auto;
   }
 
@@ -204,7 +203,6 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-
     .layout-content-inner {
       padding: 2.5rem;
       max-width: none;
@@ -235,17 +233,6 @@
 
     .layout-topbar {
       height: 64px;
-    }
-  }
-
-  /* Dark mode support */
-  @media (prefers-color-scheme: dark) {
-    .layout-wrapper {
-      background: #0f172a;
-    }
-
-    .layout-content {
-      background: #0f172a;
     }
   }
 </style>

@@ -7,13 +7,10 @@ import type { Doctor } from '@/types/doctor.types'
 import type { Specialty } from '@/types/specialty.types'
 import { AppointmentModality } from '@/types/enums'
 
-// Interfaz para el doctor con color asignado
 interface DoctorWithColor extends Doctor {
   color: string
   name: string
 }
-
-// Interfaz para eventos del calendario
 interface CalendarEvent {
   id: string
   title: string
@@ -52,7 +49,7 @@ const DOCTOR_COLORS = [
   '#8e44ad', // Púrpura oscuro
   '#27ae60', // Verde oscuro
   '#2980b9', // Azul oscuro
-  '#c0392b'  // Rojo oscuro
+  '#c0392b' // Rojo oscuro
 ]
 
 export function useScheduleCalendar() {
@@ -64,7 +61,7 @@ export function useScheduleCalendar() {
   const appointmentSlots = ref<AppointmentSlot[]>([])
   const availableSpecialties = ref<Specialty[]>([])
   const selectedSpecialtyId = ref<number>(0) // 0 = todas las especialidades
-  
+
   // Semana actual
   const currentWeek = ref<WeekRange>({
     start: getStartOfWeek(new Date()),
@@ -73,12 +70,24 @@ export function useScheduleCalendar() {
 
   // Computed
   const allDoctorsSelected = computed({
-    get: () => selectedDoctors.value.length === availableDoctors.value.length,
+    get: () => {
+      const filtered = filteredDoctors.value
+      if (filtered.length === 0) return false
+      return filtered.every(doctor => selectedDoctors.value.includes(doctor.id))
+    },
     set: (value: boolean) => {
       if (value) {
-        selectedDoctors.value = availableDoctors.value.map(d => d.id)
+        // Seleccionar todos los médicos filtrados
+        const filteredIds = filteredDoctors.value.map(d => d.id)
+        // Mantener médicos ya seleccionados que no están en el filtro actual
+        const otherSelectedIds = selectedDoctors.value.filter(
+          id => !filteredDoctors.value.some(doctor => doctor.id === id)
+        )
+        selectedDoctors.value = [...otherSelectedIds, ...filteredIds]
       } else {
-        selectedDoctors.value = []
+        // Deseleccionar solo los médicos filtrados
+        const filteredIds = filteredDoctors.value.map(d => d.id)
+        selectedDoctors.value = selectedDoctors.value.filter(id => !filteredIds.includes(id))
       }
     }
   })
@@ -88,26 +97,21 @@ export function useScheduleCalendar() {
     if (selectedSpecialtyId.value === 0) {
       return availableDoctors.value
     }
-    return availableDoctors.value.filter(doctor => doctor.specialty_id === selectedSpecialtyId.value)
+    return availableDoctors.value.filter(
+      doctor => doctor.specialty_id === selectedSpecialtyId.value
+    )
   })
 
-  // Eventos filtrados para el calendario
   const calendarEvents = computed(() => {
     return appointmentSlots.value
       .filter(slot => {
-        // Filtrar por médicos seleccionados
         const isDoctorSelected = selectedDoctors.value.includes(slot.doctor_data.id)
-        
-        // Filtrar por especialidad si está seleccionada
-        const isSpecialtyMatch = selectedSpecialtyId.value === 0 || 
-          slot.doctor_data.specialty_id === selectedSpecialtyId.value
-        
-        return isDoctorSelected && isSpecialtyMatch
+
+        return isDoctorSelected
       })
       .map(slot => transformSlotToEvent(slot))
   })
 
-  // Funciones auxiliares para fechas
   function getStartOfWeek(date: Date): Date {
     const d = new Date(date)
     const day = d.getDay()
@@ -130,12 +134,11 @@ export function useScheduleCalendar() {
   function transformSlotToEvent(slot: AppointmentSlot): CalendarEvent {
     const doctor = availableDoctors.value.find(d => d.id === slot.doctor_data.id)
     const doctorColor = doctor?.color || '#6c757d'
-    
+
     // Crear fecha y hora de inicio - manejar zona horaria correctamente
-    const scheduledAtString = typeof slot.scheduled_at === 'string' 
-      ? slot.scheduled_at 
-      : slot.scheduled_at.toISOString()
-    
+    const scheduledAtString =
+      typeof slot.scheduled_at === 'string' ? slot.scheduled_at : slot.scheduled_at.toISOString()
+
     // Si viene con Z (UTC), convertir a fecha local manteniendo la hora
     let slotDate: Date
     if (scheduledAtString.endsWith('Z')) {
@@ -145,16 +148,16 @@ export function useScheduleCalendar() {
     } else {
       slotDate = new Date(scheduledAtString)
     }
-    
+
     const startTime = slotDate.toISOString()
-    
+
     // Calcular fecha y hora de fin
     const endTime = new Date(slotDate.getTime() + slot.duration_minutes * 60000).toISOString()
-    
+
     // Determinar estado - usar el status del backend o fallback a lógica anterior
     const backendStatus = slot.status?.toLowerCase()
     let status: 'available' | 'occupied'
-    
+
     if (backendStatus === 'disponible') {
       status = 'available'
     } else if (backendStatus === 'ocupado') {
@@ -164,18 +167,18 @@ export function useScheduleCalendar() {
       const isOccupied = slot.patient_data !== null
       status = isOccupied ? 'occupied' : 'available'
     }
-    
+
     // Verificar si es un evento pasado
     const now = new Date()
     const isPast = slotDate < now
-    
+
     // Título del evento - solo nombre del médico
     const title = `Dr. ${slot.doctor_data.first_name} ${slot.doctor_data.last_name}`
-    
+
     // Ajustar color para eventos pasados
     let backgroundColor = doctorColor
     let textColor = '#ffffff'
-    
+
     if (isPast) {
       // Hacer el color más opaco para eventos pasados
       backgroundColor = doctorColor + '60' // Agregar transparencia
@@ -194,9 +197,9 @@ export function useScheduleCalendar() {
         doctorId: slot.doctor_data.id,
         slotId: slot.id,
         status,
-        patientName: slot.patient_data ? 
-          `${slot.patient_data.first_name} ${slot.patient_data.last_name}` : 
-          undefined,
+        patientName: slot.patient_data
+          ? `${slot.patient_data.first_name} ${slot.patient_data.last_name}`
+          : undefined,
         appointmentId: undefined, // TODO: Obtener del slot si está disponible
         price: slot.price,
         modality: slot.schedule_modality
@@ -229,7 +232,7 @@ export function useScheduleCalendar() {
     try {
       const doctors = await DoctorService.getDoctors()
       availableDoctors.value = assignDoctorColors(doctors)
-      
+
       // Seleccionar todos los médicos por defecto
       selectedDoctors.value = availableDoctors.value.map(d => d.id)
     } catch (err) {
@@ -243,7 +246,7 @@ export function useScheduleCalendar() {
     try {
       loading.value = true
       const slots: AppointmentSlot[] = []
-      
+
       // Cargar slots para cada día de la semana
       const currentDate = new Date(weekStart)
       while (currentDate <= weekEnd) {
@@ -254,19 +257,19 @@ export function useScheduleCalendar() {
             modality: undefined, // Sin filtro de modalidad
             doctor_id: null // Sin filtro de médico específico
           }
-          
+
           // Solo agregar specialty_id si no es 0
           // No enviamos specialty_id para obtener todas las especialidades
-          
+
           const daySlots = await SlotService.getSlots(queryParams)
           slots.push(...daySlots)
         } catch (dayError) {
           console.warn(`Error loading slots for ${formatDateForAPI(currentDate)}:`, dayError)
         }
-        
+
         currentDate.setDate(currentDate.getDate() + 1)
       }
-      
+
       appointmentSlots.value = slots
     } catch (err) {
       console.error('Error loading week slots:', err)
@@ -288,16 +291,26 @@ export function useScheduleCalendar() {
   // Cambiar especialidad seleccionada
   function changeSpecialty(specialtyId: number) {
     selectedSpecialtyId.value = specialtyId
-    
-    // Actualizar médicos seleccionados basado en la especialidad
-    if (specialtyId === 0) {
-      // Todas las especialidades - seleccionar todos los médicos
-      selectedDoctors.value = availableDoctors.value.map(d => d.id)
-    } else {
-      // Especialidad específica - seleccionar solo médicos de esa especialidad
-      selectedDoctors.value = availableDoctors.value
-        .filter(doctor => doctor.specialty_id === specialtyId)
-        .map(d => d.id)
+
+    // Si no hay médicos seleccionados de la nueva especialidad, seleccionar todos
+    const doctorsInSpecialty =
+      specialtyId === 0
+        ? availableDoctors.value
+        : availableDoctors.value.filter(doctor => doctor.specialty_id === specialtyId)
+
+    const hasSelectedDoctorsInSpecialty = doctorsInSpecialty.some(doctor =>
+      selectedDoctors.value.includes(doctor.id)
+    )
+
+    if (!hasSelectedDoctorsInSpecialty) {
+      // Si no hay médicos seleccionados en esta especialidad, seleccionar todos
+      const newDoctorIds = doctorsInSpecialty.map(d => d.id)
+      const otherSelectedIds = selectedDoctors.value.filter(
+        id =>
+          !availableDoctors.value.some(doctor => doctor.id === id) ||
+          (specialtyId !== 0 && !doctorsInSpecialty.some(doctor => doctor.id === id))
+      )
+      selectedDoctors.value = [...otherSelectedIds, ...newDoctorIds]
     }
   }
 
@@ -305,24 +318,24 @@ export function useScheduleCalendar() {
   function previousWeek() {
     const newStart = new Date(currentWeek.value.start)
     newStart.setDate(newStart.getDate() - 7)
-    
+
     currentWeek.value = {
       start: newStart,
       end: getEndOfWeek(newStart)
     }
-    
+
     loadWeekSlots(currentWeek.value.start, currentWeek.value.end)
   }
 
   function nextWeek() {
     const newStart = new Date(currentWeek.value.start)
     newStart.setDate(newStart.getDate() + 7)
-    
+
     currentWeek.value = {
       start: newStart,
       end: getEndOfWeek(newStart)
     }
-    
+
     loadWeekSlots(currentWeek.value.start, currentWeek.value.end)
   }
 
@@ -332,7 +345,7 @@ export function useScheduleCalendar() {
       start: getStartOfWeek(today),
       end: getEndOfWeek(today)
     }
-    
+
     loadWeekSlots(currentWeek.value.start, currentWeek.value.end)
   }
 
@@ -351,12 +364,12 @@ export function useScheduleCalendar() {
     currentWeek,
     availableSpecialties,
     selectedSpecialtyId,
-    
+
     // Computed
     allDoctorsSelected,
     calendarEvents,
     filteredDoctors,
-    
+
     // Métodos
     loadWeekData,
     loadAvailableDoctors,

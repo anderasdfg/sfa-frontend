@@ -1,109 +1,102 @@
 <template>
   <div class="admin-schedules-view">
-    <!-- Header -->
-    <div class="view-header">
-      <div class="header-content">
-        <!--  <h1 class="view-title">
-          <i class="pi pi-calendar mr-2"></i>
-          Horarios Médicos
-        </h1> -->
-        <p class="view-subtitle">Gestiona los horarios y disponibilidad de todos los médicos</p>
-      </div>
-
-      <!-- Specialty Filter & Week Navigation -->
-      <div class="header-controls">
-        <!-- View Selector & Navigation -->
-        <div class="view-controls">
-          <!-- View Type Selector -->
-          <div class="view-selector">
-            <Button
-              label="1 día"
-              @click="changeView('timeGridDay')"
-              :severity="currentView === 'timeGridDay' ? 'info' : 'secondary'"
-              :outlined="currentView !== 'timeGridDay'"
-              size="small"
-            />
-            <Button
-              label="3 días"
-              @click="changeView('timeGrid3Days')"
-              :severity="currentView === 'timeGrid3Days' ? 'info' : 'secondary'"
-              :outlined="currentView !== 'timeGrid3Days'"
-              size="small"
-            />
-            <Button
-              label="Semana"
-              @click="changeView('timeGridWeek')"
-              :severity="currentView === 'timeGridWeek' ? 'info' : 'secondary'"
-              :outlined="currentView !== 'timeGridWeek'"
-              size="small"
-            />
-          </div>
-
-          <!-- Navigation -->
-          <div class="week-navigation">
-            <Button
-              icon="pi pi-chevron-left"
-              @click="previousPeriod"
-              severity="secondary"
-              outlined
-            />
-            <span class="current-week">{{ currentPeriodLabel }}</span>
-            <Button icon="pi pi-chevron-right" @click="nextPeriod" severity="secondary" outlined />
-            <Button label="Hoy" @click="goToToday" severity="info" outlined class="ml-3" />
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Filters Sidebar -->
     <div class="schedules-content">
       <div class="filters-sidebar">
-        <Card class="doctors-filter">
-          <template #title>
-            <div class="filter-title">
+        <Accordion class="doctors-filter">
+          <AccordionPanel value="0">
+            <AccordionHeader>
               <i class="pi pi-filter mr-2"></i>
               Filtrar Médicos
-            </div>
-          </template>
-          <template #content>
-            <div class="specialty-filter">
-              <Dropdown
-                v-model="selectedSpecialtyId"
-                :options="specialtyOptions"
-                option-label="name"
-                option-value="id"
-                @change="onSpecialtyChange"
-                class="specialty-dropdown"
-              />
-            </div>
-            <div class="doctors-list">
-              <div class="select-all-option">
-                <Checkbox v-model="allDoctorsSelected" :binary="true" @change="toggleAllDoctors" />
-                <label class="ml-2 font-semibold">Todos los médicos</label>
+            </AccordionHeader>
+            <AccordionContent>
+              <div class="specialty-filter">
+                <Dropdown
+                  v-model="selectedSpecialtyId"
+                  :options="specialtyOptions"
+                  option-label="name"
+                  option-value="id"
+                  @change="onSpecialtyChange"
+                  class="specialty-dropdown"
+                />
               </div>
-              <Divider />
-              <div v-for="doctor in filteredDoctors" :key="doctor.id" class="doctor-filter-item">
-                <Checkbox v-model="selectedDoctors" :value="doctor.id" :binary="false" />
-                <div class="doctor-info ml-2">
-                  <div
-                    class="doctor-color-indicator"
-                    :style="{ backgroundColor: doctor.color }"
-                  ></div>
-                  <div class="doctor-details">
-                    <span class="doctor-name">{{ doctor.name }}</span>
-                    <span class="doctor-specialty">{{ doctor.specialty_name }}</span>
+              <div class="doctors-list">
+                <div class="select-all-option">
+                  <Checkbox
+                    v-model="allDoctorsSelected"
+                    :binary="true"
+                    @change="toggleAllDoctors"
+                  />
+                  <label class="ml-2 font-semibold">Todos los médicos</label>
+                </div>
+                <Divider />
+                <div v-for="doctor in filteredDoctors" :key="doctor.id" class="doctor-filter-item">
+                  <Checkbox v-model="selectedDoctors" :value="doctor.id" :binary="false" />
+                  <div class="doctor-info ml-2">
+                    <div
+                      class="doctor-color-indicator"
+                      :style="{ backgroundColor: doctor.color }"
+                    ></div>
+                    <div class="doctor-details">
+                      <span class="doctor-name">{{ doctor.name }}</span>
+                      <span class="doctor-specialty">{{ doctor.specialty_name }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </template>
-        </Card>
+            </AccordionContent>
+          </AccordionPanel>
+        </Accordion>
       </div>
 
       <!-- Calendar -->
       <div class="calendar-container">
         <Card class="calendar-card">
           <template #content>
+            <div class="view-controls">
+              <!-- View Type Selector -->
+              <div class="view-selector">
+                <Button
+                  label="1 día"
+                  @click="changeView('timeGridDay')"
+                  :severity="currentView === 'timeGridDay' ? 'info' : 'secondary'"
+                  :outlined="currentView !== 'timeGridDay'"
+                  size="small"
+                />
+                <Button
+                  label="3 días"
+                  @click="changeView('timeGrid3Days')"
+                  :severity="currentView === 'timeGrid3Days' ? 'info' : 'secondary'"
+                  :outlined="currentView !== 'timeGrid3Days'"
+                  size="small"
+                />
+                <Button
+                  label="Semana"
+                  @click="changeView('timeGridWeek')"
+                  :severity="currentView === 'timeGridWeek' ? 'info' : 'secondary'"
+                  :outlined="currentView !== 'timeGridWeek'"
+                  size="small"
+                />
+              </div>
+
+              <!-- Navigation -->
+              <div class="week-navigation">
+                <Button
+                  icon="pi pi-chevron-left"
+                  @click="previousPeriod"
+                  severity="secondary"
+                  outlined
+                />
+                <span class="current-week">{{ currentPeriodLabel }}</span>
+                <Button
+                  icon="pi pi-chevron-right"
+                  @click="nextPeriod"
+                  severity="secondary"
+                  outlined
+                />
+                <Button label="Hoy" @click="goToToday" severity="info" outlined class="ml-3" />
+              </div>
+            </div>
             <FullCalendar ref="calendarRef" :options="calendarOptions" />
           </template>
         </Card>
@@ -139,6 +132,10 @@
   import Dropdown from 'primevue/dropdown'
   import ProgressSpinner from 'primevue/progressspinner'
   import { ref, computed, onMounted } from 'vue'
+  import Accordion from 'primevue/accordion'
+  import AccordionPanel from 'primevue/accordionpanel'
+  import AccordionHeader from 'primevue/accordionheader'
+  import AccordionContent from 'primevue/accordioncontent'
 
   // Composables
   const {
@@ -358,10 +355,6 @@
     border-radius: 0.5rem;
   }
 
-  .header-content {
-    flex: 1;
-  }
-
   .view-title {
     font-size: 1.75rem;
     font-weight: 600;
@@ -392,7 +385,9 @@
   .view-controls {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1.5rem;
+    margin-bottom: 1rem;
   }
 
   .view-selector {
@@ -428,12 +423,12 @@
     flex: 1;
     display: flex;
     gap: 1.5rem;
-    padding: 1.5rem 0 2rem;
     overflow: hidden;
+    flex-direction: column;
   }
 
   .filters-sidebar {
-    width: 300px;
+    width: 100%;
     flex-shrink: 0;
   }
 

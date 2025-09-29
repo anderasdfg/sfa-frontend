@@ -137,7 +137,11 @@
   }
 
   .welcome-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(
+      135deg,
+      var(--color-sf-green-light) 0%,
+      var(--color-sf-green-normal) 100%
+    );
     color: white;
     padding: 2rem;
     border-radius: 12px;

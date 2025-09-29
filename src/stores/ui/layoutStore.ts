@@ -5,7 +5,6 @@ export const useLayoutStore = defineStore('layout', () => {
   // State
   const sidebarVisible = ref(false)
   const loading = ref(false)
-  const theme = ref<'light' | 'dark'>('light')
   const scale = ref(14) // Escala de fuente
 
   // Actions
@@ -21,23 +20,6 @@ export const useLayoutStore = defineStore('layout', () => {
     loading.value = isLoading
   }
 
-  const toggleTheme = () => {
-    theme.value = theme.value === 'light' ? 'dark' : 'light'
-
-    // Aplicar tema al documento
-    const element = document.querySelector('html')
-    if (element) {
-      if (theme.value === 'dark') {
-        element.classList.add('dark-mode')
-      } else {
-        element.classList.remove('dark-mode')
-      }
-    }
-
-    // Guardar en localStorage
-    localStorage.setItem('theme', theme.value)
-  }
-
   const setScale = (newScale: number) => {
     scale.value = newScale
     document.documentElement.style.fontSize = newScale + 'px'
@@ -45,15 +27,9 @@ export const useLayoutStore = defineStore('layout', () => {
   }
 
   const initializeLayout = () => {
-    // Cargar tema guardado
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
-    if (savedTheme) {
-      theme.value = savedTheme
-      const element = document.querySelector('html')
-      if (element && savedTheme === 'dark') {
-        element.classList.add('dark-mode')
-      }
-    }
+    // Asegurar que no haya tema oscuro
+    const element = document.documentElement
+    element.classList.remove('dark-mode')
 
     // Cargar escala guardada
     const savedScale = localStorage.getItem('scale')
@@ -69,14 +45,12 @@ export const useLayoutStore = defineStore('layout', () => {
     // State
     sidebarVisible,
     loading,
-    theme,
     scale,
 
     // Actions
     toggleSidebar,
     setSidebarVisible,
     setLoading,
-    toggleTheme,
     setScale,
     initializeLayout,
   }

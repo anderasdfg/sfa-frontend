@@ -168,7 +168,7 @@
           {
             label: 'Asignación de turnos',
             icon: 'pi pi-clock',
-            command: () => router.push('/admin/schedules')
+            command: () => router.push('/admin/schedule-availability')
           },
           {
             label: 'Reprogramaciones',
