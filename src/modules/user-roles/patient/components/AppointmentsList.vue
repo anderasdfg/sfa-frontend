@@ -68,7 +68,7 @@
     scheduleButtonText: 'Agendar mi primera cita'
   })
 
-  const emit = defineEmits<{
+  defineEmits<{
     (e: 'schedule-appointment'): void
   }>()
 
@@ -102,11 +102,12 @@
     try {
       processingPayment.value = appointment.id
       const success = await paymentsComposable.createAndRedirectToPayment(appointment)
-      
+
       if (!success) {
         notifications.showError(
           'Error en el pago',
-          paymentsComposable.error.value || 'No se pudo procesar el pago. Por favor, intente nuevamente.'
+          paymentsComposable.error.value ||
+            'No se pudo procesar el pago. Por favor, intente nuevamente.'
         )
       }
     } catch (error) {
@@ -147,13 +148,13 @@
       box-shadow 0.2s;
     gap: 1rem;
   }
-  
+
   .status-container {
     display: flex;
     align-items: center;
     gap: 0.75rem;
   }
-  
+
   .status-tag {
     margin-right: 0.5rem;
   }
