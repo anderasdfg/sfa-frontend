@@ -4,8 +4,8 @@
     <div class="welcome-section mb-6">
       <div class="flex justify-between items-start">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">¡Bienvenido, {{ userFullName }}!</h1>
-          <p class="text-gray-600">
+          <h1 class="text-3xl font-bold text-white mb-2">¡Bienvenido, {{ userFullName }}!</h1>
+          <p class="text-white">
             {{ welcomeMessage }}
           </p>
         </div>
@@ -53,38 +53,25 @@
           </div>
         </template>
         <template #content>
-          <div v-if="myAppointments.length > 0" class="appointments-list">
-            <div
-              v-for="appointment in myAppointments"
-              :key="appointment.id"
-              class="appointment-item"
-            >
-              <div class="appointment-time">
-                {{ formatTime(appointment.appointment_date) }}
-              </div>
-              <div class="appointment-details">
-                <div class="appointment-doctor">Dr. {{ appointment.doctor_name }}</div>
-                <div class="appointment-specialty">
-                  {{ appointment.specialty }}
-                </div>
-              </div>
-              <div class="appointment-status">
-                <Tag
-                  :value="getStatusLabel(appointment.status)"
-                  :severity="getStatusSeverity(appointment.status)"
-                />
-              </div>
-            </div>
+          <div v-if="loadingAppointments" class="text-center p-4">
+            <i class="pi pi-spin pi-spinner text-2xl"></i>
+            <p class="mt-2">Cargando citas...</p>
           </div>
-          <div v-else class="empty-state">
-            <i class="pi pi-calendar text-4xl text-gray-300 mb-3"></i>
-            <p class="text-gray-500">No tienes citas programadas</p>
-            <Button
-              label="Agendar mi primera cita"
-              class="mt-3"
-              @click="navigateToNewAppointment"
+          <div v-else-if="appointmentsError" class="text-center p-4 text-red-500">
+            <i class="pi pi-exclamation-triangle text-2xl"></i>
+            <p class="mt-2">{{ appointmentsError }}</p>
+            <Button 
+              label="Reintentar" 
+              icon="pi pi-refresh" 
+              class="p-button-text p-button-sm mt-2" 
+              @click="loadPatientData" 
             />
           </div>
+          <AppointmentsList
+            v-else
+            :appointments="myAppointments"
+            @schedule-appointment="navigateToNewAppointment"
+          />
         </template>
       </Card>
 
@@ -123,18 +110,26 @@
   import { useRouter } from 'vue-router'
   import Card from 'primevue/card'
   import Button from 'primevue/button'
-  import Tag from 'primevue/tag'
+  import AppointmentsList from '../components/AppointmentsList.vue'
   import { useAuthStore } from '@/stores/auth/authStore'
-  import { formatTime, formatDate } from '@/shared/lib/formatters'
-  import { AppointmentStatus } from '@/types/enums'
+  import { formatDate } from '@/shared/lib/formatters'
+  import { formatTime } from '@/utils/appointment.utils'
+  import { usePatientAppointments } from '../composables/usePatientAppointments'
 
   const router = useRouter()
   const authStore = useAuthStore()
 
+  // Composable for appointments
+  const { 
+    appointments: myAppointments, 
+    loading: loadingAppointments, 
+    error: appointmentsError, 
+    fetchPatientAppointments 
+  } = usePatientAppointments()
+
   // Reactive data
   const currentTime = ref('')
   const currentDate = ref('')
-  const myAppointments = ref<any[]>([])
 
   // Computed properties
   const userFullName = computed(() => authStore.getUserFullName)
@@ -148,29 +143,73 @@
     return `${greeting}. Gestiona tus citas y consulta tu historial médico.`
   })
 
-  const quickStats = computed(() => [
-    {
-      key: 'next-appointment',
-      icon: 'pi pi-calendar',
-      iconClass: 'bg-blue-100 text-blue-600',
-      label: 'Próxima Cita',
-      value: myAppointments.value.length > 0 ? 'Hoy 10:30' : 'Sin citas'
-    },
-    {
-      key: 'total-appointments',
-      icon: 'pi pi-clock',
-      iconClass: 'bg-green-100 text-green-600',
-      label: 'Citas Este Mes',
-      value: '3'
-    },
-    {
-      key: 'medical-records',
-      icon: 'pi pi-file',
-      iconClass: 'bg-purple-100 text-purple-600',
-      label: 'Consultas Realizadas',
-      value: '12'
+  const quickStats = computed(() => {
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    
+    // Get upcoming appointments (future or today)
+    const upcomingAppointments = myAppointments.value.filter(apt => {
+      const aptDate = new Date(apt.slot?.scheduled_at || apt.appointment_date)
+      return aptDate >= new Date(now.setHours(0, 0, 0, 0))
+    })
+    
+    // Get appointments for current month
+    const monthlyAppointments = myAppointments.value.filter(apt => {
+      const aptDate = new Date(apt.slot?.scheduled_at || apt.appointment_date)
+      return aptDate.getMonth() === currentMonth && 
+             aptDate.getFullYear() === currentYear
+    })
+    
+    // Get completed appointments (assuming status 'completed' or 'pagada')
+    const completedAppointments = myAppointments.value.filter(apt => 
+      ['completed', 'completada', 'pagada'].includes(apt.status?.toLowerCase())
+    )
+    
+    // Format next appointment
+    const nextAppointment = upcomingAppointments.length > 0 
+      ? upcomingAppointments[0]
+      : null
+      
+    const formatNextAppointment = () => {
+      if (!nextAppointment) return 'Sin citas'
+      
+      const aptDate = new Date(nextAppointment.slot?.scheduled_at || nextAppointment.appointment_date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      const isToday = aptDate >= today && 
+                     aptDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      
+      return isToday 
+        ? `Hoy ${formatTime(aptDate)}`
+        : `${aptDate.getDate()}/${aptDate.getMonth() + 1} ${formatTime(aptDate)}`
     }
-  ])
+    
+    return [
+      {
+        key: 'next-appointment',
+        icon: 'pi pi-calendar',
+        iconClass: 'bg-blue-100 text-blue-600',
+        label: 'Próxima Cita',
+        value: formatNextAppointment()
+      },
+      {
+        key: 'total-appointments',
+        icon: 'pi pi-clock',
+        iconClass: 'bg-green-100 text-green-600',
+        label: 'Citas Este Mes',
+        value: monthlyAppointments.length.toString()
+      },
+      {
+        key: 'medical-records',
+        icon: 'pi pi-check-circle',
+        iconClass: 'bg-purple-100 text-purple-600',
+        label: 'Consultas Realizadas',
+        value: completedAppointments.length.toString()
+      }
+    ]
+  })
 
   // Methods
   const updateTime = () => {
@@ -178,34 +217,13 @@
     currentTime.value = formatTime(now)
     currentDate.value = formatDate(now, {
       weekday: 'long',
-      year: 'numeric',
       month: 'long',
       day: 'numeric'
     })
   }
 
-  const getStatusLabel = (status: string): string => {
-    const labels: Record<string, string> = {
-      [AppointmentStatus.RESERVADA]: 'Reservada',
-      confirmada: 'Confirmada',
-      [AppointmentStatus.REALIZADA]: 'Completada',
-      [AppointmentStatus.CANCELADA]: 'Cancelada'
-    }
-    return labels[status] || status
-  }
-
-  const getStatusSeverity = (status: string): string => {
-    const severities: Record<string, string> = {
-      [AppointmentStatus.RESERVADA]: 'info',
-      confirmada: 'success',
-      [AppointmentStatus.REALIZADA]: 'success',
-      [AppointmentStatus.CANCELADA]: 'danger'
-    }
-    return severities[status] || 'info'
-  }
-
   const navigateToNewAppointment = () => {
-    router.push('/appointment-booking')
+    router.push('/appointments/new')
   }
 
   const navigateToMedicalHistory = () => {
@@ -217,25 +235,20 @@
   }
 
   const loadPatientData = async () => {
-    // Simular carga de datos del paciente
-    myAppointments.value = [
-      {
-        id: 1,
-        doctor_name: 'García',
-        specialty: 'Cardiología',
-        appointment_date: new Date(2025, 8, 24, 10, 30),
-        status: 'confirmada'
-      }
-    ]
+    await fetchPatientAppointments()
   }
 
   // Lifecycle
-  let timeInterval: NodeJS.Timeout
+  let timeInterval: NodeJS.Timeout | undefined
 
   onMounted(async () => {
     updateTime()
     timeInterval = setInterval(updateTime, 1000)
-    await loadPatientData()
+    try {
+      await loadPatientData()
+    } catch (error) {
+      console.error('Error loading patient data:', error)
+    }
   })
 
   onUnmounted(() => {
@@ -253,9 +266,13 @@
 
   .welcome-section {
     padding: 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 0.75rem;
     color: white;
+    background: linear-gradient(
+      135deg,
+      var(--color-sf-green-light) 0%,
+      var(--color-sf-green-normal) 100%
+    );
   }
 
   .stats-grid {

@@ -7,6 +7,7 @@ export interface Appointment {
   id: number
   patient_id: number
   doctor_id: number
+  doctor_name?: string
   slot_id: number
   appointment_date: string
   status: AppointmentStatus
@@ -19,12 +20,14 @@ export interface Appointment {
 }
 
 export interface AppointmentQueryParams {
-  patient_id: number
-  doctor_id: number
-  status: AppointmentStatus
-  modality: AppointmentModality
-  date_from: string
-  date_to: string
+  patient_id?: number
+  doctor_id?: number
+  status?: AppointmentStatus
+  modality?: AppointmentModality
+  date_from?: string
+  date_to?: string
+  limit?: number
+  offset?: number
 }
 
 export interface AppointmentCreateRequest {

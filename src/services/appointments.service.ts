@@ -12,7 +12,7 @@ export class AppointmentService {
   /** Obtiene las citas médicas */
   static async getAppointments(
     appointmentQueryParams: AppointmentQueryParams
-  ): Promise<Appointment[]> {
+  ): Promise<{ success: boolean; data: Appointment[]; message?: string }> {
     try {
       const response = await apiClient.get(this.BASE_PATH, { params: appointmentQueryParams })
       return response.data
@@ -28,7 +28,7 @@ export class AppointmentService {
       console.log('🚀 Sending appointment to API:', appointment)
       const response = await apiClient.post<AppointmentCreateResponse>(this.BASE_PATH, appointment)
       console.log('📥 API Response:', response.data)
-      
+
       // El API devuelve { success, data, message }, necesitamos solo data
       if (response.data.success && response.data.data) {
         console.log('✅ Extracted appointment data:', response.data.data)
@@ -46,7 +46,7 @@ export class AppointmentService {
   static async getAppointmentById(id: number): Promise<Appointment> {
     try {
       const response = await apiClient.get<AppointmentCreateResponse>(`${this.BASE_PATH}/${id}`)
-      
+
       // El API devuelve { success, data, message }, necesitamos solo data
       if (response.data.success && response.data.data) {
         return response.data.data
