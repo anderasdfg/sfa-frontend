@@ -83,11 +83,11 @@
           </template>
         </Card>
 
-        <!-- Current Session Diagnoses List -->
-        <div class="current-diagnoses-section">
+        <!-- Current Session Diagnosis List -->
+        <div class="current-diagnosis-section">
           <h4 class="list-title">
             Diagnósticos de esta consulta
-            <Tag :value="currentSessionDiagnoses.length.toString()" severity="info" />
+            <Tag :value="currentSessionDiagnosis.length.toString()" severity="info" />
           </h4>
 
           <div v-if="loading" class="loading-state">
@@ -98,17 +98,17 @@
           <div v-else-if="error" class="error-state">
             <i class="pi pi-exclamation-triangle text-red-500"></i>
             <p class="text-red-600">{{ error }}</p>
-            <Button label="Reintentar" size="small" @click="loadDiagnoses" />
+            <Button label="Reintentar" size="small" @click="loadDiagnosis" />
           </div>
 
-          <div v-else-if="currentSessionDiagnoses.length === 0" class="empty-state">
+          <div v-else-if="currentSessionDiagnosis.length === 0" class="empty-state">
             <i class="pi pi-file-plus text-4xl text-gray-300"></i>
             <p class="text-gray-500 mt-2">No hay diagnósticos registrados en esta consulta</p>
           </div>
 
-          <div v-else class="diagnoses-list">
+          <div v-else class="diagnosis-list">
             <div
-              v-for="diagnosis in currentSessionDiagnoses"
+              v-for="diagnosis in currentSessionDiagnosis"
               :key="diagnosis.id"
               class="diagnosis-item"
             >
@@ -146,7 +146,7 @@
         </div>
       </div>
 
-      <!-- Right Column - Previous Diagnoses History -->
+      <!-- Right Column - Previous Diagnosis History -->
       <div class="diagnosis-sidebar">
         <Card class="history-card">
           <template #header>
@@ -160,7 +160,7 @@
                 text
                 rounded
                 size="small"
-                @click="loadPreviousDiagnoses"
+                @click="loadPreviousDiagnosis"
                 v-tooltip="'Actualizar'"
               />
             </div>
@@ -170,13 +170,13 @@
               <ProgressSpinner style="width: 30px; height: 30px" />
             </div>
 
-            <div v-else-if="previousDiagnoses.length === 0" class="empty-state-small">
+            <div v-else-if="previousDiagnosis.length === 0" class="empty-state-small">
               <i class="pi pi-inbox text-2xl text-gray-300"></i>
               <p class="text-gray-500 text-sm mt-2">Sin diagnósticos previos</p>
             </div>
 
             <div v-else class="history-list">
-              <div v-for="diagnosis in previousDiagnoses" :key="diagnosis.id" class="history-item">
+              <div v-for="diagnosis in previousDiagnosis" :key="diagnosis.id" class="history-item">
                 <div class="history-item-date">
                   <i class="pi pi-calendar text-xs"></i>
                   <span>Consulta anterior</span>
@@ -249,7 +249,7 @@
 
   // Composable
   const {
-    diagnoses,
+    diagnosis,
     loading,
     error,
     savingDiagnosis,
@@ -257,7 +257,7 @@
     createDiagnosis,
     updateDiagnosis,
     deleteDiagnosis,
-    fetchDiagnosesByConsultation
+    fetchDiagnosisByConsultation
   } = useDiagnosis()
 
   // Form State
@@ -281,12 +281,12 @@
 
   // Mock CIE-10 data - En producción esto vendría de un servicio
   const mockCIE10Data = [
-    { code: 'J00', description: 'Rinofaringitis aguda [resfriado común]' },
-    { code: 'J06.9', description: 'Infección aguda de las vías respiratorias superiores' },
-    { code: 'A09', description: 'Diarrea y gastroenteritis de presunto origen infeccioso' },
-    { code: 'I10', description: 'Hipertensión esencial (primaria)' },
-    { code: 'E11', description: 'Diabetes mellitus no insulinodependiente' },
-    { code: 'K29.7', description: 'Gastritis, no especificada' }
+    { id: 1, code: 'J00', description: 'Rinofaringitis aguda [resfriado común]' },
+    { id: 2, code: 'J06.9', description: 'Infección aguda de las vías respiratorias superiores' },
+    { id: 3, code: 'A09', description: 'Diarrea y gastroenteritis de presunto origen infeccioso' },
+    { id: 4, code: 'I10', description: 'Hipertensión esencial (primaria)' },
+    { id: 5, code: 'E11', description: 'Diabetes mellitus no insulinodependiente' },
+    { id: 6, code: 'K29.7', description: 'Gastritis, no especificada' }
   ]
 
   const searchCIE10 = (event: { query: string }) => {
@@ -304,11 +304,11 @@
 
   // History State
   const loadingHistory = ref(false)
-  const previousDiagnoses = ref<Diagnosis[]>([])
+  const previousDiagnosis = ref<Diagnosis[]>([])
 
   // Computed
-  const currentSessionDiagnoses = computed(() => {
-    return diagnoses.value.filter(d => d.consultation_id === props.consultationId)
+  const currentSessionDiagnosis = computed(() => {
+    return diagnosis.value.filter(d => d.consultation_id === props.consultationId)
   })
 
   // Methods
@@ -332,10 +332,7 @@
 
     const diagnosisData = {
       consultation_id: props.consultationId,
-      cie10_code:
-        typeof formData.value.cie10_code === 'string'
-          ? formData.value.cie10_code
-          : formData.value.cie10_code.code,
+      cie10_code: formData.value.cie10_code,
       description: formData.value.description,
       diagnosis_type: formData.value.diagnosis_type
     }
@@ -385,23 +382,23 @@
     editingDiagnosis.value = null
   }
 
-  const loadDiagnoses = async () => {
-    await fetchDiagnosesByConsultation(props.consultationId)
+  const loadDiagnosis = async () => {
+    await fetchDiagnosisByConsultation(props.consultationId)
   }
 
-  const loadPreviousDiagnoses = async () => {
+  const loadPreviousDiagnosis = async () => {
     loadingHistory.value = true
     // TODO: Implementar carga de diagnósticos previos del paciente
     // Por ahora mock data
     setTimeout(() => {
-      previousDiagnoses.value = []
+      previousDiagnosis.value = []
       loadingHistory.value = false
     }, 1000)
   }
 
   onMounted(() => {
-    loadDiagnoses()
-    loadPreviousDiagnoses()
+    loadDiagnosis()
+    loadPreviousDiagnosis()
   })
 </script>
 
@@ -487,8 +484,8 @@
     border-top: 1px solid #e5e7eb;
   }
 
-  /* Current Diagnoses List */
-  .current-diagnoses-section {
+  /* Current Diagnosis List */
+  .current-diagnosis-section {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -505,7 +502,7 @@
     gap: 0.5rem;
   }
 
-  .diagnoses-list {
+  .diagnosis-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;

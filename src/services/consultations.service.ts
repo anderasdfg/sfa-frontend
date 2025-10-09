@@ -9,7 +9,7 @@ export class ConsultationService {
   static async getConsultations(params?: { appointment_id?: number }): Promise<Consultation[]> {
     try {
       const response = await apiClient.get(this.BASE_PATH, { params })
-      return response.data
+      return response.data.data || []
     } catch (error) {
       console.error('Error fetching consultations:', error)
       throw new Error('No se pudieron cargar las consultas')

@@ -1,10 +1,10 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import {
   complaintsToString,
   stringToComplaints,
   searchComplaints as searchComplaintsData
 } from '../data/complaints.data'
-import { useConsultation } from '@/core/composables/useConsultation'
+import { useConsultationStore } from '@/stores/consultation/consultationStore'
 
 export function useAnamnesis() {
   // State
@@ -13,7 +13,7 @@ export function useAnamnesis() {
   const searchQuery = ref('')
   const suggestions = ref<string[]>([])
 
-  const { completeAnamnesis } = useConsultation()
+  const { completeAnamnesis, currentConsultation } = useConsultationStore()
 
   // Computed
   const hasComplaints = computed(() => selectedComplaints.value.length > 0)
@@ -105,6 +105,12 @@ export function useAnamnesis() {
   const isComplaintSelected = (complaint: string): boolean => {
     return selectedComplaints.value.includes(complaint)
   }
+
+  watchEffect(() => {
+    if (currentConsultation?.chief_complaint) {
+      loadComplaintsFromString(currentConsultation.chief_complaint)
+    }
+  })
 
   return {
     // State

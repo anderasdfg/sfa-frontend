@@ -1,7 +1,6 @@
 <template>
   <div class="anamnesis-tab">
     <div class="anamnesis-layout">
-      <!-- Left Column - Complaints Selection -->
       <div class="complaints-section">
         <Card>
           <template #header>
@@ -82,7 +81,6 @@
         </Card>
       </div>
 
-      <!-- Right Column - Suggestions Templates -->
       <div class="suggestions-section">
         <Card class="suggestions-card">
           <template #header>
@@ -174,10 +172,9 @@
       </div>
     </div>
 
-    <!-- Save Button -->
     <div class="save-section">
       <Button
-        label="Guardar Quejas"
+        label="Siguiente"
         icon="pi pi-save"
         @click="handleSave"
         :disabled="!hasComplaints"
@@ -188,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, inject } from 'vue'
   import Card from 'primevue/card'
   import Button from 'primevue/button'
   import AutoComplete from 'primevue/autocomplete'
@@ -202,7 +199,9 @@
     consultationId: number
   }
 
-  const props = defineProps<Props>()
+  defineProps<Props>()
+
+  const emit = defineEmits(['next-tab'])
 
   // Composable
   const {
@@ -210,7 +209,6 @@
     customComplaint,
     suggestions,
     hasComplaints,
-    complaintsAsString,
     addComplaint,
     removeComplaint,
     clearComplaints,
@@ -264,11 +262,8 @@
     saving.value = true
 
     try {
-      const complaintsString = complaintsAsString.value
-      console.log('Saving complaints:', complaintsString)
-      console.log('Consultation ID:', props.consultationId)
-
       saveComplaints()
+      emit('next-tab', 'diagnosis')
     } catch (error) {
       console.error('Error saving complaints:', error)
     } finally {

@@ -137,7 +137,7 @@
   import { usePatients } from '@/core/composables/usePatients'
   import type { Appointment } from '@/types/appointments.types'
   import type { AppointmentStatus } from '@/types/enums'
-  import { useConsultation } from '@/core/composables/useConsultation'
+  import { useConsultationStore } from '@/stores/consultation/consultationStore'
 
   const router = useRouter()
   const route = useRoute()
@@ -159,7 +159,8 @@
     loading: patientLoading
   } = usePatients()
 
-  const { startConsultation } = useConsultation()
+  //const { startConsultation } = useConsultation()
+  const { startConsultationFlow } = useConsultationStore()
 
   // Cargar paciente cuando tengamos el appointment
   watch(
@@ -215,18 +216,34 @@
 
   const startConsultationProcess = async () => {
     try {
-      // Crear la consulta con el appointment_id
-      const consultation = await startConsultation(appointmentId.value)
+      startingConsultation.value = true
+      error.value = null
+
+      // 1️⃣ Intentar obtener la consulta existente por el ID del appointment
+      console.log(
+        '1️⃣ Intentar obtener la consulta existente por el ID del appointment',
+        appointmentId.value
+      )
+      const consultation = await startConsultationFlow(appointmentId.value)
+      console.log('consultation', consultation)
 
       if (consultation) {
-        // Navegar a la pantalla de consulta médica
+        // Ya existe → redirigir directamente
+        console.log('Consulta en curso, redirigiremos', consultation)
+        router.push(`/consultation/${appointmentId.value}`)
+        return
+      }
+    } catch (err: any) {
+      console.error('Error starting consultation:', err)
+
+      // 3️⃣ Manejo del error específico que te devuelve el backend
+      if (err?.response?.data?.error?.includes('Ya existe una consulta asociada')) {
         router.push(`/consultation/${appointmentId.value}`)
       } else {
-        error.value = 'No se pudo iniciar la consulta'
+        error.value = 'Ocurrió un error al iniciar la consulta'
       }
-    } catch (err) {
-      console.error('Error starting consultation:', err)
-      error.value = 'Ocurrió un error al iniciar la consulta'
+    } finally {
+      startingConsultation.value = false
     }
   }
 

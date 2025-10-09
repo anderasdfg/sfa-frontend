@@ -98,8 +98,12 @@
 
         <!-- Anamnesis -->
         <div v-if="activeTab === 'anamnesis'" class="tab-panel">
-          <h2 class="tab-title">Anamnesis</h2>
-          <p class="text-gray-500">Contenido de Anamnesis</p>
+          <AnamnesisTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="activeTab = $event"
+          />
         </div>
 
         <!-- Historial -->
@@ -150,6 +154,8 @@
   import type { Appointment } from '@/types/appointments.types'
   import DiagnosisTab from '../components/DiagnosisTab.vue'
   import { usePatients } from '@/core/composables/usePatients'
+  import { useConsultationStore } from '@/stores/consultation/consultationStore'
+  import AnamnesisTab from '../components/AnamnesisTab.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -158,14 +164,15 @@
   const loading = ref(false)
   const error = ref<string | null>(null)
   const activeTab = ref('anamnesis')
-  const { patientFullName, patientAge, patientGender, patientDocument } = usePatients()
+  const { patientFullName, patientAge, patientGender, patientDocument, patient } = usePatients()
+  const { currentConsultation } = useConsultationStore()
 
   const appointmentId = computed(() => Number(route.params.id))
 
   const tabs = [
     /* { id: 'vitals', label: 'Signos Vitales', icon: 'pi pi-heart' }, */
     { id: 'anamnesis', label: 'Anamnesis', icon: 'pi pi-file-edit' },
-    { id: 'history', label: 'Historial', icon: 'pi pi-history' },
+    /*  { id: 'history', label: 'Historial', icon: 'pi pi-history' }, */
     { id: 'diagnosis', label: 'Diagnóstico', icon: 'pi pi-search' },
     { id: 'indications', label: 'Indicaciones', icon: 'pi pi-list' },
     { id: 'auxiliary', label: 'Exámenes Auxiliares', icon: 'pi pi-flask' },

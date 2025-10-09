@@ -33,7 +33,7 @@ export class DiagnosisService {
    * @param params - Parámetros de filtrado
    * @returns Lista de diagnósticos
    */
-  static async getDiagnoses(params?: DiagnosisQueryParams): Promise<Diagnosis[]> {
+  static async getDiagnosis(params?: DiagnosisQueryParams): Promise<Diagnosis[]> {
     try {
       const response = await apiClient.get<DiagnosisResponse>(this.BASE_PATH, { params })
 
@@ -43,7 +43,7 @@ export class DiagnosisService {
 
       throw new Error(response.data.message || 'Error en la respuesta del API')
     } catch (error) {
-      console.error('Error fetching diagnoses:', error)
+      console.error('Error fetching diagnosis:', error)
       throw new Error('No se pudieron cargar los diagnósticos')
     }
   }
@@ -53,10 +53,10 @@ export class DiagnosisService {
    * @param consultationId - ID de la consulta
    * @returns Lista de diagnósticos de la consulta
    */
-  static async getDiagnosesByConsultation(consultationId: number): Promise<Diagnosis[]> {
+  static async getDiagnosisByConsultation(consultationId: number): Promise<Diagnosis[]> {
     try {
       const response = await apiClient.get<DiagnosisResponse>(
-        `${this.BASE_PATH}/consultation/${consultationId}`
+        `${this.BASE_PATH}?consultation_id=${consultationId}`
       )
 
       if (response.data.success && Array.isArray(response.data.data)) {
@@ -65,7 +65,7 @@ export class DiagnosisService {
 
       throw new Error(response.data.message || 'Error en la respuesta del API')
     } catch (error) {
-      console.error('Error fetching diagnoses by consultation:', error)
+      console.error('Error fetching diagnosis by consultation:', error)
       throw new Error('No se pudieron cargar los diagnósticos de la consulta')
     }
   }
@@ -116,10 +116,7 @@ export class DiagnosisService {
    * @param diagnosis - Datos a actualizar
    * @returns Diagnóstico actualizado
    */
-  static async updateDiagnosis(
-    id: number,
-    diagnosis: UpdateDiagnosisRequest
-  ): Promise<Diagnosis> {
+  static async updateDiagnosis(id: number, diagnosis: UpdateDiagnosisRequest): Promise<Diagnosis> {
     try {
       const response = await apiClient.put<DiagnosisResponse>(`${this.BASE_PATH}/${id}`, diagnosis)
 
