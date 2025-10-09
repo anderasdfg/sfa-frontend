@@ -170,7 +170,7 @@
   const loading = ref(false)
   const error = ref<string | null>(null)
   const activeTab = ref('anamnesis')
-  const { patientFullName, patientAge, patientGender, patientDocument, patient } = usePatients()
+  const { patientFullName, patientAge, patientGender, patientDocument, patient, fetchPatient } = usePatients()
   const consultationStore = useConsultationStore()
 
   // Usar computed para mantener reactividad
@@ -204,6 +204,11 @@
     try {
       const appointmentData = await AppointmentService.getAppointmentById(appointmentId.value)
       appointment.value = appointmentData
+
+      // Cargar información del paciente
+      if (appointmentData?.patient_id) {
+        await fetchPatient(appointmentData.patient_id)
+      }
     } catch (err) {
       console.error('Error fetching appointment:', err)
       error.value = 'No se pudo cargar la información de la cita. Por favor, intente nuevamente.'
