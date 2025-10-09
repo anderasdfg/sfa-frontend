@@ -5,7 +5,8 @@ export enum AppointmentStatus {
   RESERVADA = 'reservada',
   PAGADA = 'pagada',
   REALIZADA = 'realizada',
-  CANCELADA = 'cancelada'
+  CANCELADA = 'cancelada',
+  CONFIRMADA = 'confirmada'
 }
 
 /**

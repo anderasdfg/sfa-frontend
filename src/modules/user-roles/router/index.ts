@@ -9,6 +9,9 @@ const DoctorDashboard = () => import('../doctor/views/DoctorDashboard.vue')
 const AdminDashboard = () => import('../admin/views/AdminDashboard.vue')
 const ReceptionistDashboard = () => import('../receptionist/views/ReceptionistDashboard.vue')
 
+// Doctor specific views
+const AppointmentPreparation = () => import('../doctor/views/AppointmentPreparation.vue')
+
 const userRolesRoutes: RouteRecordRaw[] = [
   // Ruta de redirección para dashboard
   {
@@ -49,6 +52,22 @@ const userRolesRoutes: RouteRecordRaw[] = [
       {
         path: '',
         component: DoctorDashboard
+      }
+    ]
+  },
+  {
+    path: '/appointments/:id/prepare',
+    name: 'AppointmentPreparation',
+    component: MainLayout,
+    meta: {
+      requiresAuth: true,
+      roles: ['doctor'],
+      title: 'Preparación de Consulta'
+    },
+    children: [
+      {
+        path: '',
+        component: AppointmentPreparation
       }
     ]
   },

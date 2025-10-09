@@ -112,8 +112,7 @@
   import Button from 'primevue/button'
   import AppointmentsList from '../components/AppointmentsList.vue'
   import { useAuthStore } from '@/stores/auth/authStore'
-  import { formatDate } from '@/shared/lib/formatters'
-  import { formatTime } from '@/utils/appointment.utils'
+  import { formatDate, formatTime } from '@/shared/lib/formatters'
   import { usePatientAppointments } from '../composables/usePatientAppointments'
 
   const router = useRouter()

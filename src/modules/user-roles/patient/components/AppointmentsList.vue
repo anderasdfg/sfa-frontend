@@ -52,7 +52,8 @@
   import Button from 'primevue/button'
   import { usePayments } from '@/modules/appointment-system/composables/usePayments'
   import { useNotifications } from '@/composables/useNotifications'
-  import { formatTime, getDoctorName, getSpecialty, formatDate } from '@/utils/appointment.utils'
+  import { formatTime } from '@/shared/lib/formatters'
+  import { getDoctorName, getSpecialty, formatDate } from '@/utils/appointment.utils'
 
   interface Props {
     appointments: Appointment[]

@@ -2,6 +2,10 @@ import type { RouteRecordRaw } from 'vue-router'
 
 // Layouts
 const MainLayout = () => import('@/core/layouts/MainLayout.vue')
+const ConsultationLayout = () => import('@/core/layouts/ConsultationLayout.vue')
+
+// Views
+const MedicalConsultation = () => import('../views/MedicalConsultation.vue')
 
 const medicalRecordsRoutes: RouteRecordRaw[] = [
   // Rutas de historiales médicos
@@ -26,6 +30,23 @@ const medicalRecordsRoutes: RouteRecordRaw[] = [
       //   component: () => import('../views/CreateMedicalRecord.vue'),
       //   props: true
       // }
+    ]
+  },
+  // Consulta médica (sin sidebar, full width)
+  {
+    path: '/consultation/:id',
+    name: 'MedicalConsultation',
+    component: ConsultationLayout,
+    meta: {
+      requiresAuth: true,
+      roles: ['doctor'],
+      title: 'Consulta Médica'
+    },
+    children: [
+      {
+        path: '',
+        component: MedicalConsultation
+      }
     ]
   }
 ]

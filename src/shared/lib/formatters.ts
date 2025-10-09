@@ -15,11 +15,23 @@ export const formatDate = (date: Date, options?: Intl.DateTimeFormatOptions): st
   return new Intl.DateTimeFormat('es-ES', { ...defaultOptions, ...options }).format(date)
 }
 
-export const formatTime = (date: Date): string => {
-  return new Intl.DateTimeFormat('es-ES', {
+export const formatTime = (date: Date | string): string => {
+  // Si es string y tiene formato de hora (HH:MM:SS o HH:MM), extraerla directamente
+  if (typeof date === 'string') {
+    // Buscar patrón de hora en el string (ej: "2025-10-08T08:00:00" o "08:00:00")
+    const timeMatch = date.match(/T?(\d{2}):(\d{2})(?::\d{2})?/)
+    if (timeMatch) {
+      return `${timeMatch[1]}:${timeMatch[2]}`
+    }
+  }
+
+  // Fallback: convertir a Date y formatear
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return new Intl.DateTimeFormat('es-PE', {
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date)
+    hour12: false
+  }).format(dateObj)
 }
 
 export const formatDateTime = (date: Date): string => {

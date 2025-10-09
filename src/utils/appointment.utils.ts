@@ -20,33 +20,6 @@ export const formatDate = (dateInput: string | Date | undefined): string => {
   }
 }
 
-/**
- * Formatea una fecha en formato de hora (HH:MM)
- */
-export const formatTime = (dateInput: string | Date): string => {
-  if (!dateInput) return ''
-
-  try {
-    // Extract time directly from string if possible to avoid timezone issues
-    if (typeof dateInput === 'string') {
-      // Handle ISO format (e.g., 2025-10-02T16:00:00.000Z)
-      const timeMatch = dateInput.match(/T(\d{2}):(\d{2})/)
-      if (timeMatch) {
-        return `${timeMatch[1]}:${timeMatch[2]}`
-      }
-    }
-    
-    // Fallback to Date object if string parsing fails or if input is already a Date
-    const date = dateInput instanceof Date ? dateInput : new Date(dateInput)
-    const hours = String(date.getUTCHours()).padStart(2, '0')
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0')
-    return `${hours}:${minutes}`
-  } catch (e) {
-    console.error('Error formatting time:', dateInput, e)
-    return ''
-  }
-}
-
 export const getDoctorName = (appointment: any): string => {
   console.log('Appointment data:', JSON.parse(JSON.stringify(appointment)))
   

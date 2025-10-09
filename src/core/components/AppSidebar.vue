@@ -238,12 +238,12 @@
               label: 'Lista de Pacientes',
               icon: 'pi pi-list',
               command: () => router.push('/patients')
-            },
-            {
+            }
+            /*  {
               label: 'Nuevo Paciente',
               icon: 'pi pi-user-plus',
               command: () => router.push('/patients/new')
-            }
+            } */
           ]
         },
         {
@@ -269,7 +269,7 @@
     if (authStore.hasRole('doctor') && !authStore.hasRole('admin')) {
       items.push({
         label: 'Historial Médico',
-        icon: 'pi pi-file-medical',
+        icon: 'pi pi-file',
         command: () => router.push('/medical-records')
       })
     }
