@@ -30,6 +30,12 @@ export const useConsultationStore = defineStore('consultation', () => {
       })
       const consultation = consultations?.[0] ?? null
       currentConsultation.value = consultation
+
+      // Cargar diagnósticos si la consulta existe
+      if (consultation?.id) {
+        await fetchDiagnosisByConsultation(consultation.id)
+      }
+
       return consultation
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Error al cargar la consulta'
@@ -46,6 +52,11 @@ export const useConsultationStore = defineStore('consultation', () => {
       error.value = null
       const consultation = await ConsultationService.getConsultationById(id)
       currentConsultation.value = consultation
+
+      // Cargar diagnósticos
+      if (consultation?.id) {
+        await fetchDiagnosisByConsultation(consultation.id)
+      }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Error al cargar la consulta'
       console.error(err)
@@ -61,6 +72,12 @@ export const useConsultationStore = defineStore('consultation', () => {
       const consultationData: ConsultationCreateRequest = { appointment_id: appointmentId }
       const consultation = await ConsultationService.createConsultation(consultationData)
       currentConsultation.value = consultation
+
+      // Nueva consulta = no hay diagnósticos previos
+      if (currentConsultation.value) {
+        currentConsultation.value.diagnosis = []
+      }
+
       return consultation
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear la consulta'

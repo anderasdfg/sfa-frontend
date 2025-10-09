@@ -1,5 +1,5 @@
 // composables/useDiagnosis.ts
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { DiagnosisService } from '@/services/diagnosis.service'
 import { useConsultationStore } from '@/stores/consultation/consultationStore'
 import type { Diagnosis } from '@/types/diagnosis.types'
@@ -7,19 +7,24 @@ import type { Diagnosis } from '@/types/diagnosis.types'
 export function useDiagnosis() {
   const consultationStore = useConsultationStore()
 
-  const diagnosis = ref<Diagnosis[]>([])
+  // Usar el store como fuente única de verdad
+  const diagnosis = computed(() => consultationStore.currentConsultation?.diagnosis || [])
+
   const loading = ref(false)
   const savingDiagnosis = ref(false)
   const deletingDiagnosis = ref(false)
   const error = ref<string | null>(null)
 
-  const fetchDiagnosisByConsultation = async (consultationId: number) => {
+  const fetchDiagnosisByConsultation = async (consultationId: number, force = false) => {
+    // Si ya hay diagnósticos en el store y no se fuerza la recarga, no hacer fetch
+    if (!force && consultationStore.currentConsultation?.diagnosis?.length) {
+      return
+    }
+
     try {
       loading.value = true
       error.value = null
       const data = await DiagnosisService.getDiagnosisByConsultation(consultationId)
-      diagnosis.value = data
-      // Mantén sincronizado el store global (consultation actual)
       consultationStore.setCurrentConsultationDiagnosis(data)
     } catch (err: any) {
       error.value = err.message || 'Error cargando diagnósticos'
@@ -37,7 +42,6 @@ export function useDiagnosis() {
     try {
       savingDiagnosis.value = true
       const created = await DiagnosisService.createDiagnosis(payload)
-      diagnosis.value.push(created)
       consultationStore.addDiagnosisToCurrentConsultation(created)
     } catch (err: any) {
       console.error(err)
@@ -50,8 +54,6 @@ export function useDiagnosis() {
     try {
       savingDiagnosis.value = true
       const updated = await DiagnosisService.updateDiagnosis(id, payload)
-      const idx = diagnosis.value.findIndex(d => d.id === id)
-      if (idx !== -1) diagnosis.value[idx] = updated
       consultationStore.updateDiagnosisInCurrentConsultation(updated)
     } catch (err: any) {
       console.error(err)
@@ -64,7 +66,6 @@ export function useDiagnosis() {
     try {
       deletingDiagnosis.value = true
       await DiagnosisService.deleteDiagnosis(id)
-      diagnosis.value = diagnosis.value.filter(d => d.id !== id)
       consultationStore.removeDiagnosisFromCurrentConsultation(id)
       return true
     } catch (err: any) {
