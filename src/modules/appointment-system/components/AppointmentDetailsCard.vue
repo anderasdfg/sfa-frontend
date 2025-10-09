@@ -42,7 +42,7 @@
               {{ appointment.patient_data.first_name }} {{ appointment.patient_data.last_name }}
             </p>
             <p class="patient-document">
-              {{ appointment.patient_data.document_type }}:
+              {{ 'DNI' }}:
               {{ appointment.patient_data.document_number }}
             </p>
           </div>
@@ -173,7 +173,8 @@
       reservada: 'Reservada',
       pagada: 'Pagada',
       realizada: 'Realizada',
-      cancelada: 'Cancelada'
+      cancelada: 'Cancelada',
+      confirmada: 'Confirmada'
     }
     return statuses[status] || status
   }
@@ -183,7 +184,8 @@
       reservada: 'status-reserved',
       pagada: 'status-paid',
       realizada: 'status-completed',
-      cancelada: 'status-cancelled'
+      cancelada: 'status-cancelled',
+      confirmada: 'status-confirmada'
     }
     return classes[status] || 'status-default'
   }

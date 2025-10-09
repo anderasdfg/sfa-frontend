@@ -508,7 +508,8 @@
       [AppointmentStatus.RESERVADA]: 'Reservada',
       [AppointmentStatus.PAGADA]: 'Pagada',
       [AppointmentStatus.REALIZADA]: 'Realizada',
-      [AppointmentStatus.CANCELADA]: 'Cancelada'
+      [AppointmentStatus.CANCELADA]: 'Cancelada',
+      [AppointmentStatus.CONFIRMADA]: 'Confirmada'
     }
     return labels[status] || status
   }
@@ -518,7 +519,8 @@
       [AppointmentStatus.RESERVADA]: 'warning',
       [AppointmentStatus.PAGADA]: 'success',
       [AppointmentStatus.REALIZADA]: 'info',
-      [AppointmentStatus.CANCELADA]: 'danger'
+      [AppointmentStatus.CANCELADA]: 'danger',
+      [AppointmentStatus.CONFIRMADA]: 'info'
     }
     return severities[status] || 'secondary'
   }
@@ -528,7 +530,8 @@
       [AppointmentStatus.RESERVADA]: '⏳',
       [AppointmentStatus.PAGADA]: '✅',
       [AppointmentStatus.REALIZADA]: '🏁',
-      [AppointmentStatus.CANCELADA]: '❌'
+      [AppointmentStatus.CANCELADA]: '❌',
+      [AppointmentStatus.CONFIRMADA]: '✅'
     }
     return icons[status] || '📅'
   }
@@ -578,7 +581,7 @@
     document.body.style.overflow = 'hidden'
     document.body.style.height = '100vh'
   })
-  
+
   onUnmounted(() => {
     // Restaurar scroll del body al salir
     document.body.style.overflow = ''

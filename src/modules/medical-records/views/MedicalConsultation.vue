@@ -115,9 +115,10 @@
         <!-- Diagnóstico -->
         <div v-if="activeTab === 'diagnosis'" class="tab-panel">
           <DiagnosisTab
-            v-if="appointment"
-            :consultation-id="appointmentId"
-            :patient-id="appointment.patient_id"
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="activeTab = $event"
           />
         </div>
 

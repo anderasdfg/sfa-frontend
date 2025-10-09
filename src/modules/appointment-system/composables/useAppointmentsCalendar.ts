@@ -44,7 +44,8 @@ const STATUS_COLORS = {
   [AppointmentStatus.RESERVADA]: '#f59e0b', // Amarillo
   [AppointmentStatus.PAGADA]: '#10b981', // Verde
   [AppointmentStatus.REALIZADA]: '#6366f1', // Índigo
-  [AppointmentStatus.CANCELADA]: '#ef4444' // Rojo
+  [AppointmentStatus.CANCELADA]: '#ef4444', // Rojo
+  [AppointmentStatus.CONFIRMADA]: '#10b981' // Verde
 } as const
 
 // Colores por modalidad

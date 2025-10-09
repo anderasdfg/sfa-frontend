@@ -29,9 +29,11 @@
                 </label>
                 <AutoComplete
                   id="cie10-search"
-                  v-model="formData.cie10_code"
+                  v-model="selectedCIE10"
                   :suggestions="cie10Suggestions"
+                  optionLabel="description"
                   @complete="searchCIE10"
+                  @item-select="onCIE10Select"
                   placeholder="Buscar código CIE-10..."
                   dropdown
                   forceSelection
@@ -194,7 +196,9 @@
         </Card>
       </div>
     </div>
-
+    <div class="save-section">
+      <Button label="Siguiente" icon="pi pi-save" @click="emit('next-tab', 'indications')" />
+    </div>
     <!-- Delete Confirmation Dialog -->
     <Dialog
       v-model:visible="showDeleteDialog"
@@ -239,6 +243,8 @@
   import ProgressSpinner from 'primevue/progressspinner'
   import { useDiagnosis } from '../composables/useDiagnosis'
   import type { Diagnosis } from '@/types/diagnosis.types'
+
+  const emit = defineEmits(['next-tab'])
 
   interface Props {
     consultationId: number
@@ -295,6 +301,13 @@
       item =>
         item.code.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
     )
+  }
+
+  const selectedCIE10 = ref<{ code: string; description: string } | null>(null)
+
+  const onCIE10Select = (event: { value: { code: string; description: string } }) => {
+    formData.value.cie10_code = event.value.code
+    formData.value.description = event.value.description
   }
 
   // Editing State
@@ -403,6 +416,12 @@
 </script>
 
 <style scoped>
+  .save-section {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+  }
+
   .diagnosis-tab {
     height: 100%;
   }

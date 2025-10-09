@@ -150,14 +150,8 @@
   const appointmentId = computed(() => Number(route.params.id))
 
   // Usar el composable de pacientes
-  const {
-    patient,
-    patientFullName,
-    patientFormattedAge,
-    patientGender,
-    fetchPatient,
-    loading: patientLoading
-  } = usePatients()
+  const { patient, patientFullName, patientFormattedAge, patientGender, fetchPatient } =
+    usePatients()
 
   //const { startConsultation } = useConsultation()
   const { startConsultationFlow } = useConsultationStore()

@@ -65,37 +65,12 @@
   import { useRouter } from 'vue-router'
   import Card from 'primevue/card'
   import Button from 'primevue/button'
-  import Tag from 'primevue/tag'
   import ProgressSpinner from 'primevue/progressspinner'
   import { useDoctorAppointments } from '../composables/useDoctorAppointments'
   import { formatTime } from '@/shared/lib/formatters'
-  import type { AppointmentStatus } from '@/types/enums'
 
   const router = useRouter()
   const { todayAppointments, loading, error, fetchTodayAppointments } = useDoctorAppointments()
-
-  const getStatusLabel = (status: AppointmentStatus): string => {
-    console.log(status)
-    const labels: Record<AppointmentStatus, string> = {
-      reservada: 'Reservada',
-      confirmada: 'Confirmada',
-      realizada: 'Completada',
-      cancelada: 'Cancelada',
-      pagada: 'Pagada'
-    }
-    return labels[status] || status
-  }
-
-  const getStatusSeverity = (status: AppointmentStatus): string => {
-    const severities: Record<AppointmentStatus, string> = {
-      reservada: 'info',
-      confirmada: 'info',
-      realizada: 'success',
-      cancelada: 'danger',
-      pagada: 'success'
-    }
-    return severities[status] || 'info'
-  }
 
   const handleViewAppointment = (appointmentId: number) => {
     router.push(`/appointments/${appointmentId}/prepare`)
