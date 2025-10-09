@@ -88,7 +88,7 @@ export const useConsultationStore = defineStore('consultation', () => {
   }
 
   // === Anamnesis ===
-  const completeAnamnesis = async (chief_complaint: string) => {
+  /*   const completeAnamnesis = async (chief_complaint: string) => {
     if (!currentConsultation.value?.id) return null
 
     try {
@@ -110,7 +110,7 @@ export const useConsultationStore = defineStore('consultation', () => {
     } finally {
       isLoading.value = false
     }
-  }
+  } */
 
   // === Diagnósticos ===
   const fetchDiagnosisByConsultation = async (consultationId: number) => {
@@ -164,32 +164,49 @@ export const useConsultationStore = defineStore('consultation', () => {
   // 🔹 Métodos para manejar diagnósticos dentro de la consulta actual
   const setCurrentConsultationDiagnosis = (diagnosisList: any[]) => {
     if (!currentConsultation.value) return
-    currentConsultation.value = { ...currentConsultation.value, diagnosis: diagnosisList }
+    currentConsultation.value.diagnosis = diagnosisList
   }
   const addDiagnosisToCurrentConsultation = (newDiagnosis: any) => {
     if (!currentConsultation.value) return
-    currentConsultation.value = {
-      ...currentConsultation.value,
-      diagnosis: [...(currentConsultation.value.diagnosis || []), newDiagnosis]
+    if (!currentConsultation.value.diagnosis) {
+      currentConsultation.value.diagnosis = []
     }
+    currentConsultation.value.diagnosis.push(newDiagnosis)
   }
 
   const updateDiagnosisInCurrentConsultation = (updatedDiagnosis: any) => {
     if (!currentConsultation.value?.diagnosis) return
 
-    const updatedList = currentConsultation.value.diagnosis.map((d: any) =>
-      d.id === updatedDiagnosis.id ? updatedDiagnosis : d
-    )
-
-    currentConsultation.value = { ...currentConsultation.value, diagnosis: updatedList }
+    const index = currentConsultation.value.diagnosis.findIndex((d: any) => d.id === updatedDiagnosis.id)
+    if (index !== -1) {
+      currentConsultation.value.diagnosis[index] = updatedDiagnosis
+    }
   }
 
   const removeDiagnosisFromCurrentConsultation = (diagnosisId: number) => {
     if (!currentConsultation.value?.diagnosis) return
-    const filteredList = currentConsultation.value.diagnosis.filter(
-      (d: any) => d.id !== diagnosisId
-    )
-    currentConsultation.value = { ...currentConsultation.value, diagnosis: filteredList }
+    const index = currentConsultation.value.diagnosis.findIndex((d: any) => d.id === diagnosisId)
+    if (index !== -1) {
+      currentConsultation.value.diagnosis.splice(index, 1)
+    }
+  }
+
+  async function updateConsultationField(field: string, value: any) {
+    if (!currentConsultation.value?.id) {
+      console.error('No se puede actualizar: consulta sin ID')
+      return
+    }
+
+    try {
+      const updated = await ConsultationService.updateConsultation(currentConsultation.value.id, {
+        [field]: value
+      } as ConsultationCreateRequest)
+
+      // Actualizar el campo específico sin romper la reactividad
+      Object.assign(currentConsultation.value, updated)
+    } catch (err) {
+      console.error('Error actualizando campo de consulta:', err)
+    }
   }
 
   // === Otros helpers ===
@@ -213,7 +230,7 @@ export const useConsultationStore = defineStore('consultation', () => {
     fetchConsultation,
     fetchConsultationByAppointment,
     startConsultationFlow,
-    completeAnamnesis,
+    //completeAnamnesis,
     fetchDiagnosisByConsultation,
     createDiagnosis,
     updateDiagnosis,
@@ -223,6 +240,7 @@ export const useConsultationStore = defineStore('consultation', () => {
     setCurrentConsultationDiagnosis,
     addDiagnosisToCurrentConsultation,
     updateDiagnosisInCurrentConsultation,
-    removeDiagnosisFromCurrentConsultation
+    removeDiagnosisFromCurrentConsultation,
+    updateConsultationField
   }
 })

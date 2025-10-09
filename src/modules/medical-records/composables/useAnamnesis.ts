@@ -19,8 +19,6 @@ export function useAnamnesis() {
   const hasComplaints = computed(() => selectedComplaints.value.length > 0)
   const complaintsAsString = computed(() => complaintsToString(selectedComplaints.value))
 
-  // === Métodos principales ===
-
   /** Agrega una queja */
   const addComplaint = (complaint: string): void => {
     const trimmedComplaint = complaint.trim()
@@ -66,7 +64,7 @@ export function useAnamnesis() {
   /** Guarda las quejas en el store (y backend si aplica) */
   const saveComplaints = async (): Promise<string> => {
     const complaintStr = complaintsAsString.value
-    await consultationStore.completeAnamnesis(complaintStr)
+    await consultationStore.updateConsultationField('chief_complaint', complaintStr)
     return complaintStr
   }
 
@@ -83,26 +81,15 @@ export function useAnamnesis() {
 
   // === Sincronización reactiva ===
 
-  // Cargar al iniciar
+  // Cargar al iniciar - solo lectura inicial
   watch(
     () => consultationStore.currentConsultation?.chief_complaint,
     newValue => {
-      if (newValue !== undefined && newValue !== null) {
+      if (newValue !== undefined && newValue !== null && newValue !== complaintsToString(selectedComplaints.value)) {
         loadComplaintsFromString(newValue)
       }
     },
     { immediate: true }
-  )
-
-  // Actualizar el store cada vez que cambian las quejas
-  watch(
-    selectedComplaints,
-    newVal => {
-      if (consultationStore.currentConsultation) {
-        consultationStore.currentConsultation.chief_complaint = complaintsToString(newVal)
-      }
-    },
-    { deep: true }
   )
 
   return {

@@ -31,7 +31,7 @@ export class ConsultationService {
   static async createConsultation(consultation: ConsultationCreateRequest): Promise<Consultation> {
     try {
       const response = await apiClient.post(this.BASE_PATH, consultation)
-      return response.data
+      return response.data.data || response.data
     } catch (error) {
       console.error('Error creating consultation:', error)
 
@@ -54,7 +54,7 @@ export class ConsultationService {
   ): Promise<Consultation> {
     try {
       const response = await apiClient.put(`${this.BASE_PATH}/${id}`, consultation)
-      return response.data
+      return response.data.data || response.data
     } catch (error) {
       console.error('Error updating consultation:', error)
       throw new Error('No se pudo actualizar la consulta')

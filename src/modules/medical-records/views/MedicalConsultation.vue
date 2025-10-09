@@ -124,8 +124,12 @@
 
         <!-- Indicaciones -->
         <div v-if="activeTab === 'indications'" class="tab-panel">
-          <h2 class="tab-title">Indicaciones</h2>
-          <p class="text-gray-500">Contenido de Indicaciones</p>
+          <IndicationsTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="activeTab = $event"
+          />
         </div>
 
         <!-- Exámenes Auxiliares -->
@@ -157,6 +161,7 @@
   import { usePatients } from '@/core/composables/usePatients'
   import { useConsultationStore } from '@/stores/consultation/consultationStore'
   import AnamnesisTab from '../components/AnamnesisTab.vue'
+  import IndicationsTab from '../components/IndicationsTab.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -166,7 +171,10 @@
   const error = ref<string | null>(null)
   const activeTab = ref('anamnesis')
   const { patientFullName, patientAge, patientGender, patientDocument, patient } = usePatients()
-  const { currentConsultation } = useConsultationStore()
+  const consultationStore = useConsultationStore()
+
+  // Usar computed para mantener reactividad
+  const currentConsultation = computed(() => consultationStore.currentConsultation)
 
   const appointmentId = computed(() => Number(route.params.id))
 
@@ -215,6 +223,11 @@
 
   onMounted(async () => {
     await fetchAppointment()
+
+    // Cargar o crear la consulta para este appointment
+    if (appointmentId.value) {
+      await consultationStore.startConsultationFlow(appointmentId.value)
+    }
   })
 </script>
 
