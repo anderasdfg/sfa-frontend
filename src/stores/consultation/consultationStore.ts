@@ -2,8 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { ConsultationService } from '@/services/consultations.service'
 import { DiagnosisService } from '@/services/diagnosis.service'
+import { DiagnosisTestService } from '@/services/diagnosisTest.service'
+import { PrescriptionService } from '@/services/prescriptions.service'
 import type { Consultation, ConsultationCreateRequest } from '@/types/medical.types'
 import type { Diagnosis } from '@/types/diagnosis.types'
+import type { DiagnosisTest } from '@/types/diagnosisTest.types'
+import type { Prescription } from '@/types/prescriptions.types'
 
 export const useConsultationStore = defineStore('consultation', () => {
   // 🔹 State
@@ -13,6 +17,12 @@ export const useConsultationStore = defineStore('consultation', () => {
 
   const diagnosis = ref<Diagnosis[]>([])
   const loadingDiagnosis = ref(false)
+  
+  const diagnosisTests = ref<DiagnosisTest[]>([])
+  const loadingDiagnosisTests = ref(false)
+  
+  const prescriptions = ref<Prescription[]>([])
+  const loadingPrescriptions = ref(false)
 
   // 🔹 Getters
   const hasActiveConsultation = computed(() => currentConsultation.value !== null)
@@ -31,9 +41,11 @@ export const useConsultationStore = defineStore('consultation', () => {
       const consultation = consultations?.[0] ?? null
       currentConsultation.value = consultation
 
-      // Cargar diagnósticos si la consulta existe
+      // Cargar diagnósticos, exámenes diagnósticos y prescripciones si la consulta existe
       if (consultation?.id) {
         await fetchDiagnosisByConsultation(consultation.id)
+        await fetchDiagnosisTestsByConsultation(consultation.id)
+        await fetchPrescriptionsByConsultation(consultation.id)
       }
 
       return consultation
@@ -53,9 +65,11 @@ export const useConsultationStore = defineStore('consultation', () => {
       const consultation = await ConsultationService.getConsultationById(id)
       currentConsultation.value = consultation
 
-      // Cargar diagnósticos
+      // Cargar diagnósticos, exámenes diagnósticos y prescripciones
       if (consultation?.id) {
         await fetchDiagnosisByConsultation(consultation.id)
+        await fetchDiagnosisTestsByConsultation(consultation.id)
+        await fetchPrescriptionsByConsultation(consultation.id)
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Error al cargar la consulta'
@@ -208,6 +222,98 @@ export const useConsultationStore = defineStore('consultation', () => {
     }
   }
 
+  // 🔹 Métodos para manejar exámenes diagnósticos dentro de la consulta actual
+  const fetchDiagnosisTestsByConsultation = async (consultationId: number) => {
+    try {
+      loadingDiagnosisTests.value = true
+      const result = await DiagnosisTestService.getDiagnosisTestsByConsultation(consultationId)
+      diagnosisTests.value = result
+      if (currentConsultation.value) {
+        currentConsultation.value.diagnosis_tests = result
+      }
+    } catch (err) {
+      console.error('Error fetching diagnosis tests:', err)
+    } finally {
+      loadingDiagnosisTests.value = false
+    }
+  }
+
+  const setCurrentConsultationDiagnosisTests = (diagnosisTestsList: DiagnosisTest[]) => {
+    if (!currentConsultation.value) return
+    currentConsultation.value.diagnosis_tests = diagnosisTestsList
+  }
+  
+  const addDiagnosisTestToCurrentConsultation = (newDiagnosisTest: DiagnosisTest) => {
+    if (!currentConsultation.value) return
+    if (!currentConsultation.value.diagnosis_tests) {
+      currentConsultation.value.diagnosis_tests = []
+    }
+    currentConsultation.value.diagnosis_tests.push(newDiagnosisTest)
+  }
+
+  const updateDiagnosisTestInCurrentConsultation = (updatedDiagnosisTest: DiagnosisTest) => {
+    if (!currentConsultation.value?.diagnosis_tests) return
+
+    const index = currentConsultation.value.diagnosis_tests.findIndex(dt => dt.id === updatedDiagnosisTest.id)
+    if (index !== -1) {
+      currentConsultation.value.diagnosis_tests[index] = updatedDiagnosisTest
+    }
+  }
+
+  const removeDiagnosisTestFromCurrentConsultation = (diagnosisTestId: number) => {
+    if (!currentConsultation.value?.diagnosis_tests) return
+    const index = currentConsultation.value.diagnosis_tests.findIndex(dt => dt.id === diagnosisTestId)
+    if (index !== -1) {
+      currentConsultation.value.diagnosis_tests.splice(index, 1)
+    }
+  }
+  
+  // 🔹 Métodos para manejar prescripciones dentro de la consulta actual
+  const fetchPrescriptionsByConsultation = async (consultationId: number) => {
+    try {
+      loadingPrescriptions.value = true
+      const result = await PrescriptionService.getPrescriptionsByConsultation(consultationId)
+      prescriptions.value = result
+      if (currentConsultation.value) {
+        currentConsultation.value.prescriptions = result
+      }
+    } catch (err) {
+      console.error('Error fetching prescriptions:', err)
+    } finally {
+      loadingPrescriptions.value = false
+    }
+  }
+
+  const setCurrentConsultationPrescriptions = (prescriptionsList: Prescription[]) => {
+    if (!currentConsultation.value) return
+    currentConsultation.value.prescriptions = prescriptionsList
+  }
+  
+  const addPrescriptionToCurrentConsultation = (newPrescription: Prescription) => {
+    if (!currentConsultation.value) return
+    if (!currentConsultation.value.prescriptions) {
+      currentConsultation.value.prescriptions = []
+    }
+    currentConsultation.value.prescriptions.push(newPrescription)
+  }
+
+  const updatePrescriptionInCurrentConsultation = (updatedPrescription: Prescription) => {
+    if (!currentConsultation.value?.prescriptions) return
+
+    const index = currentConsultation.value.prescriptions.findIndex(p => p.id === updatedPrescription.id)
+    if (index !== -1) {
+      currentConsultation.value.prescriptions[index] = updatedPrescription
+    }
+  }
+
+  const removePrescriptionFromCurrentConsultation = (prescriptionId: number) => {
+    if (!currentConsultation.value?.prescriptions) return
+    const index = currentConsultation.value.prescriptions.findIndex(p => p.id === prescriptionId)
+    if (index !== -1) {
+      currentConsultation.value.prescriptions.splice(index, 1)
+    }
+  }
+
   async function updateConsultationField(field: string, value: any) {
     if (!currentConsultation.value?.id) {
       console.error('No se puede actualizar: consulta sin ID')
@@ -230,6 +336,8 @@ export const useConsultationStore = defineStore('consultation', () => {
   const clearConsultation = () => {
     currentConsultation.value = null
     diagnosis.value = []
+    diagnosisTests.value = []
+    prescriptions.value = []
     error.value = null
   }
 
@@ -238,26 +346,45 @@ export const useConsultationStore = defineStore('consultation', () => {
   return {
     currentConsultation,
     diagnosis,
+    diagnosisTests,
+    prescriptions,
     isLoading,
     loadingDiagnosis,
+    loadingDiagnosisTests,
+    loadingPrescriptions,
     error,
     hasActiveConsultation,
     consultationId,
+    // Consultas
     createConsultation,
     fetchConsultation,
     fetchConsultationByAppointment,
     startConsultationFlow,
     //completeAnamnesis,
+    // Diagnósticos
     fetchDiagnosisByConsultation,
     createDiagnosis,
     updateDiagnosis,
     deleteDiagnosis,
-    clearConsultation,
-    resetError,
     setCurrentConsultationDiagnosis,
     addDiagnosisToCurrentConsultation,
     updateDiagnosisInCurrentConsultation,
     removeDiagnosisFromCurrentConsultation,
-    updateConsultationField
+    // Exámenes diagnósticos
+    fetchDiagnosisTestsByConsultation,
+    setCurrentConsultationDiagnosisTests,
+    addDiagnosisTestToCurrentConsultation,
+    updateDiagnosisTestInCurrentConsultation,
+    removeDiagnosisTestFromCurrentConsultation,
+    // Prescripciones
+    fetchPrescriptionsByConsultation,
+    setCurrentConsultationPrescriptions,
+    addPrescriptionToCurrentConsultation,
+    updatePrescriptionInCurrentConsultation,
+    removePrescriptionFromCurrentConsultation,
+    // Utilidades
+    updateConsultationField,
+    clearConsultation,
+    resetError
   }
 })

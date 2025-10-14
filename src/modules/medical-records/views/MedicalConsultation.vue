@@ -134,14 +134,22 @@
 
         <!-- Exámenes Auxiliares -->
         <div v-if="activeTab === 'auxiliary'" class="tab-panel">
-          <h2 class="tab-title">Exámenes Auxiliares</h2>
-          <p class="text-gray-500">Contenido de Exámenes Auxiliares</p>
+          <DiagnosisTestsTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="activeTab = $event"
+          />
         </div>
 
         <!-- Prescripción Médica -->
         <div v-if="activeTab === 'prescription'" class="tab-panel">
-          <h2 class="tab-title">Prescripción Médica</h2>
-          <p class="text-gray-500">Contenido de Prescripción Médica</p>
+          <PrescriptionTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="finishConsultation"
+          />
         </div>
       </div>
     </div>
@@ -162,6 +170,8 @@
   import { useConsultationStore } from '@/stores/consultation/consultationStore'
   import AnamnesisTab from '../components/AnamnesisTab.vue'
   import IndicationsTab from '../components/IndicationsTab.vue'
+  import DiagnosisTestsTab from '../components/DiagnosisTestsTab.vue'
+  import PrescriptionTab from '../components/PrescriptionTab.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -426,6 +436,8 @@
     color: #1f2937;
     margin: 0 0 1.5rem 0;
   }
+
+  /* No additional styles needed */
 
   /* Responsive */
   @media (max-width: 1024px) {
