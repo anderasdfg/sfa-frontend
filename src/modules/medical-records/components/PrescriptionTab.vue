@@ -600,7 +600,8 @@
   }
   
   // Método para manejar la selección de medicamento
-  const onMedicationSelect = (medication: { name: string, generic: string, dosageForm?: string, concentration?: string }) => {
+  const onMedicationSelect = (event: any) => {
+    const medication = event.value
     if (medication) {
       // Establecemos una sugerencia de dosis más descriptiva basada en la forma farmacéutica
       if (medication.dosageForm && medication.concentration) {
