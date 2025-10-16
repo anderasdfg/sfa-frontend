@@ -170,7 +170,7 @@
                     @click="applyTemplate(template)"
                   >
                     <div class="template-icon">
-                      <i class="pi pi-flask"></i>
+                      <i class="pi pi-chart-bar"></i>
                     </div>
                     <div class="template-content">
                       <div class="template-name">{{ template.test_type }}</div>

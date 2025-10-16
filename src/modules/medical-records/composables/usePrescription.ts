@@ -3,16 +3,14 @@ import { ref, computed } from 'vue'
 import { PrescriptionService } from '@/services/prescriptions.service'
 import { useConsultationStore } from '@/stores/consultation/consultationStore'
 import type { Prescription } from '@/types/prescriptions.types'
+import {
+  PRESCRIPTION_TEMPLATES,
+  searchMedications,
+  getAllMedications,
+  type Medication,
+} from '../data/medications.data'
 
-export interface PrescriptionTemplate {
-  id: number
-  medication: string
-  dosage: string
-  frequency: string
-  duration: string
-  instructions: string
-  category: 'common' | 'antibiotics' | 'analgesics' | 'respiratory' | 'cardiovascular' | 'other'
-}
+export type { PrescriptionTemplate, Medication } from '../data/medications.data'
 
 export function usePrescription() {
   const consultationStore = useConsultationStore()
@@ -25,79 +23,32 @@ export function usePrescription() {
   const error = ref<string | null>(null)
   const savingPrescription = ref(false)
   const deletingPrescription = ref(false)
+  
+  // Estado para búsqueda de medicamentos
+  const searchTerm = ref('')
+  const medicationSuggestions = ref<Medication[]>([])
+  
+  // Referencias a las plantillas de prescripciones desde el archivo de datos
+  const commonTemplates = computed(() => PRESCRIPTION_TEMPLATES.common || [])
+  const respiratoryTemplates = computed(() => PRESCRIPTION_TEMPLATES.respiratory || [])
+  const cardiovascularTemplates = computed(() => PRESCRIPTION_TEMPLATES.cardiovascular || [])
 
-  // Plantillas de prescripciones comunes
-  const commonTemplates = ref<PrescriptionTemplate[]>([
-    {
-      id: 1,
-      medication: 'Omnicortil (10mg)',
-      dosage: '1 tableta',
-      frequency: '2 veces al día',
-      duration: '5 días',
-      instructions: 'Tomar después de las comidas',
-      category: 'common'
-    },
-    {
-      id: 2,
-      medication: 'Evapara (650)',
-      dosage: '1 tableta',
-      frequency: '2 veces al día',
-      duration: '5 días',
-      instructions: 'Tomar si hay dolor o fiebre',
-      category: 'common'
-    },
-    {
-      id: 3,
-      medication: 'Flunivib 10',
-      dosage: '1 tableta',
-      frequency: '1 vez al día',
-      duration: '7 días',
-      instructions: 'Tomar por la mañana con alimentos',
-      category: 'common'
-    }
-  ])
-
-  const respiratoryTemplates = ref<PrescriptionTemplate[]>([
-    {
-      id: 4,
-      medication: 'Calfix k2',
-      dosage: '1 tableta',
-      frequency: '2 veces al día',
-      duration: '7 días',
-      instructions: 'Tomar antes de las comidas',
-      category: 'respiratory'
-    },
-    {
-      id: 5,
-      medication: 'Altidol plus',
-      dosage: '1 tableta',
-      frequency: '3 veces al día',
-      duration: '5 días',
-      instructions: 'Tomar cada 8 horas',
-      category: 'respiratory'
-    }
-  ])
-
-  const cardiovascularTemplates = ref<PrescriptionTemplate[]>([
-    {
-      id: 6,
-      medication: 'Amlodipina 5mg',
-      dosage: '1 tableta',
-      frequency: '1 vez al día',
-      duration: '30 días',
-      instructions: 'Tomar por la mañana con alimentos',
-      category: 'cardiovascular'
-    },
-    {
-      id: 7,
-      medication: 'Losartan 50mg',
-      dosage: '1 tableta',
-      frequency: '2 veces al día',
-      duration: '30 días',
-      instructions: 'Tomar con un vaso de agua',
-      category: 'cardiovascular'
-    }
-  ])
+  /**
+   * Busca medicamentos según el término de búsqueda
+   * @param query - Término de búsqueda
+   */
+  const searchMedicationsLocal = (query: string) => {
+    searchTerm.value = query
+    medicationSuggestions.value = searchMedications(query)
+    return medicationSuggestions.value
+  }
+  
+  /**
+   * Obtiene todos los medicamentos disponibles
+   */
+  const getAllAvailableMedications = () => {
+    return getAllMedications()
+  }
 
   /**
    * Carga las prescripciones para una consulta específica
@@ -191,6 +142,8 @@ export function usePrescription() {
     error,
     savingPrescription,
     deletingPrescription,
+    searchTerm,
+    medicationSuggestions,
 
     // Plantillas
     commonTemplates,
@@ -198,6 +151,8 @@ export function usePrescription() {
     cardiovascularTemplates,
 
     // Métodos
+    searchMedications: searchMedicationsLocal,
+    getAllMedications: getAllAvailableMedications,
     fetchPrescriptionsByConsultation,
     createPrescription,
     updatePrescription,

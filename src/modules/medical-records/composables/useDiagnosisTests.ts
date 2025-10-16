@@ -3,13 +3,14 @@ import { ref, computed } from 'vue'
 import { DiagnosisTestService } from '@/services/diagnosisTest.service'
 import { useConsultationStore } from '@/stores/consultation/consultationStore'
 import type { DiagnosisTest } from '@/types/diagnosisTest.types'
+import { 
+  TEST_CATEGORIES,
+  searchDiagnosisTests,
+  getTestByType,
+  type TestTemplate
+} from '../data/diagnosisTests.data'
 
-export interface TestTemplate {
-  id: number
-  test_type: string
-  description: string
-  category: 'laboratory' | 'imaging' | 'other'
-}
+export type { TestTemplate } from '../data/diagnosisTests.data'
 
 export function useDiagnosisTests() {
   const consultationStore = useConsultationStore()
@@ -22,65 +23,40 @@ export function useDiagnosisTests() {
   const savingTest = ref(false)
   const deletingTest = ref(false)
   const error = ref<string | null>(null)
+  
+  // Referencias a las categorías de tests desde el archivo de datos
+  const laboratoryTemplates = computed(() => 
+    TEST_CATEGORIES.find(category => category.id === 'laboratory')?.tests || []
+  )
+  
+  const imagingTemplates = computed(() => 
+    TEST_CATEGORIES.find(category => category.id === 'imaging')?.tests || []
+  )
+  
+  const otherTemplates = computed(() => 
+    TEST_CATEGORIES.find(category => category.id === 'other')?.tests || []
+  )
 
-  // Plantillas de exámenes comunes
-  const laboratoryTemplates = ref<TestTemplate[]>([
-    {
-      id: 1,
-      test_type: 'Hemograma completo',
-      description: 'Análisis completo de sangre para evaluar células sanguíneas y otros componentes.',
-      category: 'laboratory'
-    },
-    {
-      id: 2,
-      test_type: 'Perfil lipídico',
-      description: 'Medición de colesterol total, HDL, LDL y triglicéridos en sangre.',
-      category: 'laboratory'
-    },
-    {
-      id: 3,
-      test_type: 'Glucosa en ayunas',
-      description: 'Medición de niveles de glucosa en sangre después de ayuno nocturno.',
-      category: 'laboratory'
-    }
-  ])
+  // Estado para búsqueda de tests
+  const searchTerm = ref('')
+  const testSuggestions = ref<TestTemplate[]>([])
 
-  const imagingTemplates = ref<TestTemplate[]>([
-    {
-      id: 4,
-      test_type: 'Radiografía de tórax',
-      description: 'Imagen de los pulmones, corazón y estructuras torácicas.',
-      category: 'imaging'
-    },
-    {
-      id: 5,
-      test_type: 'Ecografía abdominal',
-      description: 'Evaluación por ultrasonido de órganos abdominales.',
-      category: 'imaging'
-    },
-    {
-      id: 6,
-      test_type: 'Tomografía computarizada',
-      description: 'Imágenes detalladas en cortes transversales del área solicitada.',
-      category: 'imaging'
-    }
-  ])
+  /**
+   * Busca tests diagnósticos según el término de búsqueda
+   */
+  const searchTests = (query: string) => {
+    searchTerm.value = query
+    testSuggestions.value = searchDiagnosisTests(query)
+    return testSuggestions.value
+  }
 
-  const otherTemplates = ref<TestTemplate[]>([
-    {
-      id: 7,
-      test_type: 'Electrocardiograma',
-      description: 'Registro de la actividad eléctrica del corazón.',
-      category: 'other'
-    },
-    {
-      id: 8,
-      test_type: 'Espirometría',
-      description: 'Medición de la función pulmonar y capacidad respiratoria.',
-      category: 'other'
-    }
-  ])
-
+  /**
+   * Busca un test por su tipo
+   */
+  const findTestByType = (testType: string) => {
+    return getTestByType(testType)
+  }
+  
   /**
    * Carga los exámenes diagnósticos para una consulta específica
    * @param consultationId - ID de la consulta
@@ -172,6 +148,8 @@ export function useDiagnosisTests() {
     error,
     savingTest,
     deletingTest,
+    searchTerm,
+    testSuggestions,
     
     // Plantillas
     laboratoryTemplates,
@@ -179,6 +157,8 @@ export function useDiagnosisTests() {
     otherTemplates,
     
     // Métodos
+    searchTests,
+    findTestByType,
     fetchDiagnosisTestsByConsultation,
     createDiagnosisTest,
     updateDiagnosisTest,
