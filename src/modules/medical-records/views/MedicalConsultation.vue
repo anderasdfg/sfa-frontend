@@ -134,14 +134,32 @@
 
         <!-- Exámenes Auxiliares -->
         <div v-if="activeTab === 'auxiliary'" class="tab-panel">
-          <h2 class="tab-title">Exámenes Auxiliares</h2>
-          <p class="text-gray-500">Contenido de Exámenes Auxiliares</p>
+          <DiagnosisTestsTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="activeTab = $event"
+          />
         </div>
 
         <!-- Prescripción Médica -->
         <div v-if="activeTab === 'prescription'" class="tab-panel">
-          <h2 class="tab-title">Prescripción Médica</h2>
-          <p class="text-gray-500">Contenido de Prescripción Médica</p>
+          <PrescriptionTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @next-tab="activeTab = 'summary'"
+          />
+        </div>
+
+        <!-- Resumen de la Consulta -->
+        <div v-if="activeTab === 'summary'" class="tab-panel">
+          <SummaryTab
+            v-if="currentConsultation"
+            :consultation-id="currentConsultation?.id"
+            :patient-id="patient?.id"
+            @consultation-finished="finishConsultation"
+          />
         </div>
       </div>
     </div>
@@ -162,6 +180,9 @@
   import { useConsultationStore } from '@/stores/consultation/consultationStore'
   import AnamnesisTab from '../components/AnamnesisTab.vue'
   import IndicationsTab from '../components/IndicationsTab.vue'
+  import DiagnosisTestsTab from '../components/DiagnosisTestsTab.vue'
+  import PrescriptionTab from '../components/PrescriptionTab.vue'
+  import SummaryTab from '../components/SummaryTab.vue'
 
   const router = useRouter()
   const route = useRoute()
@@ -173,7 +194,6 @@
   const { patientFullName, patientAge, patientGender, patientDocument, patient, fetchPatient } = usePatients()
   const consultationStore = useConsultationStore()
 
-  // Usar computed para mantener reactividad
   const currentConsultation = computed(() => consultationStore.currentConsultation)
 
   const appointmentId = computed(() => Number(route.params.id))
@@ -184,8 +204,9 @@
     /*  { id: 'history', label: 'Historial', icon: 'pi pi-history' }, */
     { id: 'diagnosis', label: 'Diagnóstico', icon: 'pi pi-search' },
     { id: 'indications', label: 'Indicaciones', icon: 'pi pi-list' },
-    { id: 'auxiliary', label: 'Exámenes Auxiliares', icon: 'pi pi-flask' },
-    { id: 'prescription', label: 'Prescripción Médica', icon: 'pi pi-shopping-bag' }
+    { id: 'auxiliary', label: 'Exámenes Auxiliares', icon: 'pi pi-chart-bar' },
+    { id: 'prescription', label: 'Prescripción Médica', icon: 'pi pi-shopping-bag' },
+    { id: 'summary', label: 'Resumen', icon: 'pi pi-check-circle' }
   ]
 
   const formatDate = (dateString: string): string => {
@@ -221,9 +242,20 @@
     router.push('/dashboard/doctor')
   }
 
-  const finishConsultation = () => {
-    // TODO: Implementar lógica para finalizar consulta
-    console.log('Finalizar consulta')
+  const finishConsultation = async () => {
+    try {
+      // TODO: Llamar al servicio para finalizar la consulta
+      if (appointment.value && appointment.value.id) {
+        // Llamar al servicio API para actualizar el estado de la cita
+        console.log('Finalizing consultation for appointment:', appointment.value.id)
+      }
+      
+      setTimeout(() => {
+        goBack()
+      }, 1000)
+    } catch (error) {
+      console.error('Error finalizing consultation:', error)
+    }
   }
 
   onMounted(async () => {
@@ -426,6 +458,8 @@
     color: #1f2937;
     margin: 0 0 1.5rem 0;
   }
+
+  /* No additional styles needed */
 
   /* Responsive */
   @media (max-width: 1024px) {

@@ -11,11 +11,11 @@
 
     <div class="flex justify-end">
       <Button
-        :disabled="saving"
-        @click="saveIndications"
+        :loading="saving"
+        @click="handleSaveAndNext"
         icon="pi pi-save"
-        class="w-[120px] bg-sf-green-light text-white rounded-lg hover:bg-sf-green-light disabled:opacity-50"
-        label="Guardar"
+        class="w-[140px] bg-sf-green-light text-white rounded-lg hover:bg-sf-green-light disabled:opacity-50"
+        label="Siguiente"
       />
     </div>
   </div>
@@ -35,6 +35,7 @@
   }
 
   defineProps<Props>()
+  const emit = defineEmits(['next-tab'])
 
   // ✅ Mantiene sincronizado con el store, incluso si currentConsultation llega después
   watch(
@@ -47,12 +48,13 @@
     { immediate: true }
   )
 
-  const saveIndications = async () => {
+  const handleSaveAndNext = async () => {
     if (saving.value) return
 
     saving.value = true
     try {
       await consultationStore.updateConsultationField('treatment_plan', indications.value)
+      emit('next-tab', 'auxiliary')
     } catch (err) {
       console.error('Error al guardar indicaciones:', err)
     } finally {
