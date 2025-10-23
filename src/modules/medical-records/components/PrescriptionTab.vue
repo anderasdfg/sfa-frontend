@@ -314,11 +314,10 @@
 
     <div class="save-section">
       <Button 
-        label="Finalizar" 
-        icon="pi pi-check" 
+        label="Siguiente" 
+        icon="pi pi-save" 
         @click="handleFinish" 
         :loading="saving"
-        severity="success"
       />
     </div>
 

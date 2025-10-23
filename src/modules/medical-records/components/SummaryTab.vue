@@ -185,9 +185,9 @@ const saving = ref(false)
 
 // Propiedades computadas del store de consulta
 const consultation = computed(() => consultationStore.currentConsultation)
-const diagnoses = computed(() => consultationStore.diagnosis || [])
-const diagnosisTests = computed(() => consultationStore.diagnosisTests || [])
-const prescriptions = computed(() => consultationStore.prescriptions || [])
+const diagnoses = computed(() => consultationStore.currentConsultation?.diagnosis || [])
+const diagnosisTests = computed(() => consultationStore.currentConsultation?.diagnosis_tests || [])
+const prescriptions = computed(() => consultationStore.currentConsultation?.prescriptions || [])
 const complaints = computed(() => {
   const chiefComplaint = consultationStore.currentConsultation?.chief_complaint
   return chiefComplaint ? chiefComplaint.split(',').filter(Boolean) : []
