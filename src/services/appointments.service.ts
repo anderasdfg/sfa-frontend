@@ -6,6 +6,10 @@ import type {
   AppointmentQueryParams
 } from '@/types/appointments.types'
 
+interface UpdateAppointmentStatusRequest {
+  status: string
+}
+
 export class AppointmentService {
   private static readonly BASE_PATH = '/appointments'
 
@@ -58,4 +62,29 @@ export class AppointmentService {
       throw new Error('No se pudo cargar la cita')
     }
   }
+
+  /** Actualiza el estado de una cita */
+  static async updateAppointmentStatus(
+    id: number, 
+    statusData: UpdateAppointmentStatusRequest
+  ): Promise<Appointment> {
+    try {
+      const response = await apiClient.patch<AppointmentCreateResponse>(
+        `${this.BASE_PATH}/${id}/status`, 
+        statusData
+      )
+
+      // El API devuelve { success, data, message }, necesitamos solo data
+      if (response.data.success && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data.message || 'Error en la respuesta del API')
+      }
+    } catch (error) {
+      console.error('Error updating appointment status:', error)
+      throw new Error('No se pudo actualizar el estado de la cita')
+    }
+  }
 }
+
+export type { UpdateAppointmentStatusRequest }

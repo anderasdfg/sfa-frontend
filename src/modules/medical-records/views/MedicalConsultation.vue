@@ -244,10 +244,16 @@
 
   const finishConsultation = async () => {
     try {
-      // TODO: Llamar al servicio para finalizar la consulta
       if (appointment.value && appointment.value.id) {
-        // Llamar al servicio API para actualizar el estado de la cita
         console.log('Finalizing consultation for appointment:', appointment.value.id)
+        
+        // Actualizar el estado de la cita a "realizada"
+        await AppointmentService.updateAppointmentStatus(
+          appointment.value.id,
+          { status: "realizada" }
+        )
+        
+        console.log('Appointment status updated to "realizada"')
       }
       
       setTimeout(() => {
