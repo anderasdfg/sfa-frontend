@@ -282,7 +282,7 @@
           command: () => router.push('/appointments')
         },
         {
-          label: 'Mi Historial',
+          label: 'Historia Clínica',
           icon: 'pi pi-file',
           command: () => router.push(`/medical-records/patient/${user.value?.id}`)
         }

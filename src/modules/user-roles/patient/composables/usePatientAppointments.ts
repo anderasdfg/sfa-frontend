@@ -42,11 +42,22 @@ export function usePatientAppointments() {
             console.warn('No appointment date found for appointment:', appointment.id)
             appointmentDate = new Date().toISOString()
           }
-          
+
+          // Construir el nombre del doctor desde doctor_data si no existe doctor_name
+          let doctorName = appointment.doctor_name
+          if (!doctorName && appointment.doctor_data) {
+            const { first_name, last_name } = appointment.doctor_data
+            if (first_name && last_name) {
+              doctorName = `Dr. ${first_name} ${last_name}`
+            } else if (first_name) {
+              doctorName = `Dr. ${first_name}`
+            }
+          }
+
           return {
             ...appointment,
             // Asegurarse de que los campos requeridos estén presentes
-            doctor_name: appointment.doctor_name || 'Doctor',
+            doctor_name: doctorName || 'Doctor',
             specialty: appointment.specialty || 'General',
             status: appointment.status || 'scheduled',
             appointment_date: appointmentDate

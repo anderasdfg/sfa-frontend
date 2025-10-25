@@ -60,11 +60,11 @@
           <div v-else-if="appointmentsError" class="text-center p-4 text-red-500">
             <i class="pi pi-exclamation-triangle text-2xl"></i>
             <p class="mt-2">{{ appointmentsError }}</p>
-            <Button 
-              label="Reintentar" 
-              icon="pi pi-refresh" 
-              class="p-button-text p-button-sm mt-2" 
-              @click="loadPatientData" 
+            <Button
+              label="Reintentar"
+              icon="pi pi-refresh"
+              class="p-button-text p-button-sm mt-2"
+              @click="loadPatientData"
             />
           </div>
           <AppointmentsList
@@ -119,11 +119,11 @@
   const authStore = useAuthStore()
 
   // Composable for appointments
-  const { 
-    appointments: myAppointments, 
-    loading: loadingAppointments, 
-    error: appointmentsError, 
-    fetchPatientAppointments 
+  const {
+    appointments: myAppointments,
+    loading: loadingAppointments,
+    error: appointmentsError,
+    fetchPatientAppointments
   } = usePatientAppointments()
 
   // Reactive data
@@ -146,45 +146,43 @@
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
-    
+
     // Get upcoming appointments (future or today)
     const upcomingAppointments = myAppointments.value.filter(apt => {
       const aptDate = new Date(apt.slot?.scheduled_at || apt.appointment_date)
       return aptDate >= new Date(now.setHours(0, 0, 0, 0))
     })
-    
+
     // Get appointments for current month
     const monthlyAppointments = myAppointments.value.filter(apt => {
       const aptDate = new Date(apt.slot?.scheduled_at || apt.appointment_date)
-      return aptDate.getMonth() === currentMonth && 
-             aptDate.getFullYear() === currentYear
+      return aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear
     })
-    
+
     // Get completed appointments (assuming status 'completed' or 'pagada')
-    const completedAppointments = myAppointments.value.filter(apt => 
+    const completedAppointments = myAppointments.value.filter(apt =>
       ['completed', 'completada', 'pagada'].includes(apt.status?.toLowerCase())
     )
-    
+
     // Format next appointment
-    const nextAppointment = upcomingAppointments.length > 0 
-      ? upcomingAppointments[0]
-      : null
-      
+    const nextAppointment = upcomingAppointments.length > 0 ? upcomingAppointments[0] : null
+
     const formatNextAppointment = () => {
       if (!nextAppointment) return 'Sin citas'
-      
-      const aptDate = new Date(nextAppointment.slot?.scheduled_at || nextAppointment.appointment_date)
+
+      const aptDate = new Date(
+        nextAppointment.slot?.scheduled_at || nextAppointment.appointment_date
+      )
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      
-      const isToday = aptDate >= today && 
-                     aptDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
-      
-      return isToday 
+
+      const isToday = aptDate >= today && aptDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+
+      return isToday
         ? `Hoy ${formatTime(aptDate)}`
         : `${aptDate.getDate()}/${aptDate.getMonth() + 1} ${formatTime(aptDate)}`
     }
-    
+
     return [
       {
         key: 'next-appointment',
@@ -222,7 +220,7 @@
   }
 
   const navigateToNewAppointment = () => {
-    router.push('/appointments/new')
+    router.push('/appointment-booking')
   }
 
   const navigateToMedicalHistory = () => {
