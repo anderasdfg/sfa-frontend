@@ -7,14 +7,20 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="stats-grid">
+    <div v-if="loading" class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    </div>
+
+    <div v-else class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon green">
           <i class="pi pi-dollar"></i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">$45,000</div>
-          <div class="stat-label">Ingresos del Mes</div>
+          <div class="stat-value">
+            S/.{{ formatNumber(statistics?.daily_info.daily_revenue ?? 0) }}
+          </div>
+          <div class="stat-label">Ingresos del Día</div>
         </div>
       </div>
 
@@ -23,18 +29,18 @@
           <i class="pi pi-calendar"></i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">324</div>
-          <div class="stat-label">Citas del Mes</div>
+          <div class="stat-value">{{ statistics?.daily_info.total_appointments_today ?? 0 }}</div>
+          <div class="stat-label">Citas del Día</div>
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon purple">
-          <i class="pi pi-heart"></i>
+          <i class="pi pi-check-circle"></i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">4.8/5</div>
-          <div class="stat-label">Satisfacción</div>
+          <div class="stat-value">{{ statistics?.daily_info.completed_appointments ?? 0 }}</div>
+          <div class="stat-label">Citas Completadas</div>
         </div>
       </div>
 
@@ -43,32 +49,34 @@
           <i class="pi pi-clock"></i>
         </div>
         <div class="stat-content">
-          <div class="stat-value">99.9%</div>
-          <div class="stat-label">Tiempo Activo</div>
+          <div class="stat-value">{{ statistics?.daily_info.pending_appointments ?? 0 }}</div>
+          <div class="stat-label">Citas Pendientes</div>
         </div>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="content-grid">
+    <div v-if="!loading" class="content-grid">
       <div class="overview-card">
         <h3 class="card-title">Resumen del Sistema</h3>
         <div class="overview-grid">
           <div class="overview-item">
-            <div class="overview-number">1234</div>
+            <div class="overview-number">{{ statistics?.summary.total_users ?? 0 }}</div>
             <div class="overview-label">Total Usuarios</div>
           </div>
           <div class="overview-item">
-            <div class="overview-number">45</div>
+            <div class="overview-number">{{ statistics?.summary.total_doctors ?? 0 }}</div>
             <div class="overview-label">Doctores Activos</div>
           </div>
           <div class="overview-item">
-            <div class="overview-number">1189</div>
+            <div class="overview-number">{{ statistics?.summary.total_patients ?? 0 }}</div>
             <div class="overview-label">Pacientes Registrados</div>
           </div>
           <div class="overview-item">
-            <div class="overview-number">28</div>
-            <div class="overview-label">Citas Hoy</div>
+            <div class="overview-number">
+              {{ statistics?.summary.future_appointments_scheduled_today ?? 0 }}
+            </div>
+            <div class="overview-label">Citas Programadas Hoy</div>
           </div>
         </div>
       </div>
@@ -131,9 +139,45 @@
   </div>
 </template>
 
+<script setup lang="ts">
+  import { ref, onMounted } from 'vue'
+  import { StatisticsService } from '@/services/statistics.service'
+  import type { DashboardStatistics } from '@/types/statistics.types'
+
+  const statistics = ref<DashboardStatistics | null>(null)
+  const loading = ref(true)
+
+  const formatNumber = (value: number): string => {
+    return new Intl.NumberFormat('es-ES').format(value)
+  }
+
+  const loadStatistics = async () => {
+    try {
+      loading.value = true
+      statistics.value = await StatisticsService.getDashboardStatistics()
+    } catch (error) {
+      console.error('Error cargando estadísticas:', error)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  onMounted(() => {
+    loadStatistics()
+  })
+</script>
+
 <style scoped>
   .admin-dashboard {
     padding: 0;
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    color: var(--color-sf-green-normal);
   }
 
   .welcome-header {

@@ -6,6 +6,7 @@ const ConsultationLayout = () => import('@/core/layouts/ConsultationLayout.vue')
 
 // Views
 const MedicalConsultation = () => import('../views/MedicalConsultation.vue')
+const PatientMedicalRecord = () => import('../views/PatientMedicalRecord.vue')
 
 const medicalRecordsRoutes: RouteRecordRaw[] = [
   // Rutas de historiales médicos
@@ -16,20 +17,23 @@ const medicalRecordsRoutes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['doctor', 'admin']
     },
+    children: []
+  },
+  // Ruta para ver la historia clínica del paciente
+  {
+    path: '/medical-records/patient/:patientId',
+    name: 'PatientMedicalRecord',
+    component: MainLayout,
+    meta: {
+      requiresAuth: true,
+      roles: ['patient'],
+      title: 'Historia Clínica'
+    },
     children: [
-      // Rutas futuras para historiales médicos
-      // {
-      //   path: 'patient/:patientId',
-      //   name: 'PatientMedicalRecords',
-      //   component: () => import('../views/PatientMedicalRecords.vue'),
-      //   props: true
-      // },
-      // {
-      //   path: 'new/:patientId',
-      //   name: 'CreateMedicalRecord',
-      //   component: () => import('../views/CreateMedicalRecord.vue'),
-      //   props: true
-      // }
+      {
+        path: '',
+        component: PatientMedicalRecord
+      }
     ]
   },
   // Consulta médica (sin sidebar, full width)

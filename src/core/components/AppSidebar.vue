@@ -168,8 +168,8 @@
             label: 'Asignación de turnos',
             icon: 'pi pi-clock',
             command: () => router.push('/admin/schedule-availability')
-          },
-          {
+          }
+          /*  {
             label: 'Reprogramaciones',
             icon: 'pi pi-refresh',
             command: () => router.push('/appointments')
@@ -178,12 +178,12 @@
             label: 'Cancelaciones',
             icon: 'pi pi-times',
             command: () => router.push('/appointments')
-          }
+          } */
         ]
       })
 
       // Reportes y Analytics
-      items.push({
+      /*  items.push({
         label: 'Reportes y Analytics',
         icon: 'pi pi-chart-bar',
         items: [
@@ -208,10 +208,10 @@
             command: () => router.push('/dashboard/admin')
           }
         ]
-      })
+      }) */
 
       // Configuración del Sistema
-      items.push({
+      /* items.push({
         label: 'Configuración del Sistema',
         icon: 'pi pi-sliders-h',
         items: [
@@ -221,7 +221,7 @@
             command: () => router.push('/admin/settings')
           }
         ]
-      })
+      }) */
     }
 
     // Menú para roles no-admin (doctor, receptionist)
