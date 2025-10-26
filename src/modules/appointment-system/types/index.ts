@@ -16,7 +16,8 @@ export interface TimeSlot {
   time: string
   price: number
   available: boolean
-  date: string
+  date: string,
+  schedule_modality: AppointmentModality
 }
 
 export interface AppointmentBooking {

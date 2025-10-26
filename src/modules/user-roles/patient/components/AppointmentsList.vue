@@ -33,8 +33,10 @@
       </li>
     </ul>
     <div v-else class="empty-state">
-      <i class="pi pi-calendar text-4xl text-gray-300 mb-3"></i>
-      <p class="text-gray-500">{{ emptyMessage || 'No tienes citas programadas' }}</p>
+      <p class="text-gray-500"> 
+        <i class="pi pi-calendar text-4xl text-gray-300 mb-3 mr-2"></i> 
+        {{ emptyMessage || 'No tienes citas programadas' }}
+      </p>
       <Button
         v-if="showScheduleButton"
         :label="scheduleButtonText || 'Agendar mi primera cita'"
