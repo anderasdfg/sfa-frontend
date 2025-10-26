@@ -11,20 +11,24 @@ const appointmentRoutes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     children: [
       {
+        path: '',
+        name: 'PatientAppointmentsList',
+        component: () => import('../views/PatientAppointmentsList.vue'),
+        meta: {
+          roles: ['patient'],
+          title: 'Mis Citas'
+        }
+      },
+      {
         path: 'calendar',
         name: 'AppointmentsCalendar',
         component: () => import('../views/AppointmentsCalendar.vue'),
-        meta: { 
+        meta: {
           roles: ['doctor', 'admin', 'receptionist'],
           title: 'Calendario de Citas'
         }
       }
       // Rutas futuras para gestión de citas
-      // {
-      //   path: '',
-      //   name: 'AppointmentsList',
-      //   component: () => import('../views/AppointmentsList.vue')
-      // },
       // {
       //   path: 'new',
       //   name: 'CreateAppointment',
