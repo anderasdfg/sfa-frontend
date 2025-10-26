@@ -10,10 +10,10 @@
           </p>
         </div>
         <div class="text-right">
-          <div class="text-sm text-gray-500">
+          <div class="text-sm text-gray-white">
             {{ currentDate }}
           </div>
-          <div class="text-sm text-gray-500">
+          <div class="text-sm text-gray-white">
             {{ currentTime }}
           </div>
         </div>
