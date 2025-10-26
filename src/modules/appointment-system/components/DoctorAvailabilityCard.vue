@@ -12,9 +12,10 @@
 
         <div class="consultation-info">
           <Tag
-            :value="doctor.consultationType"
+            v-if="filteredSlots[0]?.schedule_modality"
+            :value="filteredSlots[0]?.schedule_modality"
             :severity="
-              doctor.consultationType === AppointmentModality.TELECONSULTA ? 'info' : 'success'
+              filteredSlots[0]?.schedule_modality === AppointmentModality.TELECONSULTA ? 'info' : 'success'
             "
             class="consultation-tag"
           />
@@ -148,14 +149,14 @@
       patientId: authStore.user?.patient_id || 0, // 0 si no está autenticado
       slotId: slot.id,
       appointmentDate: slot.date,
-      modality: props.doctor.consultationType,
+      modality: slot.schedule_modality,
       // Información adicional para mostrar en UI
       time: slot.time,
       price: slot.price,
       doctorName: props.doctor.name,
       doctorSpecialty: props.doctor.specialtyName,
       doctorAvatar: props.doctor.avatar,
-      doctorLocation: props.doctor.location
+      doctorLocation: slot.schedule_modality === 'teleconsulta' ? 'Virtual' : 'Los Olivos',
     }
 
     emit('selectAppointment', appointment)

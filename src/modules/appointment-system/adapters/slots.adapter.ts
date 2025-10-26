@@ -36,7 +36,8 @@ export const adaptSlotToTimeSlot = (slot: AppointmentSlot): TimeSlot => {
     time: timeString,
     price: slot.price,
     available: slot.status === SlotStatus.DISPONIBLE,
-    date: scheduledDate.toISOString().split('T')[0]
+    date: scheduledDate.toISOString().split('T')[0],
+    schedule_modality: slot.schedule_modality === 'teleconsulta' ? AppointmentModality.TELECONSULTA : AppointmentModality.PRESENCIAL
   }
 }
 
