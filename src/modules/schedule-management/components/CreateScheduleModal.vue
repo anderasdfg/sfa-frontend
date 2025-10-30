@@ -169,7 +169,7 @@
       first_name: string
       last_name: string
       fullName: string
-      services?: Array<{
+      services?: ReadonlyArray<{
         id: number
         name: string
       }>
@@ -280,7 +280,8 @@
   const availableServices = computed(() => {
     if (!form.value.doctorId) return []
     const selectedDoctor = props.availableDoctors.find(doctor => doctor.id === form.value.doctorId)
-    return selectedDoctor?.services || []
+    // Convertir readonly array a mutable array para PrimeVue
+    return selectedDoctor?.services ? [...selectedDoctor.services] : []
   })
 
   const slotsPreview = computed(() => {
