@@ -2,11 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { ConsultationService } from '@/services/consultations.service'
 import { DiagnosisService } from '@/services/diagnosis.service'
-import { TestOrderService } from '@/services/testOrder.service'
+import { DiagnosisTestService } from '@/services/diagnosisTest.service'
 import { PrescriptionService } from '@/services/prescriptions.service'
 import type { Consultation, ConsultationCreateRequest } from '@/types/medical.types'
 import type { Diagnosis } from '@/types/diagnosis.types'
-import type { TestOrder } from '@/types/testOrder.types'
+import type { DiagnosisTest } from '@/types/diagnosisTest.types'
 import type { Prescription } from '@/types/prescriptions.types'
 
 export const useConsultationStore = defineStore('consultation', () => {
@@ -18,8 +18,8 @@ export const useConsultationStore = defineStore('consultation', () => {
   const diagnosis = ref<Diagnosis[]>([])
   const loadingDiagnosis = ref(false)
   
-  const testOrders = ref<TestOrder[]>([])
-  const loadingTestOrders = ref(false)
+  const diagnosisTests = ref<DiagnosisTest[]>([])
+  const loadingDiagnosisTests = ref(false)
   
   const prescriptions = ref<Prescription[]>([])
   const loadingPrescriptions = ref(false)
@@ -44,7 +44,7 @@ export const useConsultationStore = defineStore('consultation', () => {
       // Cargar diagnósticos, exámenes diagnósticos y prescripciones si la consulta existe
       if (consultation?.id) {
         await fetchDiagnosisByConsultation(consultation.id)
-        await fetchTestOrdersByConsultation(consultation.id)
+        await fetchDiagnosisTestsByConsultation(consultation.id)
         await fetchPrescriptionsByConsultation(consultation.id)
       }
 
@@ -68,7 +68,7 @@ export const useConsultationStore = defineStore('consultation', () => {
       // Cargar diagnósticos, exámenes diagnósticos y prescripciones
       if (consultation?.id) {
         await fetchDiagnosisByConsultation(consultation.id)
-        await fetchTestOrdersByConsultation(consultation.id)
+        await fetchDiagnosisTestsByConsultation(consultation.id)
         await fetchPrescriptionsByConsultation(consultation.id)
       }
     } catch (err) {
@@ -222,47 +222,47 @@ export const useConsultationStore = defineStore('consultation', () => {
     }
   }
 
-  // 🔹 Métodos para manejar órdenes de exámenes dentro de la consulta actual
-  const fetchTestOrdersByConsultation = async (consultationId: number) => {
+  // 🔹 Métodos para manejar exámenes diagnósticos dentro de la consulta actual
+  const fetchDiagnosisTestsByConsultation = async (consultationId: number) => {
     try {
-      loadingTestOrders.value = true
-      const result = await TestOrderService.getTestOrdersByConsultation(consultationId)
-      testOrders.value = result
+      loadingDiagnosisTests.value = true
+      const result = await DiagnosisTestService.getDiagnosisTestsByConsultation(consultationId)
+      diagnosisTests.value = result
       if (currentConsultation.value) {
         currentConsultation.value.diagnosis_tests = result
       }
     } catch (err) {
-      console.error('Error fetching test orders:', err)
+      console.error('Error fetching diagnosis tests:', err)
     } finally {
-      loadingTestOrders.value = false
+      loadingDiagnosisTests.value = false
     }
   }
 
-  const setCurrentConsultationTestOrders = (testOrdersList: TestOrder[]) => {
+  const setCurrentConsultationDiagnosisTests = (diagnosisTestsList: DiagnosisTest[]) => {
     if (!currentConsultation.value) return
-    currentConsultation.value.diagnosis_tests = testOrdersList
+    currentConsultation.value.diagnosis_tests = diagnosisTestsList
   }
   
-  const addTestOrderToCurrentConsultation = (newTestOrder: TestOrder) => {
+  const addDiagnosisTestToCurrentConsultation = (newDiagnosisTest: DiagnosisTest) => {
     if (!currentConsultation.value) return
     if (!currentConsultation.value.diagnosis_tests) {
       currentConsultation.value.diagnosis_tests = []
     }
-    currentConsultation.value.diagnosis_tests.push(newTestOrder)
+    currentConsultation.value.diagnosis_tests.push(newDiagnosisTest)
   }
 
-  const updateTestOrderInCurrentConsultation = (updatedTestOrder: TestOrder) => {
+  const updateDiagnosisTestInCurrentConsultation = (updatedDiagnosisTest: DiagnosisTest) => {
     if (!currentConsultation.value?.diagnosis_tests) return
 
-    const index = currentConsultation.value.diagnosis_tests.findIndex(dt => dt.id === updatedTestOrder.id)
+    const index = currentConsultation.value.diagnosis_tests.findIndex(dt => dt.id === updatedDiagnosisTest.id)
     if (index !== -1) {
-      currentConsultation.value.diagnosis_tests[index] = updatedTestOrder
+      currentConsultation.value.diagnosis_tests[index] = updatedDiagnosisTest
     }
   }
 
-  const removeTestOrderFromCurrentConsultation = (testOrderId: number) => {
+  const removeDiagnosisTestFromCurrentConsultation = (diagnosisTestId: number) => {
     if (!currentConsultation.value?.diagnosis_tests) return
-    const index = currentConsultation.value.diagnosis_tests.findIndex(dt => dt.id === testOrderId)
+    const index = currentConsultation.value.diagnosis_tests.findIndex(dt => dt.id === diagnosisTestId)
     if (index !== -1) {
       currentConsultation.value.diagnosis_tests.splice(index, 1)
     }
@@ -336,7 +336,7 @@ export const useConsultationStore = defineStore('consultation', () => {
   const clearConsultation = () => {
     currentConsultation.value = null
     diagnosis.value = []
-    testOrders.value = []
+    diagnosisTests.value = []
     prescriptions.value = []
     error.value = null
   }
@@ -346,11 +346,11 @@ export const useConsultationStore = defineStore('consultation', () => {
   return {
     currentConsultation,
     diagnosis,
-    testOrders,
+    diagnosisTests,
     prescriptions,
     isLoading,
     loadingDiagnosis,
-    loadingTestOrders,
+    loadingDiagnosisTests,
     loadingPrescriptions,
     error,
     hasActiveConsultation,
@@ -370,12 +370,12 @@ export const useConsultationStore = defineStore('consultation', () => {
     addDiagnosisToCurrentConsultation,
     updateDiagnosisInCurrentConsultation,
     removeDiagnosisFromCurrentConsultation,
-    // Órdenes de exámenes
-    fetchTestOrdersByConsultation,
-    setCurrentConsultationTestOrders,
-    addTestOrderToCurrentConsultation,
-    updateTestOrderInCurrentConsultation,
-    removeTestOrderFromCurrentConsultation,
+    // Exámenes diagnósticos
+    fetchDiagnosisTestsByConsultation,
+    setCurrentConsultationDiagnosisTests,
+    addDiagnosisTestToCurrentConsultation,
+    updateDiagnosisTestInCurrentConsultation,
+    removeDiagnosisTestFromCurrentConsultation,
     // Prescripciones
     fetchPrescriptionsByConsultation,
     setCurrentConsultationPrescriptions,

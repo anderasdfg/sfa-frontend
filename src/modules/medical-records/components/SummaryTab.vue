@@ -142,8 +142,8 @@
               <div v-if="diagnosisTests.length" class="summary-section-content">
                 <div class="tests-list">
                   <div v-for="test in diagnosisTests" :key="test.id" class="test-item">
-                    <span class="test-type"> {{ test.diagnostic_test_cpt_code }} - {{ test.diagnostic_test_name }}</span>
-                    <span class="test-description">{{ test.diagnostic_test_description }}</span>
+                    <span class="test-type">{{ test.test_type }}</span>
+                    <span class="test-description">{{ test.description }}</span>
                   </div>
                 </div>
               </div>

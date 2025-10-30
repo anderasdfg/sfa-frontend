@@ -147,12 +147,10 @@
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
 
-    // Get upcoming appointments (future or today, excluding 'realizada')
+    // Get upcoming appointments (future or today)
     const upcomingAppointments = myAppointments.value.filter(apt => {
       const aptDate = new Date(apt.slot?.scheduled_at || apt.appointment_date)
-      const isUpcoming = aptDate >= new Date(now.setHours(0, 0, 0, 0))
-      const isNotCompleted = apt.status?.toLowerCase() !== 'realizada'
-      return isUpcoming && isNotCompleted
+      return aptDate >= new Date(now.setHours(0, 0, 0, 0))
     })
 
     // Get appointments for current month
@@ -161,9 +159,9 @@
       return aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear
     })
 
-    // Get completed appointments (assuming status 'realizada' or 'pagada')
+    // Get completed appointments (assuming status 'completed' or 'pagada')
     const completedAppointments = myAppointments.value.filter(apt =>
-      ['realizada', 'completada', 'pagada'].includes(apt.status?.toLowerCase())
+      ['completed', 'completada', 'pagada'].includes(apt.status?.toLowerCase())
     )
 
     // Format next appointment

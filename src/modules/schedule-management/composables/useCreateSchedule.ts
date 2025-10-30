@@ -11,7 +11,6 @@ export interface ScheduleFormData {
   endTime: Date
   slotDuration: number
   price: number
-  serviceId: number
 }
 
 export const useCreateSchedule = () => {
@@ -31,7 +30,6 @@ export const useCreateSchedule = () => {
         end_time: formData.endTime.toTimeString().split(' ')[0],
         slot_duration_minutes: formData.slotDuration,
         slot_price: formData.price,
-        service_id: formData.serviceId,
         appointment_modality: formData.modality === 'presencial' 
           ? AppointmentModality.PRESENCIAL 
           : AppointmentModality.TELECONSULTA

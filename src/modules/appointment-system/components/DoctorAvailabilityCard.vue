@@ -19,9 +19,7 @@
             "
             class="consultation-tag"
           />
-          <p v-if="filteredSlots[0]?.schedule_modality" class="doctor-location">
-            {{ filteredSlots[0]?.schedule_modality === AppointmentModality.TELECONSULTA ? 'Virtual' : 'Los Olivos' }}
-          </p>
+          <p class="doctor-location">{{ doctor.location }}</p>
         </div>
       </div>
     </div>

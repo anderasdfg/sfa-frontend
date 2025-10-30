@@ -212,8 +212,7 @@ export function useScheduleCalendar() {
     return doctors.map((doctor, index) => ({
       ...doctor,
       name: `Dr. ${doctor.first_name} ${doctor.last_name}`,
-      color: DOCTOR_COLORS[index % DOCTOR_COLORS.length],
-      services: doctor.services || [] // Incluir servicios
+      color: DOCTOR_COLORS[index % DOCTOR_COLORS.length]
     }))
   }
 

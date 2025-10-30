@@ -21,9 +21,9 @@
         <p class="text-red-600">{{ error }}</p>
         <Button label="Reintentar" class="mt-3" @click="handleRetry" />
       </div>
-      <div v-else-if="filteredAppointments.length > 0" class="appointments-list">
+      <div v-else-if="todayAppointments.length > 0" class="appointments-list">
         <div
-          v-for="appointment in filteredAppointments"
+          v-for="appointment in todayAppointments"
           :key="appointment.id"
           class="appointment-item"
         >
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, computed } from 'vue'
+  import { onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import Card from 'primevue/card'
   import Button from 'primevue/button'
@@ -71,11 +71,6 @@
 
   const router = useRouter()
   const { todayAppointments, loading, error, fetchTodayAppointments } = useDoctorAppointments()
-
-  // Filtrar citas que no estén realizadas
-  const filteredAppointments = computed(() => {
-    return todayAppointments.value.filter(appointment => appointment.status !== 'realizada')
-  })
 
   const handleViewAppointment = (appointmentId: number) => {
     router.push(`/appointments/${appointmentId}/prepare`)

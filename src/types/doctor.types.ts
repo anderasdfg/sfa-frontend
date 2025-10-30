@@ -13,12 +13,6 @@ export interface Doctor {
   is_active?: boolean
   created_at?: string
   updated_at?: string
-  services?: readonly Service[]
-}
-
-export interface Service {
-  id: number
-  name: string
 }
 
 export interface DoctorResponse {

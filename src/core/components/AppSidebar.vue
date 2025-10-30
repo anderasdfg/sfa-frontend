@@ -282,11 +282,6 @@
           command: () => router.push('/appointments')
         },
         {
-          label: 'Mis Exámenes',
-          icon: 'pi pi-chart-bar',
-          command: () => router.push('/test-orders')
-        },
-        {
           label: 'Historia Clínica',
           icon: 'pi pi-file',
           command: () => router.push(`/medical-records/patient/${user.value?.id}`)

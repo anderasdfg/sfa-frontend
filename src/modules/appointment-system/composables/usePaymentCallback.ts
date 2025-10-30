@@ -5,18 +5,14 @@
 import { ref, readonly, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { AppointmentService } from '@/services/appointments.service'
-import { TestOrderService } from '@/services/testOrder.service'
 import { 
   extractPaymentParams, 
   adaptToPaymentSummary, 
   getPaymentStatus,
   getPaymentStatusMessage,
-  validateAppointmentId,
-  isTestOrderPayment,
-  extractTestOrderId
+  validateAppointmentId
 } from '../adapters/payment-callback.adapter'
 import type { Appointment } from '@/types/appointments.types'
-import type { TestOrder } from '@/types/testOrder.types'
 import type { PaymentSummary, PaymentStatus } from '@/types/payment-callback.types'
 
 export const usePaymentCallback = () => {
@@ -24,10 +20,8 @@ export const usePaymentCallback = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const appointment = ref<Appointment | null>(null)
-  const testOrder = ref<TestOrder | null>(null)
   const paymentSummary = ref<PaymentSummary | null>(null)
   const paymentStatus = ref<PaymentStatus>('pending')
-  const isTestOrder = ref(false)
 
   // Computed properties
   const statusMessage = computed(() => getPaymentStatusMessage(paymentStatus.value))
@@ -44,36 +38,25 @@ export const usePaymentCallback = () => {
     error.value = null
 
     try {
-      // 1. Detectar si es una orden de examen
-      isTestOrder.value = isTestOrderPayment(queryParams)
-
-      // 2. Extraer y validar parámetros
+      // 1. Extraer y validar parámetros
       const params = extractPaymentParams(queryParams)
       if (!params) {
         throw new Error('Parámetros de pago inválidos')
       }
 
-      // 3. Validar appointment_id
+      // 2. Validar appointment_id
       const appointmentId = validateAppointmentId(params.appointment_id)
       if (!appointmentId) {
         throw new Error('ID de cita inválido')
       }
 
-      // 4. Determinar estado del pago
+      // 3. Determinar estado del pago
       paymentStatus.value = getPaymentStatus(params)
 
-      // 5. Crear resumen de pago
+      // 4. Crear resumen de pago
       paymentSummary.value = adaptToPaymentSummary(params)
 
-      // 6. Cargar datos según el tipo
-      if (isTestOrder.value) {
-        const testOrderId = extractTestOrderId(queryParams)
-        if (testOrderId) {
-          await loadTestOrderData(testOrderId)
-        }
-      }
-      
-      // Siempre cargar datos de la cita
+      // 5. Cargar datos de la cita
       await loadAppointmentData(appointmentId)
 
       return true
@@ -101,19 +84,6 @@ export const usePaymentCallback = () => {
   }
 
   /**
-   * Carga los datos de la orden de examen desde el API
-   */
-  const loadTestOrderData = async (testOrderId: number) => {
-    try {
-      const testOrderData = await TestOrderService.getTestOrderById(testOrderId)
-      testOrder.value = testOrderData
-    } catch (err: any) {
-      console.error('Error loading test order data:', err)
-      // No lanzamos error aquí para no interrumpir el flujo
-    }
-  }
-
-  /**
    * Procesa automáticamente los query parameters de la ruta actual
    */
   const processCurrentRoute = async () => {
@@ -128,10 +98,8 @@ export const usePaymentCallback = () => {
   const clearState = () => {
     error.value = null
     appointment.value = null
-    testOrder.value = null
     paymentSummary.value = null
     paymentStatus.value = 'pending'
-    isTestOrder.value = false
   }
 
   /**
@@ -146,10 +114,8 @@ export const usePaymentCallback = () => {
     loading: readonly(loading),
     error: readonly(error),
     appointment: readonly(appointment),
-    testOrder: readonly(testOrder),
     paymentSummary: readonly(paymentSummary),
     paymentStatus: readonly(paymentStatus),
-    isTestOrder: readonly(isTestOrder),
 
     // Computed properties
     statusMessage,

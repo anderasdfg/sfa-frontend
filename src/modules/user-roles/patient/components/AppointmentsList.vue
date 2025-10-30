@@ -1,7 +1,7 @@
 <template>
   <div class="appointments-container">
-    <ul v-if="filteredAppointments.length > 0" class="appointments-list">
-      <li v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-item">
+    <ul v-if="appointments.length > 0" class="appointments-list">
+      <li v-for="appointment in appointments" :key="appointment.id" class="appointment-item">
         <div class="appointment-time">
           <div class="time">{{ formatTime(appointment.slot?.scheduled_at) }}</div>
           <div class="date">{{ formatDate(appointment.slot?.scheduled_at) }}</div>
@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref } from 'vue'
   import type { Appointment } from '@/types/appointments.types'
   import Tag from 'primevue/tag'
   import Button from 'primevue/button'
@@ -64,21 +64,16 @@
     scheduleButtonText?: string
   }
 
-  const props = withDefaults(defineProps<Props>(), {
+  withDefaults(defineProps<Props>(), {
     appointments: () => [],
     emptyMessage: 'No tienes citas programadas',
     showScheduleButton: true,
-    scheduleButtonText: 'Agendar mi siguiente cita'
+    scheduleButtonText: 'Agendar mi primera cita'
   })
 
   defineEmits<{
     (e: 'schedule-appointment'): void
   }>()
-
-  // Filtrar citas que no estén realizadas
-  const filteredAppointments = computed(() => {
-    return props.appointments.filter(appointment => appointment.status !== 'realizada')
-  })
 
   const getStatusLabel = (status: string): string => {
     const statusMap: Record<string, string> = {

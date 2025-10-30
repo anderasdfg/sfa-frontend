@@ -39,25 +39,6 @@ export const extractPaymentParams = (queryParams: Record<string, string>): Payme
 }
 
 /**
- * Extrae el test_order_id de los query parameters
- */
-export const extractTestOrderId = (queryParams: Record<string, string>): number | null => {
-  const testOrderId = queryParams.test_order_id
-  if (!testOrderId) return null
-  
-  const id = parseInt(testOrderId, 10)
-  return isNaN(id) || id <= 0 ? null : id
-}
-
-/**
- * Determina si el pago es para una orden de examen
- * Lo detecta por la presencia del test_order_id
- */
-export const isTestOrderPayment = (queryParams: Record<string, string>): boolean => {
-  return extractTestOrderId(queryParams) !== null
-}
-
-/**
  * Convierte PaymentCallbackParams a PaymentSummary para la UI
  */
 export const adaptToPaymentSummary = (params: PaymentCallbackParams): PaymentSummary => {

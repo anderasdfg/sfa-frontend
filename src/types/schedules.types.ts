@@ -31,7 +31,6 @@ export interface ScheduleCreateRequest {
   end_time: string
   slot_duration_minutes: number
   slot_price: number
-  service_id: number
 }
 
 export interface Slot {

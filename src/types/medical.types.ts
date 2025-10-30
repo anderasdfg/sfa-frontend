@@ -1,5 +1,5 @@
 import type { Diagnosis } from './diagnosis.types'
-import type { TestOrder } from './testOrder.types'
+import type { DiagnosisTest } from './diagnosisTest.types'
 import type { Prescription } from './prescriptions.types'
 
 export interface Patient {
@@ -37,6 +37,6 @@ export interface Consultation {
   current_illnes_history: string
   treatment_plan: string
   diagnosis: Diagnosis[]
-  diagnosis_tests: TestOrder[]
+  diagnosis_tests: DiagnosisTest[]
   prescriptions: Prescription[]
 }

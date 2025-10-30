@@ -301,12 +301,11 @@
   const showCreateModal = ref(false)
   const selectedDate = ref<Date | null>(null)
 
-  // Doctores disponibles con nombre completo y servicios
+  // Doctores disponibles con nombre completo
   const availableDoctors = computed(() =>
     filteredDoctors.value.map(doctor => ({
       ...doctor,
-      fullName: `Dr. ${doctor.first_name} ${doctor.last_name}`,
-      services: doctor.services || [] // Preservar servicios del doctor
+      fullName: `Dr. ${doctor.first_name} ${doctor.last_name}`
     }))
   )
 
