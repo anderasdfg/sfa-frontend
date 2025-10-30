@@ -21,7 +21,8 @@ export interface AppointmentSlotResponse {
 }
 export interface AppointmentSlotQueryParams {
   date: string
-  specialty_id: number
+  specialty_id?: number
   modality?: AppointmentModality
   doctor_id?: number | null
+  service_id?: number | null
 }

@@ -30,7 +30,8 @@ export const formatTime = (date: Date | string): string => {
   return new Intl.DateTimeFormat('es-PE', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
+    timeZone: 'UTC'
   }).format(dateObj)
 }
 

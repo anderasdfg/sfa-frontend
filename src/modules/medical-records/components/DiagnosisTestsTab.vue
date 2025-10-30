@@ -54,7 +54,7 @@
                 <label class="form-label" for="test-description">Descripción *</label>
                 <Textarea
                   id="test-description"
-                  v-model="formData.description"
+                  v-model="formData.diagnostic_test_description"
                   rows="3"
                   placeholder="Describe los detalles del examen auxiliar..."
                   class="w-full"
@@ -63,6 +63,24 @@
                 <small v-if="formErrors.description" class="p-error">
                   {{ formErrors.description }}
                 </small>
+              </div>
+
+              <!-- Patient Instructions -->
+              <div class="form-group">
+                <label class="form-label" for="patient-instructions">
+                  Instrucciones para el Paciente
+                  <i 
+                    class="pi pi-info-circle ml-2 text-gray-400"
+                    v-tooltip="'Indicaciones que el paciente debe seguir antes del examen (ej: ayuno, abstinencia, etc.)'"
+                  ></i>
+                </label>
+                <Textarea
+                  id="patient-instructions"
+                  v-model="formData.diagnostic_test_patient_instructions"
+                  rows="2"
+                  placeholder="Ej: Ayuno de 8 horas..."
+                  class="w-full"
+                />
               </div>
 
               <!-- Form Actions -->
@@ -90,7 +108,7 @@
         <div class="current-tests-section">
           <h4 class="list-title">
             Exámenes solicitados en esta consulta
-            <Tag :value="diagnosisTests.length.toString()" severity="info" />
+            <Tag :value="testOrders.length.toString()" severity="info" />
           </h4>
 
           <div v-if="loading" class="loading-state">
@@ -101,18 +119,18 @@
           <div v-else-if="error" class="error-state">
             <i class="pi pi-exclamation-triangle text-red-500"></i>
             <p class="text-red-600">{{ error }}</p>
-            <Button label="Reintentar" size="small" @click="fetchDiagnosisTestsByConsultation(props.consultationId, true)" />
+            <Button label="Reintentar" size="small" @click="fetchTestOrdersByConsultation(props.consultationId, true)" />
           </div>
 
-          <div v-else-if="diagnosisTests.length === 0" class="empty-state">
+          <div v-else-if="testOrders.length === 0" class="empty-state">
             <i class="pi pi-file-excel text-4xl text-gray-300"></i>
             <p class="text-gray-500 mt-2">No hay exámenes diagnósticos solicitados en esta consulta</p>
           </div>
 
           <div v-else class="tests-list">
-            <div v-for="test in diagnosisTests" :key="test.id" class="test-item">
+            <div v-for="test in testOrders" :key="test.id" class="test-item">
               <div class="test-item-header">
-                <Tag value="Pendiente" severity="warning" />
+                <Tag :value="capitalizeFirstLetter(test.status)" severity="warning" />
                 <div class="test-item-actions">
                   <Button
                     icon="pi pi-pencil"
@@ -134,8 +152,8 @@
                 </div>
               </div>
               <div class="test-item-content">
-                <div class="test-type">{{ test.test_type }}</div>
-                <div class="test-description">{{ test.description }}</div>
+                <div class="test-type">{{ test.diagnostic_test_cpt_code }} - {{ test.diagnostic_test_name }}</div>
+                <div class="test-description">{{ test.diagnostic_test_description }}</div>
               </div>
             </div>
           </div>
@@ -171,66 +189,6 @@
                   >
                     <div class="template-icon">
                       <i class="pi pi-chart-bar"></i>
-                    </div>
-                    <div class="template-content">
-                      <div class="template-name">{{ template.test_type }}</div>
-                      <div class="template-description">{{ template.description }}</div>
-                    </div>
-                    <Button
-                      icon="pi pi-plus"
-                      text
-                      rounded
-                      size="small"
-                      v-tooltip="'Agregar'"
-                      class="template-add-btn"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="template-group">
-                <div class="template-group-header">
-                  <h4 class="template-group-title">Imágenes</h4>
-                </div>
-                <div class="template-items">
-                  <div
-                    class="template-item"
-                    v-for="template in imagingTemplates"
-                    :key="template.id"
-                    @click="applyTemplate(template)"
-                  >
-                    <div class="template-icon">
-                      <i class="pi pi-image"></i>
-                    </div>
-                    <div class="template-content">
-                      <div class="template-name">{{ template.test_type }}</div>
-                      <div class="template-description">{{ template.description }}</div>
-                    </div>
-                    <Button
-                      icon="pi pi-plus"
-                      text
-                      rounded
-                      size="small"
-                      v-tooltip="'Agregar'"
-                      class="template-add-btn"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="template-group">
-                <div class="template-group-header">
-                  <h4 class="template-group-title">Otros</h4>
-                </div>
-                <div class="template-items">
-                  <div
-                    class="template-item"
-                    v-for="template in otherTemplates"
-                    :key="template.id"
-                    @click="applyTemplate(template)"
-                  >
-                    <div class="template-icon">
-                      <i class="pi pi-file-medical"></i>
                     </div>
                     <div class="template-content">
                       <div class="template-name">{{ template.test_type }}</div>
@@ -299,7 +257,7 @@
   import Dialog from 'primevue/dialog'
   import ProgressSpinner from 'primevue/progressspinner'
   import { useDiagnosisTests, type TestTemplate } from '../composables/useDiagnosisTests'
-  import type { DiagnosisTest } from '@/types/diagnosisTest.types'
+  import type { TestOrder } from '@/types/testOrder.types'
 
   const emit = defineEmits(['next-tab'])
 
@@ -312,41 +270,30 @@
 
   // Composable
   const {
-    diagnosisTests,
+    testOrders,
     loading,
     error,
     savingTest,
     deletingTest,
     laboratoryTemplates,
-    imagingTemplates,
-    otherTemplates,
-    fetchDiagnosisTestsByConsultation,
-    createDiagnosisTest,
-    updateDiagnosisTest,
-    deleteDiagnosisTest
+    fetchTestOrdersByConsultation,
+    createTestOrder,
+    updateTestOrder,
+    deleteTestOrder
   } = useDiagnosisTests()
 
   // Estado de la UI
-  const editingTest = ref<DiagnosisTest | null>(null)
-  const testToDelete = ref<DiagnosisTest | null>(null)
+  const editingTest = ref<TestOrder | null>(null)
+  const testToDelete = ref<TestOrder | null>(null)
   const showDeleteDialog = ref(false)
-  
-  // Mapa de correspondencia entre templates y códigos CPT
-  const templateToCptMap: Record<string, string> = {
-    'Hemograma completo': '85025',
-    'Perfil lipídico': '80061',
-    'Glucosa en ayunas': '82947',
-    'Radiografía de tórax': '71046',
-    'Ecografía abdominal': '76700',
-    'Tomografía computarizada': '70450',
-    'Electrocardiograma': '93000',
-    'Espirometría': '94010'
-  }
 
   // Estado del formulario
   const formData = ref({
-    test_type: '',
-    description: ''
+    diagnostic_test_id: null as number | null,
+    diagnostic_test_name: '',
+    diagnostic_test_description: '',
+    diagnostic_test_cpt_code: '',
+    diagnostic_test_patient_instructions: ''
   })
 
   const formErrors = ref({
@@ -355,48 +302,21 @@
   })
   
   // Autocomplete
-  const testSuggestions = ref<Array<{ code: string; description: string }>>([])
-  const selectedTest = ref<{ code: string; description: string } | null>(null)
+  const testSuggestions = ref<Array<{ code: string; description: string; patient_instructions?: string }>>([])
+  const selectedTest = ref<{ code: string; description: string; patient_instructions?: string } | null>(null)
   
-  // Lista de procedimientos médicos con códigos CPT (o equivalentes en Perú)
+  // Lista de procedimientos médicos con códigos CPT (sincronizado con diagnosisTests.data.ts)
   const medicalProcedures = [
-    { code: '80053', description: 'Panel metabólico completo' },
-    { code: '85025', description: 'Hemograma completo (CBC)' },
-    { code: '80061', description: 'Perfil lipídico' },
-    { code: '82947', description: 'Glucosa en sangre, cuantitativa' },
-    { code: '84153', description: 'Antígeno prostático específico (PSA)' },
-    { code: '83036', description: 'Hemoglobina glicosilada (A1C)' },
-    { code: '84443', description: 'Hormona estimulante de la tiroides (TSH)' },
-    { code: '84439', description: 'Tiroxina libre (T4)' },
-    { code: '84478', description: 'Triglicéridos' },
-    { code: '82607', description: 'Vitamina B-12' },
-    { code: '82728', description: 'Ferritina' },
-    { code: '86003', description: 'Prueba de alergia, cualitativa' },
-    { code: '87086', description: 'Cultivo bacteriano de orina' },
-    { code: '87430', description: 'Prueba rápida de estreptococo' },
-    { code: '70450', description: 'TC de cabeza/cerebro sin contraste' },
-    { code: '70486', description: 'TC de senos paranasales' },
-    { code: '71045', description: 'Radiografía de tórax, una vista' },
-    { code: '71046', description: 'Radiografía de tórax, dos vistas' },
-    { code: '72100', description: 'Radiografía de columna lumbosacra' },
-    { code: '72110', description: 'Radiografía de columna lumbosacra completa' },
-    { code: '73030', description: 'Radiografía de hombro' },
-    { code: '73560', description: 'Radiografía de rodilla' },
-    { code: '73610', description: 'Radiografía de tobillo' },
-    { code: '74022', description: 'Radiografía completa de abdomen' },
-    { code: '76641', description: 'Ecografía de mama, completa' },
-    { code: '76700', description: 'Ecografía de abdomen, completa' },
-    { code: '76770', description: 'Ecografía retroperitoneal, completa' },
-    { code: '76830', description: 'Ecografía transvaginal' },
-    { code: '76856', description: 'Ecografía pélvica' },
-    { code: '93000', description: 'Electrocardiograma (ECG)' },
-    { code: '93224', description: 'Monitoreo Holter 24 horas' },
-    { code: '93306', description: 'Ecocardiografía completa' },
-    { code: '93350', description: 'Ecocardiografía de estrés' },
-    { code: '93880', description: 'Doppler carotídeo bilateral' },
-    { code: '95810', description: 'Polisomnografía (estudio del sueño)' },
-    { code: '95860', description: 'Electromiografía (EMG)' },
-    { code: '96372', description: 'Administración terapéutica/profiláctica/diagnóstica' }
+    { code: '85025', description: 'Hemograma Completo', details: 'Análisis completo de células sanguíneas', patient_instructions: 'Ayuno de 8 horas' },
+    { code: '82947', description: 'Glucosa en Sangre', details: 'Medición de niveles de glucosa', patient_instructions: 'Ayuno de 8-12 horas' },
+    { code: '80061', description: 'Perfil Lipídico', details: 'Colesterol total y triglicéridos', patient_instructions: 'Ayuno de 12 horas' },
+    { code: '81001', description: 'Examen de Orina Completo', details: 'Análisis físico-químico de orina', patient_instructions: 'Primera orina de la mañana' },
+    { code: '82565', description: 'Creatinina', details: 'Función renal', patient_instructions: 'No requiere ayuno' },
+    { code: '84443', description: 'Tiroides (TSH T3 T4)', details: 'Perfil tiroideo completo', patient_instructions: 'No requiere ayuno' },
+    { code: '84153', description: 'Antígeno Prostático', details: 'Marcador tumoral PSA', patient_instructions: 'Abstinencia sexual 48h' },
+    { code: '84450', description: 'Transaminasas (TGO TGP)', details: 'Función hepática', patient_instructions: 'Ayuno de 8 horas' },
+    { code: '84550', description: 'Ácido Úrico', details: 'Detección de gota y problemas renales', patient_instructions: 'No requiere ayuno' },
+    { code: '84520', description: 'Urea', details: 'Función renal', patient_instructions: 'No requiere ayuno' }
   ]
   
   // Método para buscar exámenes según el texto ingresado
@@ -415,7 +335,7 @@
       )
       
       if (exactMatch) {
-        formData.value.description = exactMatch.description
+        formData.value.diagnostic_test_description = exactMatch.description
       }
     }
   }
@@ -427,12 +347,12 @@
     
     let isValid = true
 
-    if (!formData.value.test_type.trim()) {
+    if (!formData.value.diagnostic_test_name.trim()) {
       formErrors.value.test_type = 'El tipo de examen es requerido'
       isValid = false
     }
 
-    if (!formData.value.description.trim()) {
+    if (!formData.value.diagnostic_test_description.trim()) {
       formErrors.value.description = 'La descripción es requerida'
       isValid = false
     }
@@ -446,43 +366,54 @@
     try {
       const testData = {
         consultation_id: props.consultationId,
-        test_type: formData.value.test_type,
-        description: formData.value.description
+        diagnostic_test_id: formData.value.diagnostic_test_id || undefined,
+        diagnostic_test_name: formData.value.diagnostic_test_name, // Solo el nombre, sin el formato "CPT - "
+        diagnostic_test_description: formData.value.diagnostic_test_description,
+        diagnostic_test_cpt_code: formData.value.diagnostic_test_cpt_code,
+        diagnostic_test_patient_instructions: formData.value.diagnostic_test_patient_instructions,
+        status: 'pendiente'
       }
 
       if (editingTest.value) {
         // Actualizar test existente
-        await updateDiagnosisTest(editingTest.value.id, testData)
+        await updateTestOrder(editingTest.value.id, testData)
       } else {
         // Agregar nuevo test
-        await createDiagnosisTest(testData)
+        await createTestOrder(testData)
       }
 
       resetForm()
     } catch (error) {
-      console.error('Error saving diagnosis test:', error)
+      console.error('Error saving test order:', error)
     }
   }
 
-  const editTest = (test: DiagnosisTest) => {
+  const editTest = (test: TestOrder) => {
     editingTest.value = test
+    
+    // Extraer el nombre del test sin el formato "CPT - " si existe
+    const testParts = test.diagnostic_test_name.split(' - ')
+    const testName = testParts.length > 1 ? testParts[1] : test.diagnostic_test_name
+    
     formData.value = {
-      test_type: test.test_type,
-      description: test.description
+      diagnostic_test_id: test.diagnostic_test_id || null,
+      diagnostic_test_name: testName,
+      diagnostic_test_description: test.diagnostic_test_description,
+      diagnostic_test_cpt_code: test.diagnostic_test_cpt_code,
+      diagnostic_test_patient_instructions: test.diagnostic_test_patient_instructions
     }
     
     // Intentar encontrar el procedimiento en la lista de médicos
-    const testParts = test.test_type.split(' - ')
     if (testParts.length > 0) {
       const code = testParts[0]
       const matchingProcedure = medicalProcedures.find(p => p.code === code)
       if (matchingProcedure) {
         selectedTest.value = matchingProcedure
       } else {
-        // Si no encuentra el código, usa el test_type como está
+        // Si no encuentra el código, usa el diagnostic_test_name como está
         selectedTest.value = { 
           code: testParts[0] || '',
-          description: testParts.length > 1 ? testParts[1] : test.test_type
+          description: testName
         }
       }
     } else {
@@ -490,7 +421,7 @@
     }
   }
 
-  const confirmDelete = (test: DiagnosisTest) => {
+  const confirmDelete = (test: TestOrder) => {
     testToDelete.value = test
     showDeleteDialog.value = true
   }
@@ -499,18 +430,21 @@
     if (!testToDelete.value) return
     
     try {
-      await deleteDiagnosisTest(testToDelete.value.id)
+      await deleteTestOrder(testToDelete.value.id)
       showDeleteDialog.value = false
       testToDelete.value = null
     } catch (error) {
-      console.error('Error deleting diagnosis test:', error)
+      console.error('Error deleting test order:', error)
     }
   }
 
   const resetForm = () => {
     formData.value = {
-      test_type: '',
-      description: ''
+      diagnostic_test_id: null,
+      diagnostic_test_name: '',
+      diagnostic_test_description: '',
+      diagnostic_test_cpt_code: '',
+      diagnostic_test_patient_instructions: ''
     }
     formErrors.value = {
       test_type: '',
@@ -521,25 +455,28 @@
   }
 
   const applyTemplate = (template: TestTemplate) => {
-    // Buscar si hay un código CPT mapeado para este template
-    const cptCode = templateToCptMap[template.test_type];
+    // Usar directamente el código CPT de la plantilla
+    const cptCode = template.cpt_code;
     
     if (cptCode) {
-      // Si tenemos un código mapeado, buscar el procedimiento correspondiente
+      // Si tenemos un código CPT, buscar el procedimiento correspondiente
       const mappedProcedure = medicalProcedures.find(p => p.code === cptCode);
       
       if (mappedProcedure) {
         // Usar el procedimiento mapeado
         selectedTest.value = mappedProcedure;
         formData.value = {
-          test_type: `${mappedProcedure.code} - ${mappedProcedure.description}`,
-          description: template.description
+          diagnostic_test_id: template.id,
+          diagnostic_test_name: mappedProcedure.description, // Solo el nombre
+          diagnostic_test_description: template.description,
+          diagnostic_test_cpt_code: mappedProcedure.code,
+          diagnostic_test_patient_instructions: template.patient_instructions || mappedProcedure.patient_instructions || ''
         };
         return;
       }
     }
     
-    // Si no hay un mapeo o no encontramos el procedimiento, buscar por coincidencia de texto
+    // Si no hay código CPT o no encontramos el procedimiento, buscar por coincidencia de texto
     const matchingProcedure = medicalProcedures.find(
       p => p.description.toLowerCase().includes(template.test_type.toLowerCase())
     );
@@ -548,8 +485,11 @@
       // Si encontramos un código CPT que coincide, lo usamos
       selectedTest.value = matchingProcedure;
       formData.value = {
-        test_type: `${matchingProcedure.code} - ${matchingProcedure.description}`,
-        description: template.description
+        diagnostic_test_id: template.id,
+        diagnostic_test_name: matchingProcedure.description, // Solo el nombre
+        diagnostic_test_description: template.description,
+        diagnostic_test_cpt_code: matchingProcedure.code,
+        diagnostic_test_patient_instructions: template.patient_instructions || matchingProcedure.patient_instructions || ''
       };
     } else {
       // Si no encontramos código CPT, usamos el texto normal de la plantilla
@@ -558,16 +498,29 @@
         description: template.test_type
       };
       formData.value = {
-        test_type: template.test_type,
-        description: template.description
+        diagnostic_test_id: template.id,
+        diagnostic_test_name: template.test_type,
+        diagnostic_test_description: template.description,
+        diagnostic_test_cpt_code: '',
+        diagnostic_test_patient_instructions: template.patient_instructions || ''
       };
     }
   }
   
-  const onTestSelect = (event: { value: { code: string; description: string } }) => {
+  const onTestSelect = (event: { value: { code: string; description: string; details?: string; patient_instructions?: string } }) => {
     const selected = event.value
-    formData.value.test_type = `${selected.code} - ${selected.description}`
-    formData.value.description = `Solicitud de ${selected.description}`
+    
+    // Buscar el procedimiento completo en medicalProcedures para obtener todos los detalles
+    const fullProcedure = medicalProcedures.find(p => p.code === selected.code)
+    
+    // Buscar el ID del test en las plantillas por código CPT
+    const template = laboratoryTemplates.value.find(t => t.cpt_code === selected.code)
+    
+    formData.value.diagnostic_test_id = template?.id || null
+    formData.value.diagnostic_test_name = selected.description // Solo el nombre
+    formData.value.diagnostic_test_description = fullProcedure?.details || selected.description // Usar detalles completos
+    formData.value.diagnostic_test_cpt_code = selected.code
+    formData.value.diagnostic_test_patient_instructions = selected.patient_instructions || ''
   }
 
   const handleNextTab = () => {
@@ -575,8 +528,13 @@
     emit('next-tab', 'prescription')
   }
 
+  const capitalizeFirstLetter = (text: string): string => {
+    if (!text) return ''
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
+  }
+
   onMounted(() => {
-    fetchDiagnosisTestsByConsultation(props.consultationId)
+    fetchTestOrdersByConsultation(props.consultationId)
   })
 </script>
 

@@ -41,12 +41,9 @@
           class="mb-6"
         />
 
-        <!-- Appointment Details -->
-        <AppointmentDetailsCard 
-          v-if="appointment"
-          :appointment="appointment"
-          class="mb-6"
-        />
+        <!-- Details Cards - mostrar según el tipo -->
+        <TestOrderDetailsCard v-if="isTestOrder && testOrder" :test-order="testOrder" class="mb-6" />
+        <AppointmentDetailsCard v-else-if="appointment" :appointment="appointment" class="mb-6" />
 
         <!-- Status Information -->
         <div class="status-info">
@@ -77,10 +74,17 @@
             <div class="info-item">
               <CalendarIcon class="info-icon" />
               <div>
-                <h4 class="info-title">Tu Cita está Reservada</h4>
+                <h4 class="info-title">
+                  <span v-if="isTestOrder">Tu Orden está Reservada</span>
+                  <span v-else>Tu Cita está Reservada</span>
+                </h4>
                 <p class="info-description">
-                  Mientras tanto, tu cita permanece reservada y no será 
-                  asignada a otro paciente.
+                  <span v-if="isTestOrder">
+                    Mientras tanto, tu orden de examen permanece reservada y no será asignada a otro paciente.
+                  </span>
+                  <span v-else>
+                    Mientras tanto, tu cita permanece reservada y no será asignada a otro paciente.
+                  </span>
                 </p>
               </div>
             </div>
@@ -93,7 +97,10 @@
             <span v-if="checking">Verificando...</span>
             <span v-else>Verificar Estado</span>
           </button>
-          <router-link to="/appointments" class="secondary-button">
+          <router-link v-if="isTestOrder" to="/test-orders" class="secondary-button">
+            Ver Mis Exámenes
+          </router-link>
+          <router-link v-else to="/appointments" class="secondary-button">
             Ver Mis Citas
           </router-link>
         </div>
@@ -171,6 +178,7 @@
   import { useNotifications } from '@/composables/useNotifications'
   import PaymentSummaryCard from '../components/PaymentSummaryCard.vue'
   import AppointmentDetailsCard from '../components/AppointmentDetailsCard.vue'
+  import TestOrderDetailsCard from '../components/TestOrderDetailsCard.vue'
 
   // Composables
   const paymentCallback = usePaymentCallback()
@@ -184,10 +192,12 @@
     loading,
     error,
     appointment,
+    testOrder,
     paymentSummary,
     paymentStatus,
     statusMessage,
     isPending,
+    isTestOrder,
     processCurrentRoute,
     clearError
   } = paymentCallback

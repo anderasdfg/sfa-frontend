@@ -172,7 +172,8 @@
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     })
       .format(date)
       .toUpperCase()
