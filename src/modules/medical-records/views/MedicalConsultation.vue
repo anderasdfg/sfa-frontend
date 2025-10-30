@@ -158,11 +158,43 @@
             v-if="currentConsultation"
             :consultation-id="currentConsultation?.id"
             :patient-id="patient?.id"
-            @consultation-finished="finishConsultation"
+            @consultation-finished="showFinishDialog = true"
           />
         </div>
       </div>
     </div>
+
+    <!-- Finish Consultation Confirmation Dialog -->
+    <Dialog
+      v-model:visible="showFinishDialog"
+      header="Finalizar Consulta"
+      :modal="true"
+      :closable="false"
+      :style="{ width: '450px' }"
+    >
+      <div class="confirmation-content">
+        <i class="pi pi-check-circle text-6xl text-green-500 mb-4"></i>
+        <h3 class="text-xl font-semibold mb-2">¿Deseas finalizar la consulta?</h3>
+        <p class="text-gray-600">Una vez finalizada, la consulta será marcada como completada.</p>
+        <p class="text-sm text-gray-500 mt-3">Esta acción no se puede deshacer.</p>
+      </div>
+      <template #footer>
+        <Button
+          label="Cancelar"
+          severity="secondary"
+          outlined
+          @click="showFinishDialog = false"
+          :disabled="finishingConsultation"
+        />
+        <Button
+          label="Finalizar Consulta"
+          severity="success"
+          @click="confirmFinishConsultation"
+          :loading="finishingConsultation"
+          icon="pi pi-check"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -171,6 +203,7 @@
   import { useRouter, useRoute } from 'vue-router'
   import Button from 'primevue/button'
   import Tag from 'primevue/tag'
+  import Dialog from 'primevue/dialog'
   import ProgressSpinner from 'primevue/progressspinner'
   import { AppointmentService } from '@/services/appointments.service'
   import { formatTime } from '@/shared/lib/formatters'
@@ -191,6 +224,8 @@
   const loading = ref(false)
   const error = ref<string | null>(null)
   const activeTab = ref('anamnesis')
+  const showFinishDialog = ref(false)
+  const finishingConsultation = ref(false)
   const { patientFullName, patientAge, patientGender, patientDocument, patient, fetchPatient } = usePatients()
   const consultationStore = useConsultationStore()
 
@@ -214,7 +249,8 @@
     return new Intl.DateTimeFormat('es-PE', {
       weekday: 'short',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     }).format(date)
   }
 
@@ -242,7 +278,13 @@
     router.push('/dashboard/doctor')
   }
 
-  const finishConsultation = async () => {
+  const finishConsultation = () => {
+    showFinishDialog.value = true
+  }
+
+  const confirmFinishConsultation = async () => {
+    finishingConsultation.value = true
+    
     try {
       if (appointment.value && appointment.value.id) {
         console.log('Finalizing consultation for appointment:', appointment.value.id)
@@ -256,11 +298,17 @@
         console.log('Appointment status updated to "realizada"')
       }
       
+      // Cerrar el modal y redirigir después de un breve delay
+      showFinishDialog.value = false
+      
       setTimeout(() => {
         goBack()
-      }, 1000)
+      }, 500)
     } catch (error) {
       console.error('Error finalizing consultation:', error)
+      // Mostrar error pero mantener el modal abierto
+    } finally {
+      finishingConsultation.value = false
     }
   }
 
@@ -523,5 +571,23 @@
     .header-actions button {
       flex: 1;
     }
+  }
+
+  /* Confirmation Dialog */
+  .confirmation-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+
+  .confirmation-content h3 {
+    margin: 0;
+    color: #1f2937;
+  }
+
+  .confirmation-content p {
+    margin: 0.5rem 0;
   }
 </style>

@@ -1,8 +1,7 @@
 // composables/useDiagnosisTests.ts
 import { ref, computed } from 'vue'
-import { DiagnosisTestService } from '@/services/diagnosisTest.service'
+import { TestOrderService } from '@/services/testOrder.service'
 import { useConsultationStore } from '@/stores/consultation/consultationStore'
-import type { DiagnosisTest } from '@/types/diagnosisTest.types'
 import { 
   TEST_CATEGORIES,
   searchDiagnosisTests,
@@ -16,7 +15,7 @@ export function useDiagnosisTests() {
   const consultationStore = useConsultationStore()
 
   // Usar el store como fuente única de verdad
-  const diagnosisTests = computed(() => consultationStore.currentConsultation?.diagnosis_tests || [])
+  const testOrders = computed(() => consultationStore.currentConsultation?.diagnosis_tests || [])
   
   // Estado
   const loading = ref(false)
@@ -58,12 +57,12 @@ export function useDiagnosisTests() {
   }
   
   /**
-   * Carga los exámenes diagnósticos para una consulta específica
+   * Carga las órdenes de exámenes para una consulta específica
    * @param consultationId - ID de la consulta
    * @param force - Forzar recarga aunque ya existan datos en el store
    */
-  const fetchDiagnosisTestsByConsultation = async (consultationId: number, force = false) => {
-    // Si ya hay exámenes diagnósticos en el store y no se fuerza la recarga, no hacer fetch
+  const fetchTestOrdersByConsultation = async (consultationId: number, force = false) => {
+    // Si ya hay órdenes de exámenes en el store y no se fuerza la recarga, no hacer fetch
     if (!force && consultationStore.currentConsultation?.diagnosis_tests?.length) {
       return
     }
@@ -71,67 +70,78 @@ export function useDiagnosisTests() {
     try {
       loading.value = true
       error.value = null
-      const data = await DiagnosisTestService.getDiagnosisTestsByConsultation(consultationId)
-      consultationStore.setCurrentConsultationDiagnosisTests(data)
+      const data = await TestOrderService.getTestOrdersByConsultation(consultationId)
+      consultationStore.setCurrentConsultationTestOrders(data)
     } catch (err: any) {
-      error.value = err.message || 'Error cargando exámenes diagnósticos'
+      error.value = err.message || 'Error cargando órdenes de exámenes'
     } finally {
       loading.value = false
     }
   }
 
   /**
-   * Crea un nuevo examen diagnóstico
-   * @param payload - Datos del examen a crear
+   * Crea una nueva orden de examen
+   * @param payload - Datos de la orden a crear
    */
-  const createDiagnosisTest = async (payload: {
+  const createTestOrder = async (payload: {
     consultation_id: number
-    test_type: string
-    description: string
-    result?: string
-    test_date?: string
+    diagnostic_test_id?: number
+    diagnostic_test_name: string
+    diagnostic_test_cpt_code?: string
+    diagnostic_test_description?: string
+    diagnostic_test_patient_instructions?: string
+    status: string
+    payment_id?: number
   }) => {
     try {
       savingTest.value = true
-      const created = await DiagnosisTestService.createDiagnosisTest(payload)
-      consultationStore.addDiagnosisTestToCurrentConsultation(created)
+      const created = await TestOrderService.createTestOrder(payload)
+      consultationStore.addTestOrderToCurrentConsultation(created)
       return created
     } catch (err: any) {
       console.error(err)
-      throw new Error(err.message || 'No se pudo crear el examen diagnóstico')
+      throw new Error(err.message || 'No se pudo crear la orden de examen')
     } finally {
       savingTest.value = false
     }
   }
 
   /**
-   * Actualiza un examen diagnóstico existente
-   * @param id - ID del examen diagnóstico
+   * Actualiza una orden de examen existente
+   * @param id - ID de la orden de examen
    * @param payload - Datos a actualizar
    */
-  const updateDiagnosisTest = async (id: number, payload: Partial<DiagnosisTest>) => {
+  const updateTestOrder = async (id: number, payload: {
+    diagnostic_test_id?: number
+    diagnostic_test_name: string
+    diagnostic_test_cpt_code?: string
+    diagnostic_test_description?: string
+    diagnostic_test_patient_instructions?: string
+    status: string
+    payment_id?: number
+  }) => {
     try {
       savingTest.value = true
-      const updated = await DiagnosisTestService.updateDiagnosisTest(id, payload)
-      consultationStore.updateDiagnosisTestInCurrentConsultation(updated)
+      const updated = await TestOrderService.updateTestOrder(id, payload)
+      consultationStore.updateTestOrderInCurrentConsultation(updated)
       return updated
     } catch (err: any) {
       console.error(err)
-      throw new Error(err.message || 'No se pudo actualizar el examen diagnóstico')
+      throw new Error(err.message || 'No se pudo actualizar la orden de examen')
     } finally {
       savingTest.value = false
     }
   }
 
   /**
-   * Elimina un examen diagnóstico
-   * @param id - ID del examen diagnóstico a eliminar
+   * Elimina una orden de examen
+   * @param id - ID de la orden de examen a eliminar
    */
-  const deleteDiagnosisTest = async (id: number) => {
+  const deleteTestOrder = async (id: number) => {
     try {
       deletingTest.value = true
-      await DiagnosisTestService.deleteDiagnosisTest(id)
-      consultationStore.removeDiagnosisTestFromCurrentConsultation(id)
+      await TestOrderService.deleteTestOrder(id)
+      consultationStore.removeTestOrderFromCurrentConsultation(id)
       return true
     } catch (err: any) {
       console.error(err)
@@ -143,7 +153,7 @@ export function useDiagnosisTests() {
 
   return {
     // Estado
-    diagnosisTests,
+    testOrders,
     loading,
     error,
     savingTest,
@@ -159,9 +169,9 @@ export function useDiagnosisTests() {
     // Métodos
     searchTests,
     findTestByType,
-    fetchDiagnosisTestsByConsultation,
-    createDiagnosisTest,
-    updateDiagnosisTest,
-    deleteDiagnosisTest
+    fetchTestOrdersByConsultation,
+    createTestOrder,
+    updateTestOrder,
+    deleteTestOrder
   }
 }

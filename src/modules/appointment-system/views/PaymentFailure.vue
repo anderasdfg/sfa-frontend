@@ -35,8 +35,9 @@
           class="mb-6"
         />
 
-        <!-- Appointment Details -->
-        <AppointmentDetailsCard v-if="appointment" :appointment="appointment" class="mb-6" />
+        <!-- Details Cards - mostrar según el tipo -->
+        <TestOrderDetailsCard v-if="isTestOrder && testOrder" :test-order="testOrder" class="mb-6" />
+        <AppointmentDetailsCard v-else-if="appointment" :appointment="appointment" class="mb-6" />
 
         <!-- Failure Reasons -->
         <div class="failure-reasons">
@@ -88,7 +89,8 @@
           <button @click="changePaymentMethod" class="secondary-button">
             Cambiar Método de Pago
           </button>
-          <router-link to="/appointments" class="tertiary-button">Ver Mis Citas</router-link>
+          <router-link v-if="isTestOrder" to="/test-orders" class="tertiary-button">Ver Mis Exámenes</router-link>
+          <router-link v-else to="/appointments" class="tertiary-button">Ver Mis Citas</router-link>
         </div>
 
         <!-- Important Notice -->
@@ -98,10 +100,15 @@
             <h3 class="notice-title">¡Importante!</h3>
             <div class="notice-text">
               <p class="mb-2">
-                <strong>Tu cita sigue reservada</strong>
+                <strong v-if="isTestOrder">Tu orden de examen sigue reservada</strong>
+                <strong v-else>Tu cita sigue reservada</strong>
                 por las próximas 2 horas. Puedes completar el pago durante este tiempo.
               </p>
-              <p>
+              <p v-if="isTestOrder">
+                Si no completas el pago, la orden será liberada automáticamente y estará disponible
+                para otros pacientes.
+              </p>
+              <p v-else>
                 Si no completas el pago, la cita será liberada automáticamente y estará disponible
                 para otros pacientes.
               </p>
@@ -158,6 +165,7 @@
   import { useNotifications } from '@/composables/useNotifications'
   import PaymentSummaryCard from '../components/PaymentSummaryCard.vue'
   import AppointmentDetailsCard from '../components/AppointmentDetailsCard.vue'
+  import TestOrderDetailsCard from '../components/TestOrderDetailsCard.vue'
 
   // Composables
   const router = useRouter()
@@ -169,10 +177,12 @@
     loading,
     error,
     appointment,
+    testOrder,
     paymentSummary,
     paymentStatus,
     statusMessage,
     isFailure,
+    isTestOrder,
     processCurrentRoute,
     clearError
   } = paymentCallback

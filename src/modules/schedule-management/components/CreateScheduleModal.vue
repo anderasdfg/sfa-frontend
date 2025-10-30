@@ -19,8 +19,26 @@
           placeholder="Selecciona un doctor"
           class="w-full"
           :class="{ 'p-invalid': errors.doctorId }"
+          @change="handleDoctorChange"
         />
         <small v-if="errors.doctorId" class="p-error">{{ errors.doctorId }}</small>
+      </div>
+
+      <!-- Selección de Servicio -->
+      <div class="form-field">
+        <label class="form-label">Servicio *</label>
+        <Dropdown
+          v-model="form.serviceId"
+          :options="availableServices"
+          option-label="name"
+          option-value="id"
+          placeholder="Selecciona un servicio"
+          class="w-full"
+          :class="{ 'p-invalid': errors.serviceId }"
+          :disabled="!form.doctorId || availableServices.length === 1"
+        />
+        <small v-if="errors.serviceId" class="p-error">{{ errors.serviceId }}</small>
+        <small v-if="!form.doctorId" class="p-info">Selecciona primero un doctor</small>
       </div>
 
       <!-- Fecha -->
@@ -151,6 +169,10 @@
       first_name: string
       last_name: string
       fullName: string
+      services?: Array<{
+        id: number
+        name: string
+      }>
     }>
     loading?: boolean
   }
@@ -172,6 +194,7 @@
   const scheduleFormSchema = z
     .object({
       doctorId: z.number().min(1, 'Selecciona un doctor'),
+      serviceId: z.number().min(1, 'Selecciona un servicio'),
       date: z
         .date()
         .min(new Date(new Date().setHours(0, 0, 0, 0)), 'La fecha debe ser hoy o posterior'),
@@ -200,6 +223,7 @@
   // Tipo para el formulario (permite null para campos no completados)
   interface FormData {
     doctorId: number | null
+    serviceId: number | null
     date: Date | null
     modality: 'presencial' | 'virtual' | null
     startTime: Date | null
@@ -216,6 +240,7 @@
 
   const form = ref<FormData>({
     doctorId: null,
+    serviceId: null,
     date: null,
     modality: null,
     startTime: null,
@@ -226,6 +251,7 @@
 
   const errors = ref({
     doctorId: '',
+    serviceId: '',
     date: '',
     modality: '',
     startTime: '',
@@ -249,6 +275,12 @@
       month: 'long',
       year: 'numeric'
     })}`
+  })
+
+  const availableServices = computed(() => {
+    if (!form.value.doctorId) return []
+    const selectedDoctor = props.availableDoctors.find(doctor => doctor.id === form.value.doctorId)
+    return selectedDoctor?.services || []
   })
 
   const slotsPreview = computed(() => {
@@ -279,6 +311,7 @@
   const resetForm = () => {
     form.value = {
       doctorId: null,
+      serviceId: null,
       date: null,
       modality: null,
       startTime: null,
@@ -289,12 +322,25 @@
 
     errors.value = {
       doctorId: '',
+      serviceId: '',
       date: '',
       modality: '',
       startTime: '',
       endTime: '',
       slotDuration: '',
       price: ''
+    }
+  }
+
+  const handleDoctorChange = () => {
+    // Resetear el servicio cuando cambia el doctor
+    form.value.serviceId = null
+    errors.value.serviceId = ''
+    
+    // Si el doctor tiene un solo servicio, seleccionarlo automáticamente
+    const selectedDoctor = props.availableDoctors.find(doctor => doctor.id === form.value.doctorId)
+    if (selectedDoctor?.services && selectedDoctor.services.length === 1) {
+      form.value.serviceId = selectedDoctor.services[0].id
     }
   }
 

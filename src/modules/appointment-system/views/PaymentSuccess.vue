@@ -35,25 +35,31 @@
           class="mb-6"
         />
 
-        <!-- Appointment Details -->
-        <AppointmentDetailsCard v-if="appointment" :appointment="appointment" class="mb-6" />
+        <!-- Details Cards - mostrar según el tipo -->
+        <TestOrderDetailsCard v-if="isTestOrder && testOrder" :test-order="testOrder" class="mb-6" />
+        <AppointmentDetailsCard v-else-if="appointment" :appointment="appointment" class="mb-6" />
 
         <!-- Actions -->
         <div class="actions-container">
-          <router-link to="/appointments" class="primary-button">Ver Mis Citas</router-link>
+          <router-link v-if="isTestOrder" to="/test-orders" class="primary-button">Ver Mis Exámenes</router-link>
+          <router-link v-else to="/appointments" class="primary-button">Ver Mis Citas</router-link>
           <button @click="downloadReceipt" class="secondary-button">Descargar Comprobante</button>
         </div>
 
         <!-- Next Steps -->
         <div class="next-steps">
           <h3 class="next-steps-title">Próximos Pasos</h3>
-          <ul class="next-steps-list">
+          <ul v-if="isTestOrder" class="next-steps-list">
+            <li>Recibirás un correo con los detalles de tu cita para el examen</li>
+            <li>Recuerda seguir las indicaciones especiales antes del examen</li>
+            <li>Recibirás un recordatorio 24 horas antes de tu cita</li>
+          </ul>
+          <ul v-else class="next-steps-list">
             <li v-if="appointment?.modality === 'teleconsulta'">
               Te enviaremos el enlace de la videollamada por correo electrónico
             </li>
             <li v-else>Dirígete a la clínica en la fecha y hora programada</li>
             <li>Recibirás un recordatorio 24 horas antes de tu cita</li>
-            <!-- <li>Si necesitas cancelar, hazlo con al menos 2 horas de anticipación</li> -->
           </ul>
         </div>
       </div>
@@ -81,6 +87,7 @@
   import { useNotifications } from '@/composables/useNotifications'
   import PaymentSummaryCard from '../components/PaymentSummaryCard.vue'
   import AppointmentDetailsCard from '../components/AppointmentDetailsCard.vue'
+  import TestOrderDetailsCard from '../components/TestOrderDetailsCard.vue'
 
   // Composables
   const paymentCallback = usePaymentCallback()
@@ -91,10 +98,12 @@
     loading,
     error,
     appointment,
+    testOrder,
     paymentSummary,
     paymentStatus,
     statusMessage,
     isSuccess,
+    isTestOrder,
     processCurrentRoute,
     clearError
   } = paymentCallback

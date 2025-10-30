@@ -36,11 +36,17 @@ export const adaptPaymentToCreateRequest = (payment: PaymentRequest): PaymentCre
 /**
  * Genera URLs de callback para el pago
  */
-export const generatePaymentUrls = (appointmentId: number, baseUrl: string) => {
+export const generatePaymentUrls = (
+  appointmentId: number, 
+  baseUrl: string,
+  testOrderId?: number
+) => {
+  const testOrderParam = testOrderId ? `&test_order_id=${testOrderId}` : ''
+  
   return {
-    successUrl: `${baseUrl}/payment/success?appointment_id=${appointmentId}`,
-    failureUrl: `${baseUrl}/payment/failure?appointment_id=${appointmentId}`,
-    pendingUrl: `${baseUrl}/payment/pending?appointment_id=${appointmentId}`
+    successUrl: `${baseUrl}/payment/success?appointment_id=${appointmentId}${testOrderParam}`,
+    failureUrl: `${baseUrl}/payment/failure?appointment_id=${appointmentId}${testOrderParam}`,
+    pendingUrl: `${baseUrl}/payment/pending?appointment_id=${appointmentId}${testOrderParam}`
   }
 }
 
