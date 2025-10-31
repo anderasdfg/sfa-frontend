@@ -27,14 +27,25 @@ const appointmentRoutes: RouteRecordRaw[] = [
           roles: ['doctor', 'admin', 'receptionist'],
           title: 'Calendario de Citas'
         }
+      },
+      {
+        path: 'new',
+        name: 'AdminCreateAppointment',
+        component: () => import('../views/AdminCreateAppointment.vue'),
+        meta: {
+          roles: ['admin'],
+          title: 'Agendar Nueva Cita'
+        }
+      },
+      {
+        path: 'today',
+        name: 'TodayAppointments',
+        component: () => import('../views/TodayAppointmentsView.vue'),
+        meta: {
+          roles: ['admin'],
+          title: 'Citas de Hoy'
+        }
       }
-      // Rutas futuras para gestión de citas
-      // {
-      //   path: 'new',
-      //   name: 'CreateAppointment',
-      //   component: () => import('../views/CreateAppointment.vue'),
-      //   meta: { roles: ['doctor', 'admin', 'receptionist'] }
-      // },
       // {
       //   path: ':id',
       //   name: 'AppointmentDetail',

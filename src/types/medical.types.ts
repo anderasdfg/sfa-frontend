@@ -1,6 +1,7 @@
 import type { Diagnosis } from './diagnosis.types'
 import type { TestOrder } from './testOrder.types'
 import type { Prescription } from './prescriptions.types'
+import { ConsultationStatus } from './enums'
 
 export interface Patient {
   id: number
@@ -36,6 +37,9 @@ export interface Consultation {
   chief_complaint: string
   current_illnes_history: string
   treatment_plan: string
+  status: ConsultationStatus
+  started_at?: string
+  ended_at?: string
   diagnosis: Diagnosis[]
   diagnosis_tests: TestOrder[]
   prescriptions: Prescription[]

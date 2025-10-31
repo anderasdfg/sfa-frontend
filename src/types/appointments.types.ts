@@ -13,6 +13,10 @@ export interface Appointment {
   status: AppointmentStatus
   modality: AppointmentModality
   scheduled_at: Date
+  patient_arrived?: boolean
+  arrival_time?: string
+  video_meeting_url?: string
+  video_room_id?: string
   patient_data: Patient
   doctor_data: Doctor
   slot: Slot

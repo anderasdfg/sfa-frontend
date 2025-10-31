@@ -38,18 +38,22 @@
               {{ appointment.modality }}
             </div>
           </div>
-          <!-- <div class="appointment-status">
-            <Tag
-              :value="getStatusLabel(appointment.status)"
-              :severity="getStatusSeverity(appointment.status)"
+          <div class="appointment-actions">
+            <VideoMeetingButton
+              v-if="appointment.modality === 'teleconsulta'"
+              :appointment-id="appointment.id"
+              role="doctor"
+              button-text="Iniciar consulta"
+              :title="`Consulta - ${appointment.patient_data.first_name} ${appointment.patient_data.last_name}`"
             />
-          </div> -->
-          <Button
-            icon="pi pi-video"
-            class="p-button-sm p-button-text"
-            @click="handleViewAppointment(appointment.id)"
-            label="Iniciar consulta"
-          />
+            <Button
+              v-else
+              icon="pi pi-user"
+              class="p-button-sm p-button-text"
+              @click="handleViewAppointment(appointment.id)"
+              label="Ver consulta"
+            />
+          </div>
         </div>
       </div>
       <div v-else class="empty-state">
@@ -68,6 +72,7 @@
   import ProgressSpinner from 'primevue/progressspinner'
   import { useDoctorAppointments } from '../composables/useDoctorAppointments'
   import { formatTime } from '@/shared/lib/formatters'
+  import VideoMeetingButton from '@/shared/components/VideoMeetingButton.vue'
 
   const router = useRouter()
   const { todayAppointments, loading, error, fetchTodayAppointments } = useDoctorAppointments()
@@ -140,6 +145,12 @@
     font-size: 0.875rem;
     color: #6b7280;
     text-transform: capitalize;
+  }
+
+  .appointment-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .empty-state,

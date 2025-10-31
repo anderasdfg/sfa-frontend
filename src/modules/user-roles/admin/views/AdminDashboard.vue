@@ -84,56 +84,32 @@
       <div class="actions-card">
         <h3 class="card-title">Gestión Rápida</h3>
         <div class="quick-actions">
-          <button class="action-btn green">
-            <i class="pi pi-user-plus"></i>
-            <span>Nuevo Usuario</span>
+          <button @click="goToQueue" class="action-btn green">
+            <i class="pi pi-list"></i>
+            <span>Cola de Pacientes</span>
           </button>
-          <button class="action-btn blue">
-            <i class="pi pi-users"></i>
-            <span>Gestionar Doctores</span>
+          <button @click="goToCheckIn" class="action-btn blue">
+            <i class="pi pi-clock"></i>
+            <span>Asistencia Doctores</span>
           </button>
-          <button class="action-btn purple">
-            <i class="pi pi-chart-bar"></i>
-            <span>Ver Reportes</span>
+          <button @click="goToAppointments" class="action-btn purple">
+            <i class="pi pi-calendar"></i>
+            <span>Ver Agenda</span>
           </button>
-          <button class="action-btn orange">
-            <i class="pi pi-cog"></i>
-            <span>Configuración</span>
+          <button @click="goToNewAppointment" class="action-btn orange">
+            <i class="pi pi-plus"></i>
+            <span>Nueva Cita</span>
           </button>
         </div>
       </div>
 
-      <div class="activity-card">
-        <h3 class="card-title">Actividad Reciente</h3>
-        <div class="activity-list">
-          <div class="activity-item">
-            <div class="activity-icon blue">
-              <i class="pi pi-user"></i>
-            </div>
-            <div class="activity-content">
-              <div class="activity-description">Nuevo doctor registrado: Dr. Martínez</div>
-              <div class="activity-time">Hace 20 min</div>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon green">
-              <i class="pi pi-check"></i>
-            </div>
-            <div class="activity-content">
-              <div class="activity-description">Sistema actualizado a v2.1.0</div>
-              <div class="activity-time">Hace 50 min</div>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon purple">
-              <i class="pi pi-database"></i>
-            </div>
-            <div class="activity-content">
-              <div class="activity-description">Backup automático completado</div>
-              <div class="activity-time">Hace 2 h</div>
-            </div>
-          </div>
-        </div>
+      <!-- Acceso rápido a Citas de Hoy -->
+      <div class="quick-link-card">
+        <h3 class="card-title">Citas de Hoy</h3>
+        <p class="card-description">Gestiona las llegadas y atenciones del día</p>
+        <button @click="goToTodayAppointments" class="btn-view-all">
+          Ver todas las citas de hoy →
+        </button>
       </div>
     </div>
   </div>
@@ -141,9 +117,11 @@
 
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
   import { StatisticsService } from '@/services/statistics.service'
   import type { DashboardStatistics } from '@/types/statistics.types'
 
+  const router = useRouter()
   const statistics = ref<DashboardStatistics | null>(null)
   const loading = ref(true)
 
@@ -161,6 +139,12 @@
       loading.value = false
     }
   }
+
+  const goToQueue = () => router.push('/patient-queue')
+  const goToCheckIn = () => router.push('/doctor-attendance/check-in')
+  const goToAppointments = () => router.push('/appointments')
+  const goToNewAppointment = () => router.push('/appointments/new')
+  const goToTodayAppointments = () => router.push('/appointments/today')
 
   onMounted(() => {
     loadStatistics()
@@ -270,7 +254,8 @@
 
   .overview-card,
   .actions-card,
-  .activity-card {
+  .activity-card,
+  .quick-link-card {
     background: white;
     padding: 1.5rem;
     border-radius: 12px;
@@ -398,6 +383,141 @@
   .activity-time {
     font-size: 0.75rem;
     color: #6b7280;
+  }
+
+  .appointments-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    grid-column: 1 / -1;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .btn-refresh {
+    padding: 0.5rem 1rem;
+    background: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .btn-refresh:hover {
+    background: #3182ce;
+  }
+
+  .loading-state,
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #718096;
+  }
+
+  .appointments-table {
+    overflow-x: auto;
+  }
+
+  .appointments-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .appointments-table th {
+    text-align: left;
+    padding: 0.75rem;
+    background: #f7fafc;
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .appointments-table td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+  }
+
+  .status-reservada {
+    background: #feebc8;
+    color: #7c2d12;
+  }
+
+  .status-pagada {
+    background: #c6f6d5;
+    color: #22543d;
+  }
+
+  .status-realizada {
+    background: #e9d8fd;
+    color: #44337a;
+  }
+
+  .status-cancelada {
+    background: #fed7d7;
+    color: #742a2a;
+  }
+
+  .arrived-badge {
+    color: #38a169;
+    font-weight: 500;
+  }
+
+  .not-arrived {
+    color: #a0aec0;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .quick-link-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .card-description {
+    color: #6b7280;
+    margin: 0.5rem 0 1.5rem 0;
+  }
+
+  .btn-view-all {
+    padding: 0.75rem 2rem;
+    background: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-view-all:hover {
+    background: #3182ce;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
   @media (max-width: 768px) {

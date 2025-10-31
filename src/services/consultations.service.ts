@@ -60,4 +60,38 @@ export class ConsultationService {
       throw new Error('No se pudo actualizar la consulta')
     }
   }
+
+  /** Iniciar una consulta */
+  static async startConsultation(id: number): Promise<Consultation> {
+    try {
+      const response = await apiClient.patch(`${this.BASE_PATH}/${id}/start`)
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('Error starting consultation:', error)
+      throw new Error('No se pudo iniciar la consulta')
+    }
+  }
+
+  /** Completar una consulta */
+  static async completeConsultation(id: number): Promise<Consultation> {
+    try {
+      const response = await apiClient.patch(`${this.BASE_PATH}/${id}/complete`)
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('Error completing consultation:', error)
+      throw new Error('No se pudo completar la consulta')
+    }
+  }
+
+  /** Listar consultas activas */
+  static async getActiveConsultations(doctorId?: number): Promise<Consultation[]> {
+    try {
+      const params = doctorId ? { doctor_id: doctorId } : undefined
+      const response = await apiClient.get(`${this.BASE_PATH}/active/list`, { params })
+      return response.data.data || []
+    } catch (error) {
+      console.error('Error fetching active consultations:', error)
+      throw new Error('No se pudieron cargar las consultas activas')
+    }
+  }
 }

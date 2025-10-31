@@ -85,6 +85,27 @@ export class AppointmentService {
       throw new Error('No se pudo actualizar el estado de la cita')
     }
   }
+
+  /** Confirmar llegada del paciente */
+  static async confirmArrival(id: number, arrivalTime?: string): Promise<Appointment> {
+    try {
+      const body = arrivalTime ? { arrival_time: arrivalTime } : {}
+      const response = await apiClient.patch<AppointmentCreateResponse>(
+        `${this.BASE_PATH}/${id}/arrival`,
+        body
+      )
+
+      if (response.data.success && response.data.data) {
+        return response.data.data
+      } else {
+        throw new Error(response.data.message || 'Error en la respuesta del API')
+      }
+    } catch (error) {
+      console.error('Error confirming arrival:', error)
+      throw new Error('No se pudo confirmar la llegada del paciente')
+    }
+  }
+
 }
 
 export type { UpdateAppointmentStatusRequest }

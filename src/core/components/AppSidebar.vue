@@ -182,6 +182,20 @@
         ]
       })
 
+      // Cola de Pacientes
+      items.push({
+        label: 'Cola de Pacientes',
+        icon: 'pi pi-list',
+        command: () => router.push('/patient-queue')
+      })
+
+      // Asistencia de Doctores
+      items.push({
+        label: 'Asistencia Doctores',
+        icon: 'pi pi-clock',
+        command: () => router.push('/doctor-attendance')
+      })
+
       // Reportes y Analytics
       /*  items.push({
         label: 'Reportes y Analytics',

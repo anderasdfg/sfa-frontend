@@ -34,3 +34,45 @@ export enum SpecialtyStatus {
   ACTIVO = 'activo',
   INACTIVO = 'inactivo'
 }
+
+/**
+ * Estado de la cola de pacientes
+ */
+export enum PatientQueueStatus {
+  WAITING = 'waiting',
+  IN_CONSULTATION = 'in_consultation',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * Estado de asistencia de doctores
+ */
+export enum DoctorAttendanceStatus {
+  PRESENTE = 'presente',
+  AUSENTE = 'ausente',
+  TARDANZA = 'tardanza',
+  PERMISO = 'permiso',
+  VACACIONES = 'vacaciones'
+}
+
+/**
+ * Estado de videollamadas
+ */
+export enum VideoMeetingStatus {
+  SCHEDULED = 'scheduled',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * Estado de consultas médicas
+ */
+export enum ConsultationStatus {
+  PENDIENTE = 'pendiente',
+  INICIADA = 'iniciada',
+  EN_CURSO = 'en_curso',
+  COMPLETADA = 'completada',
+  CANCELADA = 'cancelada'
+}
