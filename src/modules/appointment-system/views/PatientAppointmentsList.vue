@@ -298,7 +298,8 @@
       reservada: 'Programada',
       completed: 'Completada',
       cancelled: 'Cancelada',
-      in_progress: 'En progreso',
+      en_espera: 'En espera',
+      en_proceso: 'En proceso',
       pagada: 'Pagada'
     }
     return statusMap[status] || status

@@ -1,5 +1,6 @@
 export interface PaymentCreateRequest {
-  appointment_id: number
+  appointment_id?: number
+  test_order_id?: number
   transaction_type?: string
   success_url: string
   failure_url: string

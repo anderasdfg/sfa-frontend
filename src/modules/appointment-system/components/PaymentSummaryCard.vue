@@ -24,8 +24,8 @@
         </div>
 
         <div class="detail-item">
-          <span class="detail-label">ID de Cita:</span>
-          <span class="detail-value">#{{ paymentSummary.appointmentId }}</span>
+          <span class="detail-label">{{ paymentSummary.testOrderId ? 'ID de Examen:' : 'ID de Cita:' }}</span>
+          <span class="detail-value">#{{ paymentSummary.testOrderId || paymentSummary.appointmentId }}</span>
         </div>
 
         <div class="detail-item">

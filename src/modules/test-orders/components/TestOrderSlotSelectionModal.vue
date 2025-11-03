@@ -140,13 +140,11 @@
   import ProgressSpinner from 'primevue/progressspinner'
   import Calendar from 'primevue/calendar'
   import { useTestOrderSlots } from '../composables/useTestOrderSlots'
-  import { useAppointments } from '@/modules/appointment-system/composables/useAppointments'
-  import { usePayments } from '@/modules/appointment-system/composables/usePayments'
-  import { generatePaymentUrls } from '@/modules/appointment-system/adapters/payment.adapter'
+  import { TestOrderService } from '@/services/testOrder.service'
+  import { PaymentService } from '@/services/payments.service'
   import { useNotifications } from '@/composables/useNotifications'
   import { useAuthStore } from '@/stores/auth/authStore'
   import type { TestOrder } from '@/types/testOrder.types'
-  import type { AppointmentBooking } from '@/modules/appointment-system/types'
 
   interface ProcessedSlot {
     id: number
@@ -184,8 +182,6 @@
     clearSlots
   } = useTestOrderSlots()
 
-  const { createAppointment, error: appointmentError, createdAppointment } = useAppointments()
-  const { createAndRedirectToPayment, error: paymentError } = usePayments()
   const notifications = useNotifications()
   const authStore = useAuthStore()
 
@@ -257,58 +253,42 @@
     processing.value = true
 
     try {
-      // 1. Crear la cita médica
-      notifications.showInfo('Creando cita', 'Creando tu cita médica...')
+      // 1. Actualizar el testOrder con el slot_id seleccionado
+      notifications.showInfo('Actualizando orden', 'Asignando slot a tu orden de examen...')
       
-      const appointmentBooking: AppointmentBooking = {
-        patientId: authStore.user.patient_id,
-        doctorId: selectedSlot.value.doctor_id,
-        slotId: selectedSlot.value.id,
-        appointmentDate: selectedSlot.value.date,
-        status: 'pendiente' as any,
-        modality: selectedSlot.value.schedule_modality as any,
-        scheduledAt: selectedSlot.value.scheduled_at
-      }
+      await TestOrderService.updateTestOrder(props.testOrder.id, {
+        slot_id: selectedSlot.value.id
+      })
 
-      const appointmentCreated = await createAppointment(appointmentBooking)
-
-      if (!appointmentCreated) {
-        notifications.showError('Error', appointmentError.value || 'No se pudo crear la cita médica')
-        processing.value = false
-        return
-      }
-
-      // 2. Verificar que se obtuvo el ID de la cita
-      if (!createdAppointment.value?.id) {
-        notifications.showError('Error', 'No se pudo obtener el ID de la cita creada')
-        processing.value = false
-        return
-      }
-
-      // 3. Modificar las URLs del appointment para incluir test_order_id
+      // 2. Generar URLs de callback solo con test_order_id (sin appointment_id)
       const baseUrl = 'https://sfa-frontend-five.vercel.app'
-      const urls = generatePaymentUrls(
-        createdAppointment.value.id,
-        baseUrl,
-        props.testOrder.id // testOrderId
-      )
+      const successUrl = `${baseUrl}/payment/success?test_order_id=${props.testOrder.id}`
+      const failureUrl = `${baseUrl}/payment/failure?test_order_id=${props.testOrder.id}`
+      const pendingUrl = `${baseUrl}/payment/pending?test_order_id=${props.testOrder.id}`
 
-      // Actualizar las URLs en el appointment creado
-      const appointmentWithUrls = {
-        ...createdAppointment.value,
-        successUrl: urls.successUrl,
-        failureUrl: urls.failureUrl,
-        pendingUrl: urls.pendingUrl
-      }
-
-      // 4. Crear el pago y redirigir
+      // 3. Crear el pago directamente con PaymentService usando test_order_id
       notifications.showInfo('Procesando pago', 'Redirigiendo al sistema de pagos...')
-      const success = await createAndRedirectToPayment(appointmentWithUrls as any)
-
-      if (!success) {
-        notifications.showError('Error', paymentError.value || 'No se pudo procesar el pago')
-        processing.value = false
+      
+      const paymentCreateRequest = {
+        test_order_id: props.testOrder.id,
+        success_url: successUrl,
+        failure_url: failureUrl,
+        pending_url: pendingUrl
       }
+
+      const paymentResponse = await PaymentService.createPayment(paymentCreateRequest)
+
+      if (!paymentResponse.success || !paymentResponse.data?.init_point) {
+        notifications.showError('Error', paymentResponse.message || 'No se pudo procesar el pago')
+        processing.value = false
+        return
+      }
+
+      // 4. Redirigir a la pasarela de pago
+      notifications.showSuccess('Éxito', 'Redirigiendo a la pasarela de pago...')
+      setTimeout(() => {
+        window.location.href = paymentResponse.data.init_point
+      }, 1000)
 
     } catch (error: any) {
       console.error('Error en el proceso de confirmación:', error)

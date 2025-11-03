@@ -95,12 +95,12 @@
                   />
                 </span>
               </div>
-              <div class="info-item">
+              <!--<div class="info-item">
                 <span class="info-label">Estado</span>
                 <span class="info-value">
                   <Tag :value="getStatusLabel(appointment.status)" severity="info" />
                 </span>
-              </div>
+              </div>-->
               <div class="info-item">
                 <span class="info-label">Especialidad</span>
                 <span class="info-value">{{ appointment.specialty || 'Medicina General' }}</span>
@@ -136,7 +136,6 @@
   import { formatTime } from '@/shared/lib/formatters'
   import { usePatients } from '@/core/composables/usePatients'
   import type { Appointment } from '@/types/appointments.types'
-  import type { AppointmentStatus } from '@/types/enums'
   import { useConsultationStore } from '@/stores/consultation/consultationStore'
 
   const router = useRouter()
@@ -179,7 +178,7 @@
       .toUpperCase()
   }
 
-  const getStatusLabel = (status: AppointmentStatus): string => {
+  /*const getStatusLabel = (status: AppointmentStatus): string => {
     const labels: Record<AppointmentStatus, string> = {
       reservada: 'Reservada',
       confirmada: 'Confirmada',
@@ -188,7 +187,7 @@
       pagada: 'Pagada'
     }
     return labels[status] || status
-  }
+  }*/
 
   const fetchAppointment = async () => {
     loading.value = true

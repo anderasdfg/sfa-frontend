@@ -137,6 +137,20 @@
 
     // Menú específico por rol
     if (authStore.hasRole('admin')) {
+      // Cola de Pacientes
+      items.push({
+        label: 'Cola de Pacientes',
+        icon: 'pi pi-list',
+        command: () => router.push('/patient-queue')
+      })
+
+      // Asistencia de Doctores
+      items.push({
+        label: 'Asistencia Doctores',
+        icon: 'pi pi-clock',
+        command: () => router.push('/doctor-attendance')
+      })
+
       // Gestión de Usuarios
       items.push({
         label: 'Gestión de Usuarios',
@@ -182,20 +196,6 @@
         ]
       })
 
-      // Cola de Pacientes
-      items.push({
-        label: 'Cola de Pacientes',
-        icon: 'pi pi-list',
-        command: () => router.push('/patient-queue')
-      })
-
-      // Asistencia de Doctores
-      items.push({
-        label: 'Asistencia Doctores',
-        icon: 'pi pi-clock',
-        command: () => router.push('/doctor-attendance')
-      })
-
       // Reportes y Analytics
       /*  items.push({
         label: 'Reportes y Analytics',
@@ -238,12 +238,73 @@
       }) */
     }
 
-    // Menú para roles no-admin (doctor, receptionist)
-    if (
-      (authStore.hasRole('doctor') || authStore.hasRole('receptionist')) &&
-      !authStore.hasRole('admin')
-    ) {
+    // Menú específico para doctores no-admin
+    if (authStore.hasRole('doctor') && !authStore.hasRole('admin')) {
       items.push(
+        {
+          label: 'Agenda',
+          icon: 'pi pi-calendar',
+          items: [
+            {
+              label: 'Mis Citas',
+              icon: 'pi pi-calendar-plus',
+              command: () => router.push('/activities')
+            },
+            {
+              label: 'Mi Horario',
+              icon: 'pi pi-clock',
+              command: () => router.push('/activities/my-schedule')
+            },
+            {
+              label: 'Nueva Cita',
+              icon: 'pi pi-plus',
+              command: () => router.push('/appointments/new')
+            }
+          ]
+        },
+        {
+          label: 'Pacientes',
+          icon: 'pi pi-users',
+          items: [
+            {
+              label: 'Mis Pacientes',
+              icon: 'pi pi-users',
+              command: () => router.push('/patients/my-patients')
+            },
+            {
+              label: 'Historiales Médicos',
+              icon: 'pi pi-folder-open',
+              command: () => router.push('/medical-records')
+            }
+          ]
+        }
+      )
+    }
+
+    // Menú para recepcionistas no-admin
+    if (authStore.hasRole('receptionist') && !authStore.hasRole('admin')) {
+      items.push(
+        {
+          label: 'Citas',
+          icon: 'pi pi-calendar',
+          items: [
+            {
+              label: 'Agenda General',
+              icon: 'pi pi-calendar',
+              command: () => router.push('/appointments')
+            },
+            {
+              label: 'Nueva Cita',
+              icon: 'pi pi-plus',
+              command: () => router.push('/appointments/new')
+            },
+            {
+              label: 'Reprogramar',
+              icon: 'pi pi-refresh',
+              command: () => router.push('/appointments/reschedule')
+            }
+          ]
+        },
         {
           label: 'Pacientes',
           icon: 'pi pi-users',
@@ -252,40 +313,15 @@
               label: 'Lista de Pacientes',
               icon: 'pi pi-list',
               command: () => router.push('/patients')
-            }
-            /*  {
+            },
+            {
               label: 'Nuevo Paciente',
               icon: 'pi pi-user-plus',
               command: () => router.push('/patients/new')
-            } */
-          ]
-        },
-        {
-          label: 'Citas',
-          icon: 'pi pi-calendar',
-          items: [
-            {
-              label: 'Agenda',
-              icon: 'pi pi-calendar',
-              command: () => router.push('/appointments')
-            },
-            {
-              label: 'Nueva Cita',
-              icon: 'pi pi-plus',
-              command: () => router.push('/appointments/new')
             }
           ]
         }
       )
-    }
-
-    // Historial médico solo para doctores no-admin
-    if (authStore.hasRole('doctor') && !authStore.hasRole('admin')) {
-      items.push({
-        label: 'Historial Médico',
-        icon: 'pi pi-file',
-        command: () => router.push('/medical-records')
-      })
     }
 
     if (authStore.hasRole('patient')) {

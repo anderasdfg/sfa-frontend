@@ -53,28 +53,28 @@ export const usePaymentCallback = () => {
         throw new Error('Parámetros de pago inválidos')
       }
 
-      // 3. Validar appointment_id
-      const appointmentId = validateAppointmentId(params.appointment_id)
-      if (!appointmentId) {
-        throw new Error('ID de cita inválido')
-      }
-
-      // 4. Determinar estado del pago
+      // 3. Determinar estado del pago
       paymentStatus.value = getPaymentStatus(params)
 
-      // 5. Crear resumen de pago
-      paymentSummary.value = adaptToPaymentSummary(params)
+      // 4. Crear resumen de pago
+      paymentSummary.value = adaptToPaymentSummary(params, queryParams)
 
-      // 6. Cargar datos según el tipo
+      // 5. Cargar datos según el tipo
       if (isTestOrder.value) {
+        // Para test orders, solo necesitamos el test_order_id
         const testOrderId = extractTestOrderId(queryParams)
-        if (testOrderId) {
-          await loadTestOrderData(testOrderId)
+        if (!testOrderId) {
+          throw new Error('ID de orden de examen inválido')
         }
+        await loadTestOrderData(testOrderId)
+      } else {
+        // Para appointments, validar appointment_id
+        const appointmentId = validateAppointmentId(params.appointment_id)
+        if (!appointmentId) {
+          throw new Error('ID de cita inválido')
+        }
+        await loadAppointmentData(appointmentId)
       }
-      
-      // Siempre cargar datos de la cita
-      await loadAppointmentData(appointmentId)
 
       return true
     } catch (err: any) {

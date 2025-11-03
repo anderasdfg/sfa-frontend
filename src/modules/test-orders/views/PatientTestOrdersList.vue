@@ -135,12 +135,12 @@
                 class="p-button-success p-button-sm"
               />
               <Button
-                v-if="testOrder.status === 'pagado' || testOrder.status === 'completado'"
-                label="Ver resultados"
-                icon="pi pi-file-pdf"
+                v-if="testOrder.status === 'completado'"
+                label="Ver Resultado"
+                icon="pi pi-file-check"
                 size="small"
                 @click="viewResults(testOrder)"
-                class="p-button-outlined p-button-sm"
+                class="p-button-success p-button-sm"
               />
             </div>
           </div>
@@ -186,13 +186,19 @@
       :service-id="selectedTestOrder.service_id || 1"
       @update:visible="showSlotSelectionModal = $event"
     />
+
+    <!-- Modal de resultados -->
+    <TestResultModal
+      :visible="showResultModal"
+      :test-order-id="selectedTestOrderId"
+      @update:visible="showResultModal = $event"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import { usePatientTestOrders } from '../composables/usePatientTestOrders'
-  import { useNotifications } from '@/composables/useNotifications'
   import type { TestOrder } from '@/types/testOrder.types'
   import Button from 'primevue/button'
   import ProgressSpinner from 'primevue/progressspinner'
@@ -202,9 +208,9 @@
   import Calendar from 'primevue/calendar'
   import Dropdown from 'primevue/dropdown'
   import TestOrderSlotSelectionModal from '../components/TestOrderSlotSelectionModal.vue'
+  import TestResultModal from '../components/TestResultModal.vue'
 
   const { testOrders, loading, error, fetchPatientTestOrders } = usePatientTestOrders()
-  const notifications = useNotifications()
 
   // Estado de pagos
   const processingPayment = ref<number | null>(null)
@@ -212,6 +218,10 @@
   // Estado del modal de selección de slots
   const showSlotSelectionModal = ref(false)
   const selectedTestOrder = ref<TestOrder | null>(null)
+
+  // Estado del modal de resultados
+  const showResultModal = ref(false)
+  const selectedTestOrderId = ref<number | null>(null)
 
   // Filtros
   const filters = ref({
@@ -235,6 +245,7 @@
     { label: 'Pendiente', value: 'pendiente' },
     { label: 'Pagado', value: 'pagado' },
     { label: 'En proceso', value: 'en_proceso' },
+    { label: 'Pendiente resultados', value: 'pendiente_subir' },
     { label: 'Completado', value: 'completado' },
     { label: 'Cancelado', value: 'cancelado' }
   ]
@@ -295,6 +306,7 @@
       pendiente: 'Pendiente',
       pagado: 'Pagado',
       en_proceso: 'En proceso',
+      pendiente_subir: 'Pendiente subida de resultado',
       completado: 'Completado',
       cancelado: 'Cancelado'
     }
@@ -306,6 +318,7 @@
       pendiente: 'warning',
       pagado: 'info',
       en_proceso: 'info',
+      pendiente_subir: 'warning',
       completado: 'success',
       cancelado: 'danger'
     }
@@ -336,9 +349,9 @@
     showSlotSelectionModal.value = true
   }
 
-  const viewResults = (_testOrder: TestOrder) => {
-    // TODO: Implementar visualización de resultados
-    notifications.showInfo('Próximamente', 'La visualización de resultados estará disponible pronto')
+  const viewResults = (testOrder: TestOrder) => {
+    selectedTestOrderId.value = testOrder.id
+    showResultModal.value = true
   }
 
   const refreshTestOrders = async () => {

@@ -44,7 +44,12 @@
     <!-- Main Content Grid -->
     <div class="content-grid">
       <!-- Today's Appointments -->
-      <TodayAppointments />
+      <TodayAppointments 
+        :activities="todayActivities"
+        :loading="activitiesLoading"
+        :error="activitiesError"
+        @refresh-activities="handleRefreshActivities"
+      />
 
       <!-- Quick Actions for Doctor -->
       <Card class="actions-card">
@@ -114,11 +119,13 @@
   import Card from 'primevue/card'
   import Button from 'primevue/button'
   import { useAuthStore } from '@/stores/auth/authStore'
-  import { formatTime, formatDate } from '@/shared/lib/formatters'
+  import { formatDate } from '@/shared/lib/formatters'
   import TodayAppointments from '../components/TodayAppointments.vue'
+  import { useDoctorAppointments } from '../composables/useDoctorAppointments'
 
   const router = useRouter()
   const authStore = useAuthStore()
+  const { todayActivities, loading: activitiesLoading, error: activitiesError, fetchTodayActivities } = useDoctorAppointments()
 
   // Reactive data
   const currentTime = ref('')
@@ -137,26 +144,46 @@
     return `${greeting}. Listo para atender a tus pacientes.`
   })
 
+  // Computed properties para estadísticas basadas en actividades
+  const uniquePatientsToday = computed(() => {
+    const patientIds = new Set(
+      todayActivities.value
+        .filter(activity => activity.patient_id)
+        .map(activity => activity.patient_id)
+    )
+    return patientIds.size
+  })
+
+  const appointmentsToday = computed(() => {
+    return todayActivities.value.filter(activity => activity.type === 'appointment').length
+  })
+
+  const testOrdersToday = computed(() => {
+    return todayActivities.value.filter(activity => activity.type === 'test_order').length
+  })
+
   const quickStats = computed(() => [
     {
       key: 'patients-today',
       icon: 'pi pi-users',
       iconClass: 'bg-blue-100 text-blue-600',
       label: 'Pacientes Hoy',
-      value: '0',
-      change: '+2 vs ayer',
-      changeIcon: 'pi pi-arrow-up',
-      changeClass: 'text-green-600'
+      value: uniquePatientsToday.value.toString(),
+      change: null,
+      changeIcon: '',
+      changeClass: ''
     },
     {
       key: 'appointments-today',
       icon: 'pi pi-calendar',
       iconClass: 'bg-green-100 text-green-600',
       label: 'Citas Hoy',
-      value: '0',
-      change: null,
-      changeIcon: '',
-      changeClass: ''
+      value: (appointmentsToday.value + testOrdersToday.value).toString(),
+      change: appointmentsToday.value > 0 && testOrdersToday.value > 0 
+        ? `${appointmentsToday.value} citas, ${testOrdersToday.value} exámenes` 
+        : null,
+      changeIcon: 'pi pi-info-circle',
+      changeClass: 'text-blue-600'
     },
     {
       key: 'pending-reviews',
@@ -173,12 +200,20 @@
   // Methods
   const updateTime = () => {
     const now = new Date()
-    currentTime.value = formatTime(now)
+    // Formatear tiempo con zona horaria de Lima
+    currentTime.value = new Intl.DateTimeFormat('es-PE', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Lima'
+    }).format(now)
+    
     currentDate.value = formatDate(now, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'America/Lima'
     })
   }
 
@@ -213,6 +248,10 @@
     router.push('/appointments')
   }
 
+  const handleRefreshActivities = async () => {
+    await fetchTodayActivities()
+  }
+
   const loadDoctorData = async () => {
     // Cargar actividad reciente
     recentActivity.value = [
@@ -240,6 +279,7 @@
     updateTime()
     timeInterval = setInterval(updateTime, 1000)
     await loadDoctorData()
+    await fetchTodayActivities()
   })
 
   onUnmounted(() => {

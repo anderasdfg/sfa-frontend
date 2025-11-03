@@ -1,6 +1,17 @@
 import apiClient from '@/shared/lib/axios.config'
 import type { TestOrder } from '@/types/testOrder.types'
 
+// Estados disponibles para test orders (debe coincidir con el backend)
+export enum TestOrderStatus {
+  PENDING = 'pendiente',
+  PAID = 'pagado',
+  WAITING = 'en_espera',
+  IN_PROCESS = 'en_proceso',
+  PENDING_UPLOAD = 'pendiente_subir',
+  COMPLETED = 'completado',
+  CANCELLED = 'cancelado',
+}
+
 interface TestOrderResponse {
   success: boolean
   data: TestOrder | TestOrder[]
@@ -10,6 +21,11 @@ interface TestOrderResponse {
 interface TestOrderQueryParams {
   consultation_id?: number
   patient_id?: number
+  slot_id?: number
+  doctor_id?: number
+  status?: TestOrderStatus | string
+  date_from?: string // Formato YYYY-MM-DD
+  date_to?: string   // Formato YYYY-MM-DD
 }
 
 interface CreateTestOrderRequest {
@@ -20,19 +36,18 @@ interface CreateTestOrderRequest {
   diagnostic_test_description?: string
   diagnostic_test_patient_instructions?: string
   status: string
-  payment_id?: number
   created_at?: string
   updated_at?: string
 }
 
 interface UpdateTestOrderRequest {
   diagnostic_test_id?: number
-  diagnostic_test_name: string
+  diagnostic_test_name?: string
   diagnostic_test_cpt_code?: string
   diagnostic_test_description?: string
   diagnostic_test_patient_instructions?: string
-  status: string
-  payment_id?: number
+  status?: string
+  slot_id?: number
   updated_at?: string
 }
 

@@ -35,44 +35,32 @@
         </div>
       </div>
 
-      <!-- Información de la Orden -->
-      <div class="section">
-        <h4 class="section-title">Información de la Orden</h4>
-        <div class="order-info">
+      <!-- Información de la Cita -->
+      <div v-if="hasSlotInfo" class="section">
+        <h4 class="section-title">Información de la Cita</h4>
+        <div class="appointment-info">
           <div class="info-grid">
-            <div class="info-item">
+            <div v-if="testOrder.slot_scheduled_at" class="info-item">
               <CalendarIcon class="info-icon" />
               <div>
-                <p class="info-label">Fecha de Orden</p>
-                <p class="info-value">{{ formatDate(testOrder.created_at) }}</p>
+                <p class="info-label">Fecha</p>
+                <p class="info-value">{{ formatDate(testOrder.slot_scheduled_at) }}</p>
               </div>
             </div>
 
-            <div class="info-item">
+            <div v-if="testOrder.slot_scheduled_at" class="info-item">
               <ClockIcon class="info-icon" />
               <div>
-                <p class="info-label">Hora de Creación</p>
-                <p class="info-value">{{ formatTime(testOrder.created_at) }}</p>
+                <p class="info-label">Hora</p>
+                <p class="info-value">{{ formatTime(testOrder.slot_scheduled_at) }}</p>
               </div>
             </div>
 
-            <div class="info-item">
-              <CheckCircleIcon class="info-icon" />
+            <div v-if="testOrder.slot_price" class="info-item">
+              <CurrencyDollarIcon class="info-icon" />
               <div>
-                <p class="info-label">Estado</p>
-                <p class="info-value">
-                  <span class="status-badge" :class="getStatusClass(testOrder.status)">
-                    {{ formatStatus(testOrder.status) }}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div v-if="testOrder.doctor_first_name" class="info-item">
-              <DocumentCheckIcon class="info-icon" />
-              <div>
-                <p class="info-label">Médico Asignado</p>
-                <p class="info-value">Dr. {{ testOrder.doctor_first_name }} {{ testOrder.doctor_last_name }}</p>
+                <p class="info-label">Precio</p>
+                <p class="info-value">S/ {{ testOrder.slot_price }}</p>
               </div>
             </div>
           </div>
@@ -83,13 +71,13 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue'
   import {
     CalendarIcon,
     ClockIcon,
-    CheckCircleIcon,
     BeakerIcon,
     DocumentTextIcon,
-    DocumentCheckIcon
+    CurrencyDollarIcon
   } from '@heroicons/vue/24/outline'
   import type { TestOrder } from '@/types/testOrder.types'
 
@@ -97,7 +85,15 @@
     testOrder: TestOrder
   }
 
-  defineProps<Props>()
+  const props = defineProps<Props>()
+
+  // Computed
+  const hasSlotInfo = computed(() => {
+    return props.testOrder.slot_id && (
+      props.testOrder.slot_scheduled_at ||
+      props.testOrder.slot_price
+    )
+  })
 
   // Métodos de formateo
   const formatDate = (dateString: string): string => {
@@ -112,33 +108,21 @@
   }
 
   const formatTime = (dateString: string): string => {
-    const date = new Date(dateString)
+    let date: Date
+    if (dateString.endsWith('Z')) {
+      const localDateString = dateString.replace('Z', '')
+      date = new Date(localDateString)
+    } else {
+      date = new Date(dateString)
+    }
+
     return date.toLocaleTimeString('es-PE', {
       hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Lima'
+      minute: '2-digit'
     })
   }
 
-  const formatStatus = (status: string): string => {
-    const statuses: Record<string, string> = {
-      pendiente: 'Pendiente',
-      pagada: 'Pagada',
-      completada: 'Completada',
-      cancelada: 'Cancelada'
-    }
-    return statuses[status] || status
-  }
 
-  const getStatusClass = (status: string): string => {
-    const classes: Record<string, string> = {
-      pendiente: 'status-pending',
-      pagada: 'status-paid',
-      completada: 'status-completed',
-      cancelada: 'status-cancelled'
-    }
-    return classes[status] || 'status-default'
-  }
 </script>
 
 <style scoped>
@@ -245,39 +229,7 @@
     line-height: 1.5;
   }
 
-  /* Patient Info */
-  .patient-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
 
-  .patient-avatar {
-    width: 3rem;
-    height: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #e5e7eb;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .avatar-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-    color: #6b7280;
-  }
-
-  .patient-name {
-    font-weight: 600;
-    color: #111827;
-  }
-
-  .patient-document {
-    font-size: 0.875rem;
-    color: #4b5563;
-  }
 
   /* Instructions */
   .instructions-box {
@@ -303,7 +255,6 @@
     font-size: 0.875rem;
   }
 
-  /* Order Info */
   .info-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -342,36 +293,5 @@
     color: #111827;
   }
 
-  /* Status Badges */
-  .status-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
 
-  .status-pending {
-    background-color: #fef3c7;
-    color: #92400e;
-  }
-
-  .status-paid {
-    background-color: #dcfce7;
-    color: #166534;
-  }
-
-  .status-completed {
-    background-color: #dbeafe;
-    color: #1e40af;
-  }
-
-  .status-cancelled {
-    background-color: #fecaca;
-    color: #991b1b;
-  }
-
-  .status-default {
-    background-color: #f3f4f6;
-    color: #374151;
-  }
 </style>

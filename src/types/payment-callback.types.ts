@@ -19,6 +19,7 @@ export interface PaymentCallbackParams {
 
 export interface PaymentSummary {
   appointmentId: number
+  testOrderId?: number
   paymentId: string
   collectionId: string
   status: 'approved' | 'pending' | 'rejected' | 'cancelled'

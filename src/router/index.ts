@@ -13,6 +13,7 @@ import scheduleRoutes from '@/modules/schedule-management/router'
 import testOrderRoutes from '@/modules/test-orders/router'
 import patientQueueRoutes from '@/modules/patient-queue/router'
 import doctorAttendanceRoutes from '@/modules/doctor-attendance/router'
+import doctorActivitiesRoutes from '@/modules/doctor-activities/router'
 
 const routes: RouteRecordRaw[] = [
   // Combinar todas las rutas de los módulos
@@ -27,6 +28,7 @@ const routes: RouteRecordRaw[] = [
   ...testOrderRoutes,
   ...patientQueueRoutes,
   ...doctorAttendanceRoutes,
+  ...doctorActivitiesRoutes,
 
   // Rutas de error
   {
