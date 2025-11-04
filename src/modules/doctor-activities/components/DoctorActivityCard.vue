@@ -114,7 +114,7 @@
   }
 
   const props = defineProps<Props>()
-  const emit = defineEmits<Emits>()
+  defineEmits<Emits>()
 
 
 
