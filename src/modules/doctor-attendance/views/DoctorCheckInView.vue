@@ -29,6 +29,16 @@
       </div>
 
       <div class="form-group">
+        <label>Consultorio *</label>
+        <input 
+          type="text" 
+          v-model="formData.consultation_room" 
+          placeholder="Ej: Consultorio 1, Sala A, etc."
+          required 
+        />
+      </div>
+
+      <div class="form-group">
         <label>Notas (opcional)</label>
         <textarea v-model="formData.notes" rows="4" placeholder="Observaciones..."></textarea>
       </div>
@@ -63,6 +73,7 @@
           <div class="card-body">
             <p><strong>Check-In:</strong> {{ attendance.check_in_time }}</p>
             <p><strong>Check-Out:</strong> {{ attendance.check_out_time || 'Pendiente' }}</p>
+            <p v-if="attendance.consultation_room"><strong>Consultorio:</strong> {{ attendance.consultation_room }}</p>
             <p v-if="attendance.notes"><strong>Notas:</strong> {{ attendance.notes }}</p>
           </div>
         </div>
@@ -90,6 +101,7 @@ const formData = ref({
   doctor_id: undefined as number | undefined,
   date: new Date().toISOString().split('T')[0],
   check_in_time: '',
+  consultation_room: '',
   notes: ''
 })
 

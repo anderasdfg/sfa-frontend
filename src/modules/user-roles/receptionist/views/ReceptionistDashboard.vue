@@ -272,12 +272,12 @@ onMounted(() => {
   loadQueueStats()
   loadAttendanceStats()
   
-  // Actualizar cada 30 segundos
+  // Actualizar cada 5 minutos
   setInterval(() => {
     loadTodayAppointments()
     loadQueueStats()
     loadAttendanceStats()
-  }, 30000)
+  }, 300000)
 })
 </script>
 

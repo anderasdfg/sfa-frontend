@@ -1,544 +1,372 @@
 <template>
   <div class="admin-dashboard">
-    <!-- Welcome Header -->
-    <div class="welcome-header">
-      <h1 class="welcome-title">¡Bienvenido, Admin Sistema!</h1>
-      <p class="welcome-subtitle">Buenas tardes. Gestiona tu clínica de manera eficiente.</p>
-    </div>
+    <DashboardHeader />
 
-    <!-- Quick Stats -->
     <div v-if="loading" class="loading-container">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+      <p>Cargando dashboard...</p>
     </div>
 
-    <div v-else class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon green">
-          <i class="pi pi-dollar"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">
-            S/.{{ formatNumber(statistics?.daily_info.daily_revenue ?? 0) }}
-          </div>
-          <div class="stat-label">Ingresos del Día</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon blue">
-          <i class="pi pi-calendar"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ statistics?.daily_info.total_appointments_today ?? 0 }}</div>
-          <div class="stat-label">Citas del Día</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon purple">
-          <i class="pi pi-check-circle"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ statistics?.daily_info.completed_appointments ?? 0 }}</div>
-          <div class="stat-label">Citas Completadas</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon orange">
-          <i class="pi pi-clock"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ statistics?.daily_info.pending_appointments ?? 0 }}</div>
-          <div class="stat-label">Citas Pendientes</div>
-        </div>
-      </div>
+    <div v-else-if="error" class="error-container">
+      <i class="pi pi-exclamation-triangle"></i>
+      <p>{{ error }}</p>
+      <button @click="loadDashboard" class="btn-retry">Reintentar</button>
     </div>
 
-    <!-- Main Content -->
-    <div v-if="!loading" class="content-grid">
-      <div class="overview-card">
-        <h3 class="card-title">Resumen del Sistema</h3>
-        <div class="overview-grid">
-          <div class="overview-item">
-            <div class="overview-number">{{ statistics?.summary.total_users ?? 0 }}</div>
-            <div class="overview-label">Total Usuarios</div>
-          </div>
-          <div class="overview-item">
-            <div class="overview-number">{{ statistics?.summary.total_doctors ?? 0 }}</div>
-            <div class="overview-label">Doctores Activos</div>
-          </div>
-          <div class="overview-item">
-            <div class="overview-number">{{ statistics?.summary.total_patients ?? 0 }}</div>
-            <div class="overview-label">Pacientes Registrados</div>
-          </div>
-          <div class="overview-item">
-            <div class="overview-number">
-              {{ statistics?.summary.future_appointments_scheduled_today ?? 0 }}
-            </div>
-            <div class="overview-label">Citas Programadas Hoy</div>
-          </div>
-        </div>
-      </div>
+    <div v-else class="dashboard-content">
+      <!-- Stats Cards -->
+      <StatsCards
+        :waiting-patients="dashboardData.waiting_patients_count"
+        :average-wait-time="dashboardData.average_wait_time"
+        :available-doctors="dashboardData.available_doctors"
+        :daily-revenue="dashboardData.daily_revenue"
+      />
 
-      <div class="actions-card">
-        <h3 class="card-title">Gestión Rápida</h3>
-        <div class="quick-actions">
-          <button @click="goToQueue" class="action-btn green">
-            <i class="pi pi-list"></i>
-            <span>Cola de Pacientes</span>
-          </button>
-          <button @click="goToCheckIn" class="action-btn blue">
-            <i class="pi pi-clock"></i>
-            <span>Asistencia Doctores</span>
-          </button>
-          <button @click="goToAppointments" class="action-btn purple">
-            <i class="pi pi-calendar"></i>
-            <span>Ver Agenda</span>
-          </button>
-          <button @click="goToNewAppointment" class="action-btn orange">
-            <i class="pi pi-plus"></i>
-            <span>Nueva Cita</span>
-          </button>
+      <!-- Main Grid -->
+      <div class="main-grid">
+        <!-- Left Column -->
+        <div class="left-column">
+          <WaitingRoom :patients="dashboardData.waiting_room" />
+          <DayStatistics :statistics="dashboardData.day_statistics" />
         </div>
-      </div>
 
-      <!-- Acceso rápido a Citas de Hoy -->
-      <div class="quick-link-card">
-        <h3 class="card-title">Citas de Hoy</h3>
-        <p class="card-description">Gestiona las llegadas y atenciones del día</p>
-        <button @click="goToTodayAppointments" class="btn-view-all">
-          Ver todas las citas de hoy →
-        </button>
+        <!-- Middle Column -->
+        <div class="middle-column">
+          <UpcomingAppointments :appointments="dashboardData.upcoming_appointments" />
+          <HourlyAppointments :hourly-data="dashboardData.hourly_appointments" />
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+          <MedicalAvailability :availability="dashboardData.medical_availability" />
+          <AvailableDoctors :doctors="dashboardData.available_doctors_now" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { ref, onMounted, onUnmounted } from 'vue'
   import { StatisticsService } from '@/services/statistics.service'
-  import type { DashboardStatistics } from '@/types/statistics.types'
+  import { AppointmentService } from '@/services/appointments.service'
+  import type { AdminDashboard } from '@/types/statistics.types'
+  import DashboardHeader from '../components/DashboardHeader.vue'
+  import StatsCards from '../components/StatsCards.vue'
+  import WaitingRoom from '../components/WaitingRoom.vue'
+  import UpcomingAppointments from '../components/UpcomingAppointments.vue'
+  import MedicalAvailability from '../components/MedicalAvailability.vue'
+  import AvailableDoctors from '../components/AvailableDoctors.vue'
+  import DayStatistics from '../components/DayStatistics.vue'
+  import HourlyAppointments from '../components/HourlyAppointments.vue'
 
-  const router = useRouter()
-  const statistics = ref<DashboardStatistics | null>(null)
+  const dashboardData = ref<AdminDashboard>({
+    current_datetime: new Date().toISOString(),
+    waiting_patients_count: 0,
+    average_wait_time: 0,
+    available_doctors: '0/0',
+    daily_revenue: 0,
+    waiting_room: [],
+    upcoming_appointments: [],
+    medical_availability: { available: 0, in_consultation: 0, busy: 0 },
+    available_doctors_now: [],
+    day_statistics: { patients_attended: 0, absences: 0, occupied_rooms: 0 },
+    hourly_appointments: []
+  })
   const loading = ref(true)
+  const error = ref<string | null>(null)
+  let refreshInterval: number | null = null
 
-  const formatNumber = (value: number): string => {
-    return new Intl.NumberFormat('es-ES').format(value)
-  }
-
-  const loadStatistics = async () => {
+  const loadDashboard = async () => {
     try {
       loading.value = true
-      statistics.value = await StatisticsService.getDashboardStatistics()
-    } catch (error) {
-      console.error('Error cargando estadísticas:', error)
+      error.value = null
+      
+      // Cargar datos del dashboard
+      const dashboard = await StatisticsService.getAdminDashboard()
+      
+      // Obtener citas del día desde el endpoint de appointments
+      const today = new Date()
+      const todayStr = today.toISOString().split('T')[0]
+      
+      const appointmentsResponse = await AppointmentService.getAppointments({
+        date_from: todayStr,
+        date_to: todayStr
+      })
+      
+      const appointments = appointmentsResponse.data || []
+      console.log('Appointments from API:', appointments)
+      
+      // Filtrar solo citas futuras y con estado pagada
+      const now = new Date()
+      console.log('Current time:', now)
+      console.log('Total appointments:', appointments.length)
+      
+      const upcomingAppointments = appointments
+        .filter((apt: any) => {
+          // Solo citas pagadas o reservadas
+          if (apt.status !== 'pagada' && apt.status !== 'reservada') {
+            console.log(`Appointment ${apt.id} filtered out: status = ${apt.status}`)
+            return false
+          }
+          
+          const aptDateTime = apt.slot?.scheduled_at || apt.appointment_date
+          console.log(`Appointment ${apt.id} datetime:`, aptDateTime)
+          
+          // Remover la Z para interpretar como hora local de Perú
+          const localDateString = typeof aptDateTime === 'string' && aptDateTime.endsWith('Z') 
+            ? aptDateTime.slice(0, -1) 
+            : aptDateTime
+          const aptDate = new Date(localDateString)
+          const isFuture = aptDate > now
+          
+          console.log(`Appointment ${apt.id}: ${localDateString} -> ${aptDate.toISOString()} > ${now.toISOString()} = ${isFuture}`)
+          
+          return isFuture
+        })
+        .slice(0, 4)
+        .map((apt: any) => {
+          const aptDateTime = apt.slot?.scheduled_at || apt.appointment_date
+          const localDateString = typeof aptDateTime === 'string' && aptDateTime.endsWith('Z') 
+            ? aptDateTime.slice(0, -1) 
+            : aptDateTime
+          return {
+            id: apt.id,
+            time: new Date(localDateString).toLocaleTimeString('es-PE', { 
+              hour: '2-digit', 
+              minute: '2-digit'
+            }),
+            patient_name: `${apt.patient_data?.first_name || ''} ${apt.patient_data?.last_name || ''}`,
+            doctor_name: `Dr. ${apt.doctor_data?.last_name || ''}`,
+            specialty: apt.specialty || apt.doctor_data?.specialty_name || 'Medicina General',
+            status: apt.status === 'pagada' ? 'Pagada' : 'Reservada',
+            modality: apt.modality === 'presencial' ? 'Presencial' : 'Telemedicina'
+          }
+        })
+      
+      // Reemplazar las citas del dashboard con las obtenidas del endpoint
+      dashboardData.value = {
+        ...dashboard,
+        upcoming_appointments: upcomingAppointments
+      }
+      
+      console.log('Upcoming appointments:', upcomingAppointments)
+    } catch (err) {
+      console.error('Error cargando dashboard:', err)
+      error.value = 'No se pudo cargar el dashboard. Por favor, intenta de nuevo.'
     } finally {
       loading.value = false
     }
   }
 
-  const goToQueue = () => router.push('/patient-queue')
-  const goToCheckIn = () => router.push('/doctor-attendance/check-in')
-  const goToAppointments = () => router.push('/appointments')
-  const goToNewAppointment = () => router.push('/appointments/new')
-  const goToTodayAppointments = () => router.push('/appointments/today')
+  const openQueueDisplay = () => {
+    // Abrir en nueva ventana/pestaña
+    const width = 1920
+    const height = 1080
+    const left = (screen.width - width) / 2
+    const top = (screen.height - height) / 2
+    
+    window.open(
+      '/queue-display',
+      'QueueDisplay',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    )
+  }
 
   onMounted(() => {
-    loadStatistics()
+    loadDashboard()
+    // Refrescar cada 30 segundos
+    refreshInterval = window.setInterval(() => {
+      loadDashboard()
+    }, 30000)
+  })
+
+  onUnmounted(() => {
+    if (refreshInterval) {
+      clearInterval(refreshInterval)
+    }
   })
 </script>
 
 <style scoped>
   .admin-dashboard {
-    padding: 0;
+    padding: 1.5rem 2rem;
+    min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
-  .loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 3rem;
-    color: var(--color-sf-green-normal);
-  }
-
-  .welcome-header {
-    background: linear-gradient(
-      135deg,
-      var(--color-sf-green-light) 0%,
-      var(--color-sf-green-normal) 100%
-    );
-    color: white;
-    padding: 2rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-  }
-
-  .welcome-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-  }
-
-  .welcome-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin: 0;
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-  }
-
-  .stat-icon.green {
-    background: #10b981;
-  }
-  .stat-icon.blue {
-    background: #3b82f6;
-  }
-  .stat-icon.purple {
-    background: #8b5cf6;
-  }
-  .stat-icon.orange {
-    background: #f59e0b;
-  }
-
-  .stat-content {
-    flex: 1;
-  }
-
-  .stat-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 0.25rem;
-  }
-
-  .stat-label {
-    color: #6b7280;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .content-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .overview-card,
-  .actions-card,
-  .activity-card,
-  .quick-link-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 1.5rem 0;
-  }
-
-  .overview-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  .overview-item {
-    text-align: center;
-    padding: 1rem;
-    background: #f9fafb;
-    border-radius: 8px;
-  }
-
-  .overview-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #059669;
-    margin-bottom: 0.25rem;
-  }
-
-  .overview-label {
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 500;
-  }
-
-  .quick-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .action-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .action-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .action-btn.green {
-    background: #10b981;
-  }
-  .action-btn.blue {
-    background: #3b82f6;
-  }
-  .action-btn.purple {
-    background: #8b5cf6;
-  }
-  .action-btn.orange {
-    background: #f59e0b;
-  }
-
-  .activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .activity-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 8px;
-  }
-
-  .activity-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    color: white;
-  }
-
-  .activity-icon.blue {
-    background: #3b82f6;
-  }
-  .activity-icon.green {
-    background: #10b981;
-  }
-  .activity-icon.purple {
-    background: #8b5cf6;
-  }
-
-  .activity-content {
-    flex: 1;
-  }
-
-  .activity-description {
-    font-size: 0.875rem;
-    color: #374151;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-  }
-
-  .activity-time {
-    font-size: 0.75rem;
-    color: #6b7280;
-  }
-
-  .appointments-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    grid-column: 1 / -1;
-  }
-
-  .card-header {
+  .queue-display-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
-  .btn-refresh {
-    padding: 0.5rem 1rem;
-    background: #4299e1;
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .banner-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: white;
+    font-size: 1.5rem;
+  }
+
+  .banner-text h3 {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .banner-text p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .btn-open-display {
+    background: white;
+    color: #667eea;
     border: none;
-    border-radius: 0.375rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     transition: all 0.2s;
-  }
-
-  .btn-refresh:hover {
-    background: #3182ce;
-  }
-
-  .loading-state,
-  .empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: #718096;
-  }
-
-  .appointments-table {
-    overflow-x: auto;
-  }
-
-  .appointments-table table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .appointments-table th {
-    text-align: left;
-    padding: 0.75rem;
-    background: #f7fafc;
-    color: #4a5568;
-    font-weight: 600;
-    font-size: 0.875rem;
-    border-bottom: 2px solid #e2e8f0;
-  }
-
-  .appointments-table td {
-    padding: 1rem 0.75rem;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: inline-block;
-  }
-
-  .status-reservada {
-    background: #feebc8;
-    color: #7c2d12;
-  }
-
-  .status-pagada {
-    background: #c6f6d5;
-    color: #22543d;
-  }
-
-  .status-realizada {
-    background: #e9d8fd;
-    color: #44337a;
-  }
-
-  .status-cancelada {
-    background: #fed7d7;
-    color: #742a2a;
-  }
-
-  .arrived-badge {
-    color: #38a169;
-    font-weight: 500;
-  }
-
-  .not-arrived {
-    color: #a0aec0;
-  }
-
-  .action-buttons {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .quick-link-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
   }
 
-  .card-description {
+  .btn-open-display:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-open-display i {
+    font-size: 1rem;
+  }
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+  }
+
+  .loading-container {
+    color: #059669;
+  }
+
+  .loading-container p {
+    font-size: 1rem;
     color: #6b7280;
-    margin: 0.5rem 0 1.5rem 0;
   }
 
-  .btn-view-all {
-    padding: 0.75rem 2rem;
-    background: #4299e1;
+  .error-container {
+    color: #dc2626;
+  }
+
+  .error-container i {
+    font-size: 3rem;
+  }
+
+  .error-container p {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  .btn-retry {
+    padding: 0.75rem 1.5rem;
+    background: #059669;
     color: white;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 8px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    margin-top: 1rem;
   }
 
-  .btn-view-all:hover {
-    background: #3182ce;
+  .btn-retry:hover {
+    background: #047857;
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
   }
 
-  @media (max-width: 768px) {
-    .stats-grid {
+  .dashboard-content {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(400px, 2fr) minmax(280px, 1fr);
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .left-column,
+  .middle-column,
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+
+  @media (max-width: 1400px) {
+    .main-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .right-column {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+  }
+
+  @media (max-width: 968px) {
+    .main-grid {
       grid-template-columns: 1fr;
     }
 
-    .content-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .overview-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .welcome-header {
-      padding: 1.5rem;
-    }
-
-    .welcome-title {
-      font-size: 1.5rem;
+    .right-column {
+      grid-column: 1;
+      display: flex;
+      flex-direction: column;
     }
   }
 </style>

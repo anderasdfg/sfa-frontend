@@ -1,27 +1,37 @@
 <template>
   <div class="patient-queue-management">
-    <!-- Header with Display Button -->
+    <!-- Header -->
     <div class="queue-header">
       <div class="header-left">
         <h1 class="page-title">Cola de Pacientes</h1>
         <p class="page-subtitle">{{ formattedDate }}</p>
       </div>
-      <button @click="openQueueDisplay" class="btn-display">
-        <i class="pi pi-desktop"></i>
-        Abrir Display
-      </button>
+      <div class="header-right">
+        <button class="btn-register" @click="handleRegisterArrival">
+          <i class="pi pi-plus"></i>
+          Registrar Llegada
+        </button>
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar paciente..."
+            v-model="searchQuery"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Filters Card -->
     <div class="filters-card">
-      <!--  <div class="card-header-section">
+      <div class="card-header-section">
         <h2 class="card-title">Cola de Pacientes</h2>
         <p class="card-subtitle">{{ formattedDate }}</p>
         <button class="btn-export" @click="handleExport">
           <i class="pi pi-download"></i>
           Exportar
         </button>
-      </div> -->
+      </div>
 
       <div class="filters-row">
         <div class="filter-item">
@@ -41,10 +51,57 @@
           <label>Especialidad</label>
           <select v-model="filters.specialty_id" @change="loadQueue">
             <option :value="undefined">Todas</option>
-            <option v-for="specialty in specialties" :key="specialty.id" :value="specialty.id">
+            <option
+              v-for="specialty in specialties"
+              :key="specialty.id"
+              :value="specialty.id"
+            >
               {{ specialty.name }}
             </option>
           </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="metrics-grid" v-if="queueData">
+      <div class="metric-card purple">
+        <div class="metric-icon">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-label">Citas Programadas</div>
+          <div class="metric-value">{{ queueData.metrics.scheduled_count }}</div>
+        </div>
+      </div>
+
+      <div class="metric-card yellow">
+        <div class="metric-icon">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-label">En Sala de Espera</div>
+          <div class="metric-value">{{ queueData.metrics.waiting_count }}</div>
+        </div>
+      </div>
+
+      <div class="metric-card blue">
+        <div class="metric-icon">
+          <i class="pi pi-heart-fill"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-label">En Consulta</div>
+          <div class="metric-value">{{ queueData.metrics.in_consultation_count }}</div>
+        </div>
+      </div>
+
+      <div class="metric-card green">
+        <div class="metric-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="metric-content">
+          <div class="metric-label">Completados Hoy</div>
+          <div class="metric-value">{{ queueData.metrics.completed_today_count }}</div>
         </div>
       </div>
     </div>
@@ -55,101 +112,44 @@
       <p>Cargando cola de pacientes...</p>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="error-container">
-      <i class="pi pi-exclamation-triangle"></i>
-      <p>{{ error }}</p>
-      <button @click="loadQueue" class="btn-retry">Reintentar</button>
+    <!-- Queue Sections -->
+    <div v-else-if="queueData" class="queue-sections">
+      <!-- Scheduled Appointments -->
+      <ScheduledAppointmentsSection
+        :appointments="queueData.scheduled_appointments"
+        @mark-arrival="handleMarkArrival"
+        @send-reminder="handleSendReminder"
+      />
+
+      <!-- Waiting Room -->
+      <WaitingRoomSection
+        :patients="queueData.waiting_patients"
+        @call-to-consultation="handleCallToConsultation"
+      />
+
+      <!-- In Consultation -->
+      <InConsultationSection :patients="queueData.in_consultation" />
     </div>
-
-    <!-- Content -->
-    <div v-else-if="queueData">
-      <!-- Metrics Cards -->
-      <div class="metrics-grid">
-        <div class="metric-card purple">
-          <i class="pi pi-clock metric-icon-inline"></i>
-          <div class="metric-info">
-            <div class="metric-label">Citas Programadas</div>
-            <div class="metric-value">{{ queueData.metrics.scheduled_count }}</div>
-          </div>
-        </div>
-
-        <div class="metric-card yellow">
-          <i class="pi pi-users metric-icon-inline"></i>
-          <div class="metric-info">
-            <div class="metric-label">En Sala de Espera</div>
-            <div class="metric-value">{{ queueData.metrics.waiting_count }}</div>
-          </div>
-        </div>
-
-        <div class="metric-card blue">
-          <i class="pi pi-chart-line metric-icon-inline"></i>
-          <div class="metric-info">
-            <div class="metric-label">En Consulta</div>
-            <div class="metric-value">{{ queueData.metrics.in_consultation_count }}</div>
-          </div>
-        </div>
-
-        <div class="metric-card green">
-          <i class="pi pi-check-circle metric-icon-inline"></i>
-          <div class="metric-info">
-            <div class="metric-label">Completados Hoy</div>
-            <div class="metric-value">{{ queueData.metrics.completed_today_count }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Queue Sections -->
-      <div class="queue-sections">
-        <!-- Scheduled Appointments -->
-        <ScheduledAppointmentsSection
-          :appointments="queueData.scheduled_appointments"
-          @mark-arrival="handleMarkArrival"
-          @send-reminder="handleSendReminder"
-        />
-
-        <!-- Waiting Room -->
-        <WaitingRoomSection
-          :patients="queueData.waiting_patients"
-          @call-to-consultation="handleCallToConsultation"
-        />
-
-        <!-- In Consultation -->
-        <InConsultationSection :patients="queueData.in_consultation" />
-      </div>
-    </div>
-
-    <!-- Arrival Confirmation Modal -->
-    <ArrivalConfirmationModal
-      :is-open="showArrivalModal"
-      :appointment="selectedAppointment"
-      @close="closeArrivalModal"
-      @confirm="confirmArrival"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { PatientQueueService } from '@/services/patientQueue.service'
-  import type { QueueOverview, QueueFilters, ScheduledAppointment } from '@/types/patient-queue.types'
-  import ScheduledAppointmentsSection from '../components/ScheduledAppointmentsSection.vue'
-  import WaitingRoomSection from '../components/WaitingRoomSection.vue'
-  import InConsultationSection from '../components/InConsultationSection.vue'
-  import ArrivalConfirmationModal from '../components/ArrivalConfirmationModal.vue'
+  import type { QueueOverview, QueueFilters } from '@/types/patient-queue.types'
+  import ScheduledAppointmentsSection from '../components/queue/ScheduledAppointmentsSection.vue'
+  import WaitingRoomSection from '../components/queue/WaitingRoomSection.vue'
+  import InConsultationSection from '../components/queue/InConsultationSection.vue'
 
   const queueData = ref<QueueOverview | null>(null)
   const loading = ref(true)
-  const error = ref<string | null>(null)
   const searchQuery = ref('')
   const filters = ref<QueueFilters>({
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
   })
 
   const doctors = ref<Array<{ id: number; name: string }>>([])
   const specialties = ref<Array<{ id: number; name: string }>>([])
-  const showArrivalModal = ref(false)
-  const selectedAppointment = ref<ScheduledAppointment | null>(null)
 
   let refreshInterval: number | null = null
 
@@ -161,47 +161,24 @@
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   })
 
   const loadQueue = async () => {
     try {
       loading.value = true
-      error.value = null
       queueData.value = await PatientQueueService.getQueueOverview(filters.value)
-      console.log('Queue data loaded:', queueData.value)
-    } catch (err) {
-      console.error('Error loading queue:', err)
-      error.value = err instanceof Error ? err.message : 'Error al cargar la cola de pacientes'
+    } catch (error) {
+      console.error('Error loading queue:', error)
     } finally {
       loading.value = false
     }
   }
 
-  const handleMarkArrival = (appointmentId: number) => {
-    // Buscar la cita en los datos actuales
-    const appointment = queueData.value?.scheduled_appointments.find(apt => apt.id === appointmentId)
-    if (appointment) {
-      selectedAppointment.value = appointment
-      showArrivalModal.value = true
-    }
-  }
-
-  const closeArrivalModal = () => {
-    showArrivalModal.value = false
-    selectedAppointment.value = null
-  }
-
-  const confirmArrival = async (data: { appointmentId: number; paymentStatus: string; notes: string; arrivalTime: string }) => {
+  const handleMarkArrival = async (appointmentId: number) => {
     try {
-      // Llamar al servicio para marcar la llegada con los datos adicionales
-      await PatientQueueService.markArrival(data.appointmentId, {
-        payment_status: data.paymentStatus,
-        notes: data.notes,
-        arrival_time: data.arrivalTime
-      })
-      // Recargar la cola para reflejar los cambios
+      await PatientQueueService.markArrival(appointmentId)
       await loadQueue()
     } catch (error) {
       console.error('Error marking arrival:', error)
@@ -235,19 +212,6 @@
     console.log('Exportar cola')
   }
 
-  const openQueueDisplay = () => {
-    const width = 1920
-    const height = 1080
-    const left = (screen.width - width) / 2
-    const top = (screen.height - height) / 2
-    
-    window.open(
-      '/queue-display',
-      'QueueDisplay',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    )
-  }
-
   onMounted(() => {
     loadQueue()
     // Refrescar cada 30 segundos
@@ -265,7 +229,8 @@
 
 <style scoped>
   .patient-queue-management {
-    padding: 1rem;
+    padding: 1.5rem 2rem;
+    background: #f5f5f5;
     min-height: 100vh;
   }
 
@@ -285,39 +250,6 @@
     font-weight: 600;
     color: #1f2937;
     margin: 0 0 0.25rem 0;
-  }
-
-  .page-subtitle {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
-    text-transform: capitalize;
-  }
-
-  .btn-display {
-    background: #059669;
-    color: white;
-    border: none;
-    padding: 0.625rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.875rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .btn-display:hover {
-    background: #047857;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .btn-display i {
-    font-size: 1rem;
   }
 
   .page-subtitle {
@@ -459,80 +391,88 @@
   .metrics-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    gap: 1.25rem;
     margin-bottom: 1.5rem;
   }
 
   .metric-card {
     background: white;
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    padding: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
-    border-left: 3px solid;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
   }
 
   .metric-card.purple {
     border-left-color: #8b5cf6;
+    background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
   }
 
   .metric-card.yellow {
     border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
   }
 
   .metric-card.blue {
     border-left-color: #3b82f6;
+    background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
   }
 
   .metric-card.green {
     border-left-color: #10b981;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
   }
 
-  .metric-icon-inline {
-    font-size: 1.5rem;
-    flex-shrink: 0;
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
   }
 
-  .purple .metric-icon-inline {
-    color: #8b5cf6;
+  .purple .metric-icon {
+    background: #ede9fe;
+    color: #7c3aed;
   }
 
-  .yellow .metric-icon-inline {
-    color: #f59e0b;
+  .yellow .metric-icon {
+    background: #fef3c7;
+    color: #d97706;
   }
 
-  .blue .metric-icon-inline {
-    color: #3b82f6;
+  .blue .metric-icon {
+    background: #dbeafe;
+    color: #2563eb;
   }
 
-  .green .metric-icon-inline {
-    color: #10b981;
+  .green .metric-icon {
+    background: #d1fae5;
+    color: #059669;
   }
 
-  .metric-info {
+  .metric-content {
     flex: 1;
-    min-width: 0;
   }
 
   .metric-label {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     color: #6b7280;
-    margin-bottom: 0.125rem;
-    font-weight: 400;
+    margin-bottom: 0.25rem;
   }
 
   .metric-value {
-    font-size: 1.5rem;
+    font-size: 1.875rem;
     font-weight: 700;
     color: #1f2937;
-    line-height: 1;
   }
 
-  .loading-container,
-  .error-container {
+  .loading-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -549,38 +489,6 @@
   .loading-container p {
     font-size: 1rem;
     color: #6b7280;
-  }
-
-  .error-container {
-    color: #dc2626;
-  }
-
-  .error-container i {
-    font-size: 3rem;
-  }
-
-  .error-container p {
-    font-size: 1rem;
-    color: #6b7280;
-    margin: 0;
-  }
-
-  .btn-retry {
-    padding: 0.75rem 1.5rem;
-    background: #059669;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 1rem;
-  }
-
-  .btn-retry:hover {
-    background: #047857;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
   }
 
   .queue-sections {

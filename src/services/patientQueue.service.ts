@@ -6,6 +6,7 @@ import type {
   PatientQueueStatistics,
   PatientQueueResponse
 } from '@/types/patientQueue.types'
+import type { QueueOverview, QueueFilters } from '@/types/patient-queue.types'
 
 export class PatientQueueService {
   private static readonly BASE_PATH = '/patient-queue'
@@ -111,6 +112,60 @@ export class PatientQueueService {
     } catch (error) {
       console.error('Error fetching queue statistics:', error)
       throw new Error('No se pudieron cargar las estadísticas de la cola')
+    }
+  }
+
+  /** Obtener vista general de la cola (Programadas, Sala de Espera, En Consulta) */
+  static async getQueueOverview(filters?: QueueFilters): Promise<QueueOverview> {
+    try {
+      const params: any = {}
+      if (filters?.date) params.date = filters.date
+      if (filters?.doctor_id) params.doctor_id = filters.doctor_id
+      if (filters?.specialty_id) params.specialty_id = filters.specialty_id
+
+      const response = await apiClient.get<{ success: boolean; data: QueueOverview }>(
+        `${this.BASE_PATH}/overview`,
+        { params }
+      )
+      if (response.data.success && response.data.data) {
+        return response.data.data
+      }
+      throw new Error('Error al obtener vista general de la cola')
+    } catch (error) {
+      console.error('Error fetching queue overview:', error)
+      throw new Error('No se pudo cargar la vista general de la cola')
+    }
+  }
+
+  /** Marcar llegada de paciente y agregarlo automáticamente a la cola */
+  static async markArrival(
+    appointmentId: number,
+    data?: { payment_status?: string; notes?: string; arrival_time?: string }
+  ): Promise<PatientQueue> {
+    try {
+      const response = await apiClient.post<PatientQueueResponse>(
+        `${this.BASE_PATH}/mark-arrival/${appointmentId}`,
+        data || {}
+      )
+      if (response.data.success && response.data.data) {
+        return response.data.data as PatientQueue
+      }
+      throw new Error(response.data.message || 'Error al marcar llegada')
+    } catch (error) {
+      console.error('Error marking arrival:', error)
+      throw new Error('No se pudo marcar la llegada del paciente')
+    }
+  }
+
+  /** Enviar recordatorio al paciente (SMS/llamada) */
+  static async sendReminder(appointmentId: number): Promise<void> {
+    try {
+      // TODO: Implementar endpoint de recordatorio en el backend
+      console.log('Enviando recordatorio para cita:', appointmentId)
+      // await apiClient.post(`${this.BASE_PATH}/send-reminder/${appointmentId}`)
+    } catch (error) {
+      console.error('Error sending reminder:', error)
+      throw new Error('No se pudo enviar el recordatorio')
     }
   }
 }

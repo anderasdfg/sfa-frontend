@@ -189,10 +189,24 @@
 
   const upcomingAppointments = computed(() => {
     const now = new Date()
+    
     return myAppointments.value
       .filter(apt => {
-        const aptDate = new Date(apt.slot?.scheduled_at || apt.appointment_date)
-        const isUpcoming = aptDate >= new Date(now.setHours(0, 0, 0, 0))
+        const dateString = apt.slot?.scheduled_at || apt.appointment_date
+        
+        // Si la fecha viene en formato UTC (con Z), la parseamos correctamente
+        // removiendo la Z para que se interprete como hora local de Perú
+        let aptDate: Date
+        if (typeof dateString === 'string' && dateString.endsWith('Z')) {
+          // Remover la Z para interpretar como hora local
+          const localDateString = dateString.slice(0, -1)
+          aptDate = new Date(localDateString)
+        } else {
+          aptDate = new Date(dateString)
+        }
+        
+        // Filtrar solo citas futuras (comparando fecha Y hora completa)
+        const isUpcoming = aptDate > now
         const isNotCompleted = apt.status?.toLowerCase() !== 'realizada'
         return isUpcoming && isNotCompleted
       })

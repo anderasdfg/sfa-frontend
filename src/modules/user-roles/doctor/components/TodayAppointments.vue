@@ -34,22 +34,31 @@
           <div class="appointment-details">
             <div class="appointment-patient">
               {{ activity.patient_name }}
-              <span class="activity-badge" :class="activity.type === 'test_order' ? 'test-badge' : 'appointment-badge'">
+              <span
+                class="activity-badge"
+                :class="activity.type === 'test_order' ? 'test-badge' : 'appointment-badge'"
+              >
                 {{ activity.type === 'test_order' ? 'Examen' : 'Cita' }}
               </span>
             </div>
             <div class="appointment-type">
-              {{ activity.type === 'test_order' ? activity.diagnostic_test_name : activity.modality }}
+              {{
+                activity.type === 'test_order' ? activity.diagnostic_test_name : activity.modality
+              }}
             </div>
           </div>
           <div class="appointment-actions">
             <!-- Para citas médicas -->
             <template v-if="activity.type === 'appointment'">
               <VideoMeetingButton
-                v-if="activity.modality === 'teleconsulta' && canStartAppointmentConsultation(activity)"
+                v-if="
+                  activity.modality === 'teleconsulta' && canStartAppointmentConsultation(activity)
+                "
                 :appointment-id="activity.id"
                 role="doctor"
-                :button-text="activity.status === 'en_proceso' ? 'Entrar a consulta' : 'Iniciar consulta'"
+                :button-text="
+                  activity.status === 'en_proceso' ? 'Entrar a consulta' : 'Iniciar consulta'
+                "
                 :title="`Consulta - ${activity.patient_name}`"
               />
               <Button
@@ -167,7 +176,7 @@
     if (success) {
       // Emitir evento para refrescar las actividades en el componente padre
       //emit('refreshActivities')
-      
+
       // Siempre navegar a consulta después de cambiar el estado exitosamente
       router.push(`/appointments/${activity.id}/prepare`)
     }

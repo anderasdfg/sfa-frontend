@@ -58,6 +58,14 @@
 
         <div class="header-actions">
           <Button
+            v-if="appointment.modality === 'teleconsulta'"
+            label="Abrir Videollamada"
+            icon="pi pi-video"
+            severity="info"
+            outlined
+            @click="openVideoInNewTab"
+          />
+          <Button
             label="Volver"
             icon="pi pi-arrow-left"
             severity="secondary"
@@ -206,6 +214,8 @@
   import Dialog from 'primevue/dialog'
   import ProgressSpinner from 'primevue/progressspinner'
   import { AppointmentService } from '@/services/appointments.service'
+  import { PatientQueueService } from '@/services/patientQueue.service'
+  import { VideoMeetingService } from '@/services/videoMeeting.service'
   import { formatTime } from '@/shared/lib/formatters'
   import type { Appointment } from '@/types/appointments.types'
   import DiagnosisTab from '../components/DiagnosisTab.vue'
@@ -226,7 +236,8 @@
   const activeTab = ref('anamnesis')
   const showFinishDialog = ref(false)
   const finishingConsultation = ref(false)
-  const { patientFullName, patientAge, patientGender, patientDocument, patient, fetchPatient } = usePatients()
+  const { patientFullName, patientAge, patientGender, patientDocument, patient, fetchPatient } =
+    usePatients()
   const consultationStore = useConsultationStore()
 
   const currentConsultation = computed(() => consultationStore.currentConsultation)
@@ -278,29 +289,56 @@
     router.push('/dashboard/doctor')
   }
 
+  const openVideoInNewTab = async () => {
+    if (!appointment.value) return
+    
+    try {
+      const videoUrl = await VideoMeetingService.getJoinUrl(appointment.value.id, 'doctor')
+      window.open(videoUrl, '_blank')
+    } catch (error) {
+      console.error('Error opening video:', error)
+      alert('No se pudo abrir la videollamada')
+    }
+  }
+
   const finishConsultation = () => {
     showFinishDialog.value = true
   }
 
   const confirmFinishConsultation = async () => {
     finishingConsultation.value = true
-    
+
     try {
       if (appointment.value && appointment.value.id) {
         console.log('Finalizing consultation for appointment:', appointment.value.id)
-        
-        // Actualizar el estado de la cita a "realizada"
-        await AppointmentService.updateAppointmentStatus(
-          appointment.value.id,
-          { status: "realizada" }
-        )
-        
+
+        // 1. Actualizar el estado de la cita a "realizada"
+        await AppointmentService.updateAppointmentStatus(appointment.value.id, {
+          status: 'realizada'
+        })
         console.log('Appointment status updated to "realizada"')
+
+        // 2. Marcar la consulta como completada en la cola de pacientes
+        try {
+          // Buscar el queue_id del appointment
+          const queueData = await PatientQueueService.getQueue({
+            appointment_id: appointment.value.id
+          })
+
+          if (queueData && queueData.length > 0) {
+            const queueId = queueData[0].id
+            await PatientQueueService.completePatient(queueId)
+            console.log('Patient queue marked as completed')
+          }
+        } catch (queueError) {
+          console.error('Error completing patient queue:', queueError)
+          // No bloqueamos el flujo si falla la actualización de la cola
+        }
       }
-      
+
       // Cerrar el modal y redirigir después de un breve delay
       showFinishDialog.value = false
-      
+
       setTimeout(() => {
         goBack()
       }, 500)

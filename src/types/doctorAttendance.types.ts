@@ -8,6 +8,7 @@ export interface DoctorAttendance {
   check_in_time: string
   check_out_time?: string
   status: DoctorAttendanceStatus
+  consultation_room?: string
   notes?: string
   created_at: string
   updated_at: string
@@ -18,6 +19,7 @@ export interface DoctorAttendanceCheckInRequest {
   doctor_id: number
   date: string
   check_in_time: string
+  consultation_room?: string
   notes?: string
 }
 

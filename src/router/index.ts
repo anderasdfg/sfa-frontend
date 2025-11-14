@@ -30,6 +30,14 @@ const routes: RouteRecordRaw[] = [
   ...doctorAttendanceRoutes,
   ...doctorActivitiesRoutes,
 
+  // Ruta del display de turnos (sin layout)
+  {
+    path: '/queue-display',
+    name: 'QueueDisplay',
+    component: () => import('@/views/QueueDisplayView.vue'),
+    meta: { requiresAuth: false, layout: 'none' }
+  },
+
   // Rutas de error
   {
     path: '/:pathMatch(.*)*',

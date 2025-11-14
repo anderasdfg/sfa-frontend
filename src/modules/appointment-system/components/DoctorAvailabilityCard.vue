@@ -125,8 +125,25 @@
   const filteredSlots = computed(() => {
     if (!selectedDateTab.value) return props.doctor.availableSlots
 
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+    const isToday = selectedDateTab.value === today
+
     return props.doctor.availableSlots.filter(slot => {
-      return slot.date === selectedDateTab.value
+      // Filtrar por fecha
+      if (slot.date !== selectedDateTab.value) return false
+
+      // Si es hoy, filtrar también por hora
+      if (isToday && slot.time) {
+        const [hours, minutes] = slot.time.split(':').map(Number)
+        const slotDateTime = new Date()
+        slotDateTime.setHours(hours, minutes, 0, 0)
+        
+        // Solo mostrar slots cuya hora sea mayor a la hora actual
+        return slotDateTime > now
+      }
+
+      return true
     })
   })
 

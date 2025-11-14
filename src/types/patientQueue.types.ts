@@ -27,6 +27,7 @@ export interface PatientQueueCreateRequest {
 }
 
 export interface PatientQueueQueryParams {
+  appointment_id?: number
   doctor_id?: number
   service_id?: number
   status?: PatientQueueStatus

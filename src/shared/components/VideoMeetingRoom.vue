@@ -11,24 +11,6 @@
     </div>
 
     <div v-else-if="meetingUrl" class="meeting-container">
-      <div class="meeting-header">
-        <h2>{{ title }}</h2>
-        <div class="meeting-actions">
-          <button v-if="!meetingStarted" @click="startMeeting" class="btn-start">
-            🎥 Iniciar Videollamada
-          </button>
-          <button v-if="meetingStarted" @click="endMeeting" class="btn-end">
-            🔴 Finalizar
-          </button>
-          <button @click="$emit('close')" class="btn-close-small">✕</button>
-        </div>
-      </div>
-
-      <div class="meeting-info">
-        <p><strong>Cita:</strong> {{ appointmentInfo }}</p>
-        <p><strong>Rol:</strong> {{ roleLabel }}</p>
-      </div>
-
       <div class="iframe-container">
         <iframe
           :src="meetingUrl"
@@ -134,6 +116,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #000;
 }
 
 .loading-state,

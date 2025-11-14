@@ -1,27 +1,11 @@
 <template>
   <div class="video-meeting-button">
-    <button @click="openMeeting" class="btn-video" :disabled="!canJoin">🎥 {{ buttonText }}</button>
-
-    <!-- Modal de videollamada -->
-    <teleport to="body">
-      <div v-if="showMeeting" class="meeting-modal" @click.self="closeMeeting">
-        <div class="meeting-modal-content">
-          <VideoMeetingRoom
-            :appointment-id="appointmentId"
-            :role="role"
-            :title="title"
-            :appointment-info="appointmentInfo"
-            @close="closeMeeting"
-          />
-        </div>
-      </div>
-    </teleport>
+    <button @click="goToConsultation" class="btn-video" :disabled="!canJoin">🎥 {{ buttonText }}</button>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
-  import VideoMeetingRoom from './VideoMeetingRoom.vue'
+  import { useRouter } from 'vue-router'
 
   interface Props {
     appointmentId: number
@@ -32,21 +16,18 @@
     appointmentInfo?: string
   }
 
-  withDefaults(defineProps<Props>(), {
+  const props = withDefaults(defineProps<Props>(), {
     canJoin: true,
     buttonText: 'Unirse a Videollamada',
     title: 'Videollamada',
     appointmentInfo: ''
   })
 
-  const showMeeting = ref(false)
+  const router = useRouter()
 
-  const openMeeting = () => {
-    showMeeting.value = true
-  }
-
-  const closeMeeting = () => {
-    showMeeting.value = false
+  const goToConsultation = () => {
+    // Redirigir a la página de preparación de la consulta
+    router.push(`/appointments/${props.appointmentId}/prepare`)
   }
 </script>
 
