@@ -17,9 +17,10 @@ export interface Appointment {
   arrival_time?: string
   video_meeting_url?: string
   video_room_id?: string
-  patient_data: Patient
-  doctor_data: Doctor
-  slot: Slot
+  patient_data?: Patient
+  doctor_data?: Doctor
+  doctor?: Doctor
+  slot?: Slot
   specialty: string
 }
 

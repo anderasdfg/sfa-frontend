@@ -150,7 +150,7 @@
 
   .layout-content {
     flex: 1;
-    background: #f0fdf4;
+    background: #f9fafc;
     overflow-y: auto;
   }
 

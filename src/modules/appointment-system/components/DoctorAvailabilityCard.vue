@@ -84,17 +84,21 @@
   import { useAuthStore } from '@/stores/auth/authStore'
 
   // Props
-  const props = defineProps<{
-    doctor: Doctor
-    selectedDate: string
-  }>()
+  const props = defineProps({
+    doctor: {
+      type: Object as () => Doctor,
+      required: true
+    },
+    selectedDate: {
+      type: String,
+      required: true
+    }
+  })
   console.log('Doctor:', props.doctor)
   console.log('Selected date from props:', props.selectedDate)
 
   // Emits
-  const emit = defineEmits<{
-    selectAppointment: [appointment: AppointmentSelection]
-  }>()
+  const emit = defineEmits(['selectAppointment'])
 
   // Stores
   const authStore = useAuthStore()
