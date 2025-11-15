@@ -48,7 +48,7 @@
           </div>
           <div class="info-badge">
             <i class="pi pi-clock"></i>
-            <span>{{ formatTime(appointment.slot.scheduled_at) }}</span>
+            <span>{{ appointment.slot ? formatTime(appointment.slot.scheduled_at) : 'N/A' }}</span>
           </div>
           <Tag
             :value="appointment.modality"

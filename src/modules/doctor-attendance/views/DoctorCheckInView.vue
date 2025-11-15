@@ -151,6 +151,7 @@ const handleSubmit = async () => {
       doctor_id: undefined,
       date: new Date().toISOString().split('T')[0],
       check_in_time: '',
+      consultation_room: '',
       notes: ''
     }
 

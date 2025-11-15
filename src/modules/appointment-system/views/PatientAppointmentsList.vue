@@ -112,8 +112,8 @@
             class="appointment-card"
           >
             <div class="appointment-time">
-              <div class="time">{{ formatTime(appointment.slot?.scheduled_at) }}</div>
-              <div class="date">{{ formatDate(appointment.slot?.scheduled_at) }}</div>
+              <div class="time">{{ appointment.slot?.scheduled_at ? formatTime(appointment.slot.scheduled_at) : 'N/A' }}</div>
+              <div class="date">{{ appointment.slot?.scheduled_at ? formatDate(appointment.slot.scheduled_at) : 'N/A' }}</div>
             </div>
 
             <div class="appointment-details">

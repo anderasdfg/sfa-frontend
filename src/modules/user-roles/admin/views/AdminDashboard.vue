@@ -81,27 +81,27 @@
     try {
       loading.value = true
       error.value = null
-      
+
       // Cargar datos del dashboard
       const dashboard = await StatisticsService.getAdminDashboard()
-      
+
       // Obtener citas del día desde el endpoint de appointments
       const today = new Date()
       const todayStr = today.toISOString().split('T')[0]
-      
+
       const appointmentsResponse = await AppointmentService.getAppointments({
         date_from: todayStr,
         date_to: todayStr
       })
-      
+
       const appointments = appointmentsResponse.data || []
       console.log('Appointments from API:', appointments)
-      
+
       // Filtrar solo citas futuras y con estado pagada
       const now = new Date()
       console.log('Current time:', now)
       console.log('Total appointments:', appointments.length)
-      
+
       const upcomingAppointments = appointments
         .filter((apt: any) => {
           // Solo citas pagadas o reservadas
@@ -109,31 +109,35 @@
             console.log(`Appointment ${apt.id} filtered out: status = ${apt.status}`)
             return false
           }
-          
+
           const aptDateTime = apt.slot?.scheduled_at || apt.appointment_date
           console.log(`Appointment ${apt.id} datetime:`, aptDateTime)
-          
+
           // Remover la Z para interpretar como hora local de Perú
-          const localDateString = typeof aptDateTime === 'string' && aptDateTime.endsWith('Z') 
-            ? aptDateTime.slice(0, -1) 
-            : aptDateTime
+          const localDateString =
+            typeof aptDateTime === 'string' && aptDateTime.endsWith('Z')
+              ? aptDateTime.slice(0, -1)
+              : aptDateTime
           const aptDate = new Date(localDateString)
           const isFuture = aptDate > now
-          
-          console.log(`Appointment ${apt.id}: ${localDateString} -> ${aptDate.toISOString()} > ${now.toISOString()} = ${isFuture}`)
-          
+
+          console.log(
+            `Appointment ${apt.id}: ${localDateString} -> ${aptDate.toISOString()} > ${now.toISOString()} = ${isFuture}`
+          )
+
           return isFuture
         })
         .slice(0, 4)
         .map((apt: any) => {
           const aptDateTime = apt.slot?.scheduled_at || apt.appointment_date
-          const localDateString = typeof aptDateTime === 'string' && aptDateTime.endsWith('Z') 
-            ? aptDateTime.slice(0, -1) 
-            : aptDateTime
+          const localDateString =
+            typeof aptDateTime === 'string' && aptDateTime.endsWith('Z')
+              ? aptDateTime.slice(0, -1)
+              : aptDateTime
           return {
             id: apt.id,
-            time: new Date(localDateString).toLocaleTimeString('es-PE', { 
-              hour: '2-digit', 
+            time: new Date(localDateString).toLocaleTimeString('es-PE', {
+              hour: '2-digit',
               minute: '2-digit'
             }),
             patient_name: `${apt.patient_data?.first_name || ''} ${apt.patient_data?.last_name || ''}`,
@@ -143,13 +147,13 @@
             modality: apt.modality === 'presencial' ? 'Presencial' : 'Telemedicina'
           }
         })
-      
+
       // Reemplazar las citas del dashboard con las obtenidas del endpoint
       dashboardData.value = {
         ...dashboard,
         upcoming_appointments: upcomingAppointments
       }
-      
+
       console.log('Upcoming appointments:', upcomingAppointments)
     } catch (err) {
       console.error('Error cargando dashboard:', err)
@@ -157,20 +161,6 @@
     } finally {
       loading.value = false
     }
-  }
-
-  const openQueueDisplay = () => {
-    // Abrir en nueva ventana/pestaña
-    const width = 1920
-    const height = 1080
-    const left = (screen.width - width) / 2
-    const top = (screen.height - height) / 2
-    
-    window.open(
-      '/queue-display',
-      'QueueDisplay',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    )
   }
 
   onMounted(() => {
@@ -204,7 +194,9 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
   .banner-content {

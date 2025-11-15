@@ -3,8 +3,8 @@
     <ul v-if="filteredAppointments.length > 0" class="appointments-list">
       <li v-for="appointment in filteredAppointments" :key="appointment.id" class="appointment-item">
         <div class="appointment-time">
-          <div class="time">{{ formatTime(appointment.slot?.scheduled_at) }}</div>
-          <div class="date">{{ formatDate(appointment.slot?.scheduled_at) }}</div>
+          <div class="time">{{ appointment.slot?.scheduled_at ? formatTime(appointment.slot.scheduled_at) : 'N/A' }}</div>
+          <div class="date">{{ appointment.slot?.scheduled_at ? formatDate(appointment.slot.scheduled_at) : 'N/A' }}</div>
         </div>
         <div class="appointment-details">
           <div class="appointment-doctor">{{ getDoctorName(appointment) }}</div>

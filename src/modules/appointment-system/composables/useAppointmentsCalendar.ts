@@ -77,7 +77,9 @@ export function useAppointmentsCalendar() {
 
   // Computed para eventos del calendario
   const calendarEvents = computed(() => {
-    return filteredAppointments.value.map(appointment => transformAppointmentToEvent(appointment))
+    return filteredAppointments.value
+      .map(appointment => transformAppointmentToEvent(appointment))
+      .filter((event): event is CalendarEvent => event !== null)
   })
 
   // Computed para citas filtradas
@@ -180,7 +182,7 @@ export function useAppointmentsCalendar() {
   })
 
   // Funciones auxiliares
-  function transformAppointmentToEvent(appointment: Appointment): CalendarEvent {
+  function transformAppointmentToEvent(appointment: Appointment): CalendarEvent | null {
     const doctor = doctors.value.find(d => d.id === appointment.doctor_id)
     const specialty = specialties.value.find(s => s.id === doctor?.specialty_id)
 
@@ -192,6 +194,10 @@ export function useAppointmentsCalendar() {
     const borderColor = modalityColor
 
     const appointmentDate = new Date(appointment.appointment_date)
+
+    if (!appointment.slot?.scheduled_at) {
+      return null
+    }
 
     const slotScheduledAtString =
       typeof appointment.slot.scheduled_at === 'string'
@@ -211,12 +217,12 @@ export function useAppointmentsCalendar() {
     startDate.setHours(slotTime.getHours(), slotTime.getMinutes(), 0, 0)
 
     // Calcular fecha de fin usando la duración del slot
-    const durationMinutes = appointment.slot.duration_minutes || 30
+    const durationMinutes = appointment.slot?.duration_minutes || 30
     const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
 
     // Título del evento
-    const patientName = `${appointment.patient_data.first_name} ${appointment.patient_data.last_name}`
-    const doctorName = `Dr. ${appointment.doctor_data.first_name} ${appointment.doctor_data.last_name}`
+    const patientName = `${appointment.patient_data?.first_name || ''} ${appointment.patient_data?.last_name || ''}`
+    const doctorName = `Dr. ${appointment.doctor_data?.first_name || ''} ${appointment.doctor_data?.last_name || ''}`
     const title = `${patientName} - ${doctorName}`
 
     return {
@@ -236,7 +242,7 @@ export function useAppointmentsCalendar() {
         patientName,
         doctorName,
         specialty: specialty?.name || 'Sin especialidad',
-        phone: appointment.patient_data.phone || undefined
+        phone: appointment.patient_data?.phone || undefined
       }
     }
   }

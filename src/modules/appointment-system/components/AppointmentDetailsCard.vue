@@ -12,15 +12,15 @@
           <div class="doctor-avatar">
             <img
               src="https://cdn-icons-png.flaticon.com/512/3607/3607444.png"
-              :alt="`Dr. ${appointment.doctor_data.last_name}`"
+              :alt="`Dr. ${appointment.doctor_data?.last_name || 'Doctor'}`"
               class="avatar-image"
             />
           </div>
           <div class="doctor-details">
             <p class="doctor-name">
-              Dr. {{ appointment.doctor_data.first_name }} {{ appointment.doctor_data.last_name }}
+              Dr. {{ appointment.doctor_data?.first_name }} {{ appointment.doctor_data?.last_name }}
             </p>
-            <p class="doctor-license">{{ appointment.doctor_data.license_number }}</p>
+            <p class="doctor-license">{{ appointment.doctor_data?.license_number }}</p>
             <p class="specialty">{{ appointment.specialty }}</p>
           </div>
         </div>
@@ -33,17 +33,17 @@
           <div class="patient-avatar">
             <img
               src="https://cdn-icons-png.flaticon.com/512/3607/3607444.png"
-              :alt="`${appointment.patient_data.first_name} ${appointment.patient_data.last_name}`"
+              :alt="`${appointment.patient_data?.first_name || ''} ${appointment.patient_data?.last_name || ''}`"
               class="avatar-image"
             />
           </div>
           <div class="patient-details">
             <p class="patient-name">
-              {{ appointment.patient_data.first_name }} {{ appointment.patient_data.last_name }}
+              {{ appointment.patient_data?.first_name }} {{ appointment.patient_data?.last_name }}
             </p>
             <p class="patient-document">
               {{ 'DNI' }}:
-              {{ appointment.patient_data.document_number }}
+              {{ appointment.patient_data?.document_number }}
             </p>
           </div>
         </div>
@@ -66,7 +66,7 @@
               <ClockIcon class="info-icon" />
               <div>
                 <p class="info-label">Hora</p>
-                <p class="info-value">{{ formatTime(appointment.slot.scheduled_at) }}</p>
+                <p class="info-value">{{ appointment.slot ? formatTime(appointment.slot.scheduled_at) : 'N/A' }}</p>
               </div>
             </div>
 
@@ -83,7 +83,7 @@
               <CurrencyDollarIcon class="info-icon" />
               <div>
                 <p class="info-label">Precio</p>
-                <p class="info-value">S/ {{ appointment.slot.price }}</p>
+                <p class="info-value">S/ {{ appointment.slot?.price || 0 }}</p>
               </div>
             </div>
 
@@ -91,7 +91,7 @@
               <ClockIcon class="info-icon" />
               <div>
                 <p class="info-label">Duración</p>
-                <p class="info-value">{{ appointment.slot.duration_minutes }} minutos</p>
+                <p class="info-value">{{ appointment.slot?.duration_minutes || 30 }} minutos</p>
               </div>
             </div>
 

@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { VideoMeetingService } from '@/services/videoMeeting.service'
 import type { VideoMeeting } from '@/types/videoMeeting.types'
 
@@ -46,62 +46,21 @@ defineEmits<{
   ended: [meeting: VideoMeeting]
 }>()
 
-const meeting = ref<VideoMeeting | null>(null)
 const meetingUrl = ref<string>('')
 const loading = ref(true)
 const error = ref<string | null>(null)
-const meetingStarted = ref(false)
-
-const roleLabel = computed(() => {
-  return props.role === 'doctor' ? 'Doctor' : 'Paciente'
-})
 
 const loadMeeting = async () => {
   loading.value = true
   error.value = null
   
   try {
-    // Get meeting info
-    meeting.value = await VideoMeetingService.getMeetingByAppointment(props.appointmentId)
-    
     // Get join URL for role
     meetingUrl.value = await VideoMeetingService.getJoinUrl(props.appointmentId, props.role)
-    
-    // Check if meeting is already active
-    if (meeting.value.status === 'active') {
-      meetingStarted.value = true
-    }
   } catch (e: any) {
     error.value = e.message || 'Error al cargar la videollamada'
   } finally {
     loading.value = false
-  }
-}
-
-const startMeeting = async () => {
-  if (!meeting.value) return
-  
-  try {
-    const updatedMeeting = await VideoMeetingService.startMeeting(meeting.value.id)
-    meeting.value = updatedMeeting
-    meetingStarted.value = true
-  } catch (e: any) {
-    alert(e.message || 'Error al iniciar la videollamada')
-  }
-}
-
-const endMeeting = async () => {
-  if (!meeting.value) return
-  
-  if (!confirm('¿Está seguro de finalizar la videollamada?')) return
-  
-  try {
-    const updatedMeeting = await VideoMeetingService.endMeeting(meeting.value.id)
-    meeting.value = updatedMeeting
-    meetingStarted.value = false
-    alert('Videollamada finalizada')
-  } catch (e: any) {
-    alert(e.message || 'Error al finalizar la videollamada')
   }
 }
 

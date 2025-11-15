@@ -132,7 +132,11 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { PatientQueueService } from '@/services/patientQueue.service'
-  import type { QueueOverview, QueueFilters, ScheduledAppointment } from '@/types/patient-queue.types'
+  import type {
+    QueueOverview,
+    QueueFilters,
+    ScheduledAppointment
+  } from '@/types/patient-queue.types'
   import ScheduledAppointmentsSection from '../components/ScheduledAppointmentsSection.vue'
   import WaitingRoomSection from '../components/WaitingRoomSection.vue'
   import InConsultationSection from '../components/InConsultationSection.vue'
@@ -141,7 +145,6 @@
   const queueData = ref<QueueOverview | null>(null)
   const loading = ref(true)
   const error = ref<string | null>(null)
-  const searchQuery = ref('')
   const filters = ref<QueueFilters>({
     date: new Date().toISOString().split('T')[0]
   })
@@ -181,7 +184,9 @@
 
   const handleMarkArrival = (appointmentId: number) => {
     // Buscar la cita en los datos actuales
-    const appointment = queueData.value?.scheduled_appointments.find(apt => apt.id === appointmentId)
+    const appointment = queueData.value?.scheduled_appointments.find(
+      apt => apt.id === appointmentId
+    )
     if (appointment) {
       selectedAppointment.value = appointment
       showArrivalModal.value = true
@@ -193,7 +198,12 @@
     selectedAppointment.value = null
   }
 
-  const confirmArrival = async (data: { appointmentId: number; paymentStatus: string; notes: string; arrivalTime: string }) => {
+  const confirmArrival = async (data: {
+    appointmentId: number
+    paymentStatus: string
+    notes: string
+    arrivalTime: string
+  }) => {
     try {
       // Llamar al servicio para marcar la llegada con los datos adicionales
       await PatientQueueService.markArrival(data.appointmentId, {
@@ -225,22 +235,12 @@
     }
   }
 
-  const handleRegisterArrival = () => {
-    // TODO: Abrir modal para registrar llegada manual
-    console.log('Registrar llegada manual')
-  }
-
-  const handleExport = () => {
-    // TODO: Implementar exportación
-    console.log('Exportar cola')
-  }
-
   const openQueueDisplay = () => {
     const width = 1920
     const height = 1080
     const left = (screen.width - width) / 2
     const top = (screen.height - height) / 2
-    
+
     window.open(
       '/queue-display',
       'QueueDisplay',

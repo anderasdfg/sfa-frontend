@@ -84,7 +84,7 @@
               </div>
               <div class="info-item">
                 <span class="info-label">Hora</span>
-                <span class="info-value">{{ formatTime(appointment.slot.scheduled_at) }}</span>
+                <span class="info-value">{{ appointment.slot ? formatTime(appointment.slot.scheduled_at) : 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Modalidad</span>
