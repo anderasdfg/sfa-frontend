@@ -34,6 +34,19 @@ export interface InConsultationPatient {
   consultation_minutes: number
 }
 
+export interface CompletedPatient {
+  id: number
+  queue_id: number
+  turn_number: string
+  patient_name: string
+  doctor_name: string
+  specialty: string
+  appointment_time: string
+  completed_at: string
+  total_time_minutes: number
+  consultation_room: string
+}
+
 export interface QueueMetrics {
   scheduled_count: number
   waiting_count: number
@@ -45,6 +58,7 @@ export interface QueueOverview {
   scheduled_appointments: ScheduledAppointment[]
   waiting_patients: WaitingPatient[]
   in_consultation: InConsultationPatient[]
+  completed_patients: CompletedPatient[]
   metrics: QueueMetrics
 }
 
@@ -52,4 +66,13 @@ export interface QueueFilters {
   date?: string
   doctor_id?: number
   specialty_id?: number
+}
+
+export interface DoctorQueueData {
+  doctor_name: string
+  specialty: string
+  scheduled_appointments: ScheduledAppointment[]
+  waiting_patients: WaitingPatient[]
+  in_consultation: InConsultationPatient[]
+  completed_patients: CompletedPatient[]
 }
