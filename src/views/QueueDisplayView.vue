@@ -17,54 +17,104 @@
 
     <!-- Main Content -->
     <div class="display-content">
-      <p class="section-subtitle">Por favor observe su número de turno en la pantalla</p>
+      <p class="section-subtitle">Por favor observe su nombre en la pantalla y diríjase al consultorio indicado</p>
 
-      <!-- Calling Patients (Parpadean) -->
-      <div v-if="callingPatients.length > 0" class="calling-section">
-        <div v-for="patient in callingPatients" :key="patient.queue_id" class="calling-card">
-          <div :class="['turn-badge', `color-${getColorIndex(patient.turn_number)}`]">
-            <div class="turn-label">TURNO</div>
-            <div class="turn-number">{{ patient.turn_number }}</div>
-          </div>
-          <div class="calling-info">
-            <div class="calling-direction">
-              <span class="direction-label">DIRÍJASE A</span>
-              <span class="room-name">{{ patient.consultation_room }}</span>
+      <!-- Doctors Sections with Scroll -->
+      <div class="doctors-container">
+        <div 
+          v-for="doctor in activeDoctors" 
+          :key="doctor.doctor_name"
+          class="doctor-section"
+        >
+          <!-- Doctor Header -->
+          <div class="doctor-header">
+            <div class="doctor-info">
+              <h3 class="doctor-name">{{ doctor.doctor_name }}</h3>
+              <span class="doctor-specialty">{{ doctor.specialty }}</span>
             </div>
-            <div class="status-badge calling">LLAMANDO</div>
+            <div class="doctor-status">
+              <div :class="['status-indicator', doctor.status]">
+                <span class="status-dot"></span>
+              <span class="status-text">
+                <template v-if="doctor.status === 'busy' && doctor.current_patient">
+                  <div class="current-patient-info">
+                    <div class="patient-name-small">{{ doctor.current_patient }}</div>
+                    <div class="consultation-time">{{ doctor.consultation_time }} min en consulta</div>
+                  </div>
+                </template>
+                <template v-else-if="doctor.status === 'available'">
+                  Disponible
+                </template>
+                <template v-else-if="doctor.status === 'finished'">
+                  Terminó consulta
+                </template>
+              </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calling Patient (if any) -->
+          <div v-if="doctor.calling_patient" class="calling-patient">
+            <div class="calling-card">
+              <div class="patient-name-large">
+                {{ doctor.calling_patient.patient_name }}
+              </div>
+              <div class="calling-info">
+                <div class="calling-direction">
+                  <span class="direction-label">
+                    <template v-if="doctor.calling_patient.being_called">
+                      POR FAVOR DIRÍJASE A
+                    </template>
+                    <template v-else>
+                      DIRÍJASE A
+                    </template>
+                  </span>
+                  <span class="room-name">{{ doctor.calling_patient.consultation_room }}</span>
+                </div>
+                <div class="status-badge calling">
+                  <template v-if="doctor.calling_patient.being_called">
+                    SIENDO LLAMADO
+                  </template>
+                  <template v-else>
+                    LLAMANDO
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Waiting Patients for this Doctor -->
+          <div v-if="doctor.waiting_patients.filter(p => !p.being_called).length > 0" class="waiting-patients">
+            <h4 class="waiting-subtitle">Próximos pacientes</h4>
+            <div class="patients-scroll">
+              <div 
+                v-for="(patient, index) in doctor.waiting_patients.filter(p => !p.being_called).slice(0, 5)"
+                :key="patient.queue_id"
+                class="waiting-patient"
+              >
+                <div class="patient-position">{{ index + 1 }}</div>
+                <div class="patient-name">{{ patient.patient_name }}</div>
+                <div class="patient-turn">{{ patient.turn_number }}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Waiting Patients -->
-      <div v-if="waitingPatients.length > 0" class="waiting-section">
-        <h3 class="waiting-title">Próximos Turnos</h3>
-        <div class="waiting-grid">
-          <div
-            v-for="patient in waitingPatients.slice(0, 8)"
-            :key="patient.queue_id"
-            class="waiting-card"
-          >
-            <div class="waiting-turn">{{ patient.turn_number }}</div>
-            <div class="waiting-specialty">{{ patient.specialty }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer Info -->
+      <!-- Global Footer Info -->
       <div class="footer-info">
         <div class="info-item">
           <i class="pi pi-users"></i>
           <div>
-            <div class="info-label">Próximos Turnos</div>
-            <div class="info-value">{{ nextTurns }}</div>
+            <div class="info-label">Médicos Activos</div>
+            <div class="info-value">{{ activeDoctors.length }}</div>
           </div>
         </div>
         <div class="info-item">
           <i class="pi pi-clock"></i>
           <div>
-            <div class="info-label">En Sala de Espera</div>
-            <div class="info-value">{{ waitingCount }} pacientes</div>
+            <div class="info-label">Pacientes en Espera</div>
+            <div class="info-value">{{ totalWaiting }}</div>
           </div>
         </div>
       </div>
@@ -86,13 +136,26 @@
     queue_id: number
     turn_number: string
     patient_name: string
+    doctor_name: string
     specialty: string
     consultation_room?: string
     status: string
+    started_at?: string
+    consultation_minutes?: number
+    being_called?: boolean
   }
 
-  const callingPatients = ref<QueuePatient[]>([])
-  const waitingPatients = ref<QueuePatient[]>([])
+  interface DoctorDisplay {
+    doctor_name: string
+    specialty: string
+    status: 'available' | 'busy' | 'finished'
+    current_patient?: string
+    consultation_time?: number
+    waiting_patients: QueuePatient[]
+    calling_patient?: QueuePatient
+  }
+
+  const doctorsDisplay = ref<DoctorDisplay[]>([])
   const currentTime = ref('')
   const currentDate = ref('')
   const showAlert = ref(false)
@@ -101,14 +164,18 @@
   let refreshInterval: number | null = null
   let timeInterval: number | null = null
 
-  const waitingCount = computed(() => waitingPatients.value.length)
+  const totalWaiting = computed(() => 
+    doctorsDisplay.value.reduce((total, doctor) => 
+      total + doctor.waiting_patients.filter(p => !p.being_called).length, 0
+    )
+  )
 
-  const nextTurns = computed(() => {
-    return waitingPatients.value
-      .slice(0, 3)
-      .map(p => p.turn_number)
-      .join(', ')
-  })
+  const activeDoctors = computed(() => 
+    doctorsDisplay.value.filter(doctor => {
+      const hasWaitingPatients = doctor.waiting_patients.some(p => !p.being_called)
+      return hasWaitingPatients || doctor.calling_patient || doctor.status === 'busy'
+    })
+  )
 
   const updateTime = () => {
     const now = new Date()
@@ -125,43 +192,107 @@
     })
   }
 
-  const getColorIndex = (turnNumber: string): number => {
-    const prefix = turnNumber.charAt(0)
-    return prefix.charCodeAt(0) % 4
-  }
-
   const loadQueueData = async () => {
     try {
       const response = await PatientQueueService.getQueueOverview({
         date: new Date().toISOString().split('T')[0]
       })
 
-      // Pacientes siendo llamados (en consulta reciente - últimos 2 minutos)
+      const doctorsMap = new Map<string, DoctorDisplay>()
       const now = new Date()
-      const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000)
 
-      callingPatients.value = response.in_consultation
-        .filter((p: any) => {
-          const calledAt = new Date(p.started_at)
-          return calledAt > twoMinutesAgo
-        })
-        .map((p: any) => ({
+      // Procesar pacientes en consulta
+      response.in_consultation.forEach((p: any) => {
+        const key = `${p.doctor_name}-${p.specialty}`
+        if (!doctorsMap.has(key)) {
+          doctorsMap.set(key, {
+            doctor_name: p.doctor_name,
+            specialty: p.specialty,
+            status: 'busy',
+            current_patient: p.patient_name,
+            consultation_time: p.consultation_minutes || 0,
+            waiting_patients: []
+          })
+        }
+
+        // Los pacientes en consulta ya no usan el estilo llamativo
+        // Solo se muestran en el estado del médico
+      })
+
+      // Procesar pacientes en espera
+      response.waiting_patients.forEach((p: any) => {
+        const key = `${p.doctor_name}-${p.specialty}`
+        if (!doctorsMap.has(key)) {
+          doctorsMap.set(key, {
+            doctor_name: p.doctor_name,
+            specialty: p.specialty,
+            status: 'available',
+            waiting_patients: []
+          })
+        }
+
+        const patient = {
           queue_id: p.queue_id,
           turn_number: p.turn_number || 'N/A',
           patient_name: p.patient_name,
+          doctor_name: p.doctor_name,
           specialty: p.specialty,
-          consultation_room: p.consultation_room,
-          status: 'calling'
-        }))
+          status: p.being_called ? 'being-called' : 'waiting',
+          being_called: p.being_called
+        }
+        
+        if (p.being_called) {
+          // Si está siendo llamado, también lo consideramos como "calling_patient"
+          // Usar el consultation_room del paciente si está disponible, sino buscar alternativas
+          let consultationRoom = p.consultation_room || 'Consultorio Principal'
+          
+          // Si no viene consultation_room, buscar si hay un paciente en consulta del mismo doctor
+          if (!p.consultation_room) {
+            const doctorInConsultation = response.in_consultation.find((cp: any) => 
+              cp.doctor_name === p.doctor_name && cp.consultation_room
+            )
+            
+            if (doctorInConsultation) {
+              consultationRoom = doctorInConsultation.consultation_room
+            } else {
+              // Si no hay consultorio específico, usar un formato más genérico
+              consultationRoom = `Consultorio ${p.specialty}`
+            }
+          }
+          
+          doctorsMap.get(key)!.calling_patient = {
+            ...patient,
+            consultation_room: consultationRoom,
+            being_called: true
+          }
+        }
+        
+        doctorsMap.get(key)!.waiting_patients.push(patient)
+      })
 
-      // Pacientes en espera
-      waitingPatients.value = response.waiting_patients.map((p: any) => ({
-        queue_id: p.queue_id,
-        turn_number: p.turn_number || 'N/A',
-        patient_name: p.patient_name,
-        specialty: p.specialty,
-        status: 'waiting'
-      }))
+      // Procesar pacientes completados recientes para mostrar estado "finished"
+      response.completed_patients.forEach((p: any) => {
+        const completedAt = new Date(p.completed_at)
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
+        
+        if (completedAt > fiveMinutesAgo) {
+          const key = `${p.doctor_name}-${p.specialty}`
+          if (!doctorsMap.has(key)) {
+            doctorsMap.set(key, {
+              doctor_name: p.doctor_name,
+              specialty: p.specialty,
+              status: 'finished',
+              waiting_patients: []
+            })
+          } else if (doctorsMap.get(key)!.waiting_patients.length === 0) {
+            doctorsMap.get(key)!.status = 'finished'
+          }
+        }
+      })
+
+      doctorsDisplay.value = Array.from(doctorsMap.values())
+        .sort((a, b) => a.doctor_name.localeCompare(b.doctor_name))
+        
     } catch (error) {
       console.error('Error loading queue data:', error)
       showAlert.value = true
@@ -285,11 +416,148 @@
     text-align: center;
   }
 
-  .calling-section {
+  .doctors-container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 2rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+
+  .doctors-container::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .doctors-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  .doctors-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .doctors-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  .doctor-section {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 2px solid #e2e8f0;
+  }
+
+  .doctor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .doctor-info h3.doctor-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .doctor-specialty {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .doctor-status {
+    display: flex;
+    align-items: center;
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  .status-indicator.available {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+
+  .status-indicator.busy {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  .status-indicator.finished {
+    background: #f0f9ff;
+    color: #0284c7;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: block;
+  }
+
+  .status-indicator.available .status-dot {
+    background: #16a34a;
+  }
+
+  .status-indicator.busy .status-dot {
+    background: #2563eb;
+    animation: pulse-status 2s ease-in-out infinite;
+  }
+
+  .status-indicator.finished .status-dot {
+    background: #0284c7;
+  }
+
+  @keyframes pulse-status {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.2); }
+  }
+
+  .consultation-time {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+  }
+
+  .current-patient-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .patient-name-small {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .current-patient-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .patient-name-small {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .calling-patient {
+    margin-bottom: 1.5rem;
   }
 
   .calling-card {
@@ -297,21 +565,46 @@
     align-items: stretch;
     border-radius: 16px;
     background: white;
-    border: 3px solid #10b981;
+    border: 3px solid #f59e0b;
     overflow: hidden;
     animation: pulse 1.5s ease-in-out infinite;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
-  @keyframes pulse {
+  .patient-name-large {
+    min-width: 250px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f59e0b;
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .current-patient-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .patient-name-small {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+@keyframes pulse {
     0%,
     100% {
       transform: scale(1);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
     }
     50% {
       transform: scale(1.01);
-      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 12px rgba(245, 158, 11, 0.4);
     }
   }
 
@@ -395,8 +688,9 @@
   }
 
   .status-badge.calling {
-    background: #fef2f2;
-    color: #ef4444;
+    background: #f59e0b;
+    color: white;
+    font-weight: 700;
     animation: blink 1s ease-in-out infinite;
   }
 
@@ -410,50 +704,86 @@
     }
   }
 
-  .waiting-section {
-    margin-top: 2rem;
+  .waiting-patients {
+    margin-top: 1rem;
   }
 
-  .waiting-title {
-    font-size: 1.5rem;
+  .waiting-subtitle {
+    font-size: 1.125rem;
     font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 1.5rem 0;
+    color: #374151;
+    margin: 0 0 1rem 0;
   }
 
-  .waiting-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  .patients-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+
+  .patients-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .patients-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .patients-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .waiting-patient {
+    display: flex;
+    align-items: center;
     gap: 1rem;
-  }
-
-  .waiting-card {
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
+    background: white;
+    padding: 1rem;
     border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
+    border: 2px solid #e5e7eb;
     transition: all 0.2s;
   }
 
-  .waiting-card:hover {
-    border-color: #667eea;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  .waiting-patient:hover {
+    border-color: #3b82f6;
+    transform: translateX(4px);
   }
 
-  .waiting-turn {
-    font-size: 1.75rem;
+  .patient-position {
+    width: 32px;
+    height: 32px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: 700;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
   }
 
-  .waiting-specialty {
-    font-size: 0.75rem;
+  .patient-name {
+    flex: 1;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 1rem;
+  }
+
+  .patient-turn {
+    font-size: 0.875rem;
     color: #6b7280;
     font-weight: 500;
+    background: #f3f4f6;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
   }
+
+
 
   .footer-info {
     display: grid;
@@ -516,17 +846,28 @@
   }
 
   @media (max-width: 1024px) {
+    .doctor-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
     .calling-card {
-      grid-template-columns: 1fr;
-      text-align: center;
+      flex-direction: column;
     }
 
-    .arrow-section {
-      transform: rotate(90deg);
+    .patient-name-large {
+      min-width: auto;
+      width: 100%;
     }
 
-    .waiting-grid {
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    .doctors-container {
+      max-height: 50vh;
+    }
+
+    .waiting-patient {
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
   }
 </style>

@@ -168,4 +168,36 @@ export class PatientQueueService {
       throw new Error('No se pudo enviar el recordatorio')
     }
   }
+
+  /** Marcar paciente como siendo llamado */
+  static async markBeingCalled(queueId: number): Promise<PatientQueue> {
+    try {
+      const response = await apiClient.patch<PatientQueueResponse>(
+        `${this.BASE_PATH}/${queueId}/mark-being-called`
+      )
+      if (response.data.success && response.data.data) {
+        return response.data.data as PatientQueue
+      }
+      throw new Error(response.data.message || 'Error al marcar paciente como siendo llamado')
+    } catch (error) {
+      console.error('Error marking patient as being called:', error)
+      throw new Error('No se pudo marcar el paciente como siendo llamado')
+    }
+  }
+
+  /** Desmarcar paciente como siendo llamado */
+  static async unmarkBeingCalled(queueId: number): Promise<PatientQueue> {
+    try {
+      const response = await apiClient.patch<PatientQueueResponse>(
+        `${this.BASE_PATH}/${queueId}/unmark-being-called`
+      )
+      if (response.data.success && response.data.data) {
+        return response.data.data as PatientQueue
+      }
+      throw new Error(response.data.message || 'Error al desmarcar paciente como siendo llamado')
+    } catch (error) {
+      console.error('Error unmarking patient as being called:', error)
+      throw new Error('No se pudo desmarcar el paciente como siendo llamado')
+    }
+  }
 }

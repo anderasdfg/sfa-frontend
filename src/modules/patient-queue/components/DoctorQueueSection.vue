@@ -55,6 +55,7 @@
           :class="{
             urgent: patient.is_urgent,
             'payment-pending': patient.payment_pending,
+            'being-called': patient.being_called
           }"
         >
           <div class="patient-info">
@@ -77,16 +78,39 @@
           </div>
 
           <div class="status-badges-container">
-            <div class="status-badge waiting">
+            <div v-if="patient.being_called" class="status-badge being-called">
+              <span class="pulse-dot"></span>
+              <span>Siendo Llamado</span>
+            </div>
+            <div v-else class="status-badge waiting">
               <span>En Espera</span>
             </div>
             <span v-if="patient.is_urgent" class="badge urgent-badge">URGENTE</span>
             <span v-if="patient.payment_pending" class="badge payment-badge">PAGO PENDIENTE</span>
           </div>
 
-          <button class="btn-call" @click="emit('call-to-consultation', patient.queue_id)">
-            Llamar a Consulta
-          </button>
+          <div class="patient-actions">
+            <button 
+              v-if="!patient.being_called" 
+              class="btn-mark-calling" 
+              @click="emit('mark-being-called', patient.queue_id)"
+            >
+              <i class="pi pi-volume-up"></i>
+              Llamar
+            </button>
+            <button 
+              v-else 
+              class="btn-unmark-calling" 
+              @click="emit('unmark-being-called', patient.queue_id)"
+            >
+              <i class="pi pi-times"></i>
+              Cancelar
+            </button>
+            <button class="btn-call" @click="emit('call-to-consultation', patient.queue_id)">
+              <i class="pi pi-sign-in"></i>
+              A Consulta
+            </button>
+          </div>
         </div>
       </template>
 
@@ -175,6 +199,8 @@ const emit = defineEmits<{
   'send-reminder': [appointmentId: number]
   'call-to-consultation': [queueId: number]
   'complete-consultation': [queueId: number]
+  'mark-being-called': [queueId: number]
+  'unmark-being-called': [queueId: number]
 }>()
 
 const totalPatients = computed(() => 
@@ -334,6 +360,20 @@ const capitalizeFirst = (text: string): string => {
   color: #059669;
 }
 
+.status-badge.being-called {
+  background: #f59e0b;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: blink-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes blink-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .appointment-actions {
   display: flex;
   gap: 0.5rem;
@@ -419,6 +459,23 @@ const capitalizeFirst = (text: string): string => {
 .patient-item.completed {
   border-left-color: #059669;
   opacity: 0.8;
+}
+
+.patient-item.being-called {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% { 
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  }
 }
 
 .patient-item:hover {
@@ -532,7 +589,7 @@ const capitalizeFirst = (text: string): string => {
 .pulse-dot {
   width: 8px;
   height: 8px;
-  background: #3b82f6;
+  background: white;
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -590,6 +647,63 @@ const capitalizeFirst = (text: string): string => {
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
+.patient-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-mark-calling {
+  padding: 0.75rem 1rem;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.btn-mark-calling:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.btn-unmark-calling {
+  padding: 0.75rem 1rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.btn-unmark-calling:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.btn-call {
+  background: #059669;
+}
+
+.btn-call i {
+  font-size: 0.875rem;
+}
+
 @media (max-width: 768px) {
   .section-header {
     flex-direction: column;
@@ -610,8 +724,15 @@ const capitalizeFirst = (text: string): string => {
   .btn-reminder,
   .btn-mark-arrival,
   .btn-call,
-  .btn-complete {
+  .btn-complete,
+  .btn-mark-calling,
+  .btn-unmark-calling {
     flex: 1;
+  }
+
+  .patient-actions {
+    width: 100%;
+    flex-direction: column;
   }
 
   .patient-header {

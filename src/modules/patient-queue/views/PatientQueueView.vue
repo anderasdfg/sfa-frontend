@@ -119,6 +119,8 @@
           @send-reminder="handleSendReminder"
           @call-to-consultation="handleCallToConsultation"
           @complete-consultation="handleCompleteConsultation"
+          @mark-being-called="handleMarkBeingCalled"
+          @unmark-being-called="handleUnmarkBeingCalled"
         />
       </div>
     </div>
@@ -329,6 +331,24 @@
       await loadQueue()
     } catch (error) {
       console.error('Error completing consultation:', error)
+    }
+  }
+
+  const handleMarkBeingCalled = async (queueId: number) => {
+    try {
+      await PatientQueueService.markBeingCalled(queueId)
+      await loadQueue()
+    } catch (error) {
+      console.error('Error marking patient as being called:', error)
+    }
+  }
+
+  const handleUnmarkBeingCalled = async (queueId: number) => {
+    try {
+      await PatientQueueService.unmarkBeingCalled(queueId)
+      await loadQueue()
+    } catch (error) {
+      console.error('Error unmarking patient as being called:', error)
     }
   }
 

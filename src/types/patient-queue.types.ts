@@ -21,6 +21,8 @@ export interface WaitingPatient {
   queue_position: number
   is_urgent: boolean
   payment_pending: boolean
+  being_called: boolean
+  consultation_room: string
 }
 
 export interface InConsultationPatient {
