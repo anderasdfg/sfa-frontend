@@ -16,6 +16,7 @@ export interface Patient {
   status: string
   phone: string
   document_number: string
+  birth_date?: string
   date_of_birth?: string
   created_at: string
   update_at: string

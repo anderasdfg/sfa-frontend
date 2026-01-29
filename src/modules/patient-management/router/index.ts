@@ -37,6 +37,22 @@ const patientRoutes: RouteRecordRaw[] = [
       //   props: true
       // }
     ]
+  },
+  // Ruta de administración de pacientes
+  {
+    path: '/admin/patients',
+    component: MainLayout,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin', 'receptionist']
+    },
+    children: [
+      {
+        path: '',
+        name: 'AdminPatientsList',
+        component: () => import('../views/PatientsList.vue')
+      }
+    ]
   }
 ]
 

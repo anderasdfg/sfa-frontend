@@ -18,8 +18,8 @@ export class PatientService {
   /** Busca un paciente por DNI */
   static async getPatientByDNI(documentNumber: string): Promise<Patient | null> {
     try {
-      const response = await apiClient.get(this.BASE_PATH, { 
-        params: { document_number: documentNumber } 
+      const response = await apiClient.get(this.BASE_PATH, {
+        params: { document_number: documentNumber }
       })
       const patients = response.data.data || response.data
       return Array.isArray(patients) && patients.length > 0 ? patients[0] : null
@@ -48,6 +48,38 @@ export class PatientService {
     } catch (error) {
       console.error('Error fetching patient test results:', error)
       throw new Error('No se pudieron cargar los resultados de exámenes')
+    }
+  }
+
+  /** Crea un nuevo paciente */
+  static async createPatient(patientData: Partial<Patient>): Promise<Patient> {
+    try {
+      const response = await apiClient.post(this.BASE_PATH, patientData)
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('Error creating patient:', error)
+      throw new Error('No se pudo crear el paciente')
+    }
+  }
+
+  /** Actualiza un paciente */
+  static async updatePatient(id: number, patientData: Partial<Patient>): Promise<Patient> {
+    try {
+      const response = await apiClient.put(`${this.BASE_PATH}/${id}`, patientData)
+      return response.data.data || response.data
+    } catch (error) {
+      console.error('Error updating patient:', error)
+      throw new Error('No se pudo actualizar el paciente')
+    }
+  }
+
+  /** Elimina un paciente */
+  static async deletePatient(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`${this.BASE_PATH}/${id}`)
+    } catch (error) {
+      console.error('Error deleting patient:', error)
+      throw new Error('No se pudo eliminar el paciente')
     }
   }
 }
