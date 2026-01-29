@@ -99,23 +99,29 @@
         </div>
       </div>
 
-      <!-- Queue Sections -->
-      <div class="queue-sections">
-        <!-- Scheduled Appointments -->
-        <ScheduledAppointmentsSection
-          :appointments="queueData.scheduled_appointments"
+      <!-- Queue by Doctor -->
+      <div class="doctors-queue-sections">
+        <div v-if="doctorsQueueData.length === 0" class="empty-doctors-state">
+          <i class="pi pi-users"></i>
+          <p>No hay datos de médicos para mostrar</p>
+        </div>
+        
+        <DoctorQueueSection
+          v-for="doctorData in doctorsQueueData"
+          :key="doctorData.doctor_name"
+          :doctor-name="doctorData.doctor_name"
+          :specialty="doctorData.specialty"
+          :scheduled-appointments="doctorData.scheduled_appointments"
+          :waiting-patients="doctorData.waiting_patients"
+          :in-consultation-patients="doctorData.in_consultation"
+          :completed-patients="doctorData.completed_patients"
           @mark-arrival="handleMarkArrival"
           @send-reminder="handleSendReminder"
-        />
-
-        <!-- Waiting Room -->
-        <WaitingRoomSection
-          :patients="queueData.waiting_patients"
           @call-to-consultation="handleCallToConsultation"
+          @complete-consultation="handleCompleteConsultation"
+          @mark-being-called="handleMarkBeingCalled"
+          @unmark-being-called="handleUnmarkBeingCalled"
         />
-
-        <!-- In Consultation -->
-        <InConsultationSection :patients="queueData.in_consultation" />
       </div>
     </div>
 
@@ -132,17 +138,19 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { PatientQueueService } from '@/services/patientQueue.service'
+  import { DoctorService } from '@/services/doctors.service'
+  import { SpecialtyService } from '@/services/specialty.service'
   import type {
     QueueOverview,
     QueueFilters,
-    ScheduledAppointment
+    ScheduledAppointment,
+    DoctorQueueData
   } from '@/types/patient-queue.types'
-  import ScheduledAppointmentsSection from '../components/ScheduledAppointmentsSection.vue'
-  import WaitingRoomSection from '../components/WaitingRoomSection.vue'
-  import InConsultationSection from '../components/InConsultationSection.vue'
+  import DoctorQueueSection from '../components/DoctorQueueSection.vue'
   import ArrivalConfirmationModal from '../components/ArrivalConfirmationModal.vue'
 
   const queueData = ref<QueueOverview | null>(null)
+  const doctorsQueueData = ref<DoctorQueueData[]>([])
   const loading = ref(true)
   const error = ref<string | null>(null)
   const filters = ref<QueueFilters>({
@@ -173,13 +181,95 @@
       loading.value = true
       error.value = null
       queueData.value = await PatientQueueService.getQueueOverview(filters.value)
+      
+      // Agrupar datos por médico
+      groupDataByDoctor()
+      
       console.log('Queue data loaded:', queueData.value)
+      console.log('Doctors queue data:', doctorsQueueData.value)
     } catch (err) {
       console.error('Error loading queue:', err)
       error.value = err instanceof Error ? err.message : 'Error al cargar la cola de pacientes'
     } finally {
       loading.value = false
     }
+  }
+
+  const groupDataByDoctor = () => {
+    if (!queueData.value) {
+      doctorsQueueData.value = []
+      return
+    }
+
+    const doctorsMap = new Map<string, DoctorQueueData>()
+
+    // Procesar citas programadas
+    queueData.value.scheduled_appointments.forEach(appointment => {
+      const key = `${appointment.doctor_name}-${appointment.specialty}`
+      if (!doctorsMap.has(key)) {
+        doctorsMap.set(key, {
+          doctor_name: appointment.doctor_name,
+          specialty: appointment.specialty,
+          scheduled_appointments: [],
+          waiting_patients: [],
+          in_consultation: [],
+          completed_patients: []
+        })
+      }
+      doctorsMap.get(key)!.scheduled_appointments.push(appointment)
+    })
+
+    // Procesar pacientes en espera
+    queueData.value.waiting_patients.forEach(patient => {
+      const key = `${patient.doctor_name}-${patient.specialty}`
+      if (!doctorsMap.has(key)) {
+        doctorsMap.set(key, {
+          doctor_name: patient.doctor_name,
+          specialty: patient.specialty,
+          scheduled_appointments: [],
+          waiting_patients: [],
+          in_consultation: [],
+          completed_patients: []
+        })
+      }
+      doctorsMap.get(key)!.waiting_patients.push(patient)
+    })
+
+    // Procesar pacientes en consulta
+    queueData.value.in_consultation.forEach(patient => {
+      const key = `${patient.doctor_name}-${patient.specialty}`
+      if (!doctorsMap.has(key)) {
+        doctorsMap.set(key, {
+          doctor_name: patient.doctor_name,
+          specialty: patient.specialty,
+          scheduled_appointments: [],
+          waiting_patients: [],
+          in_consultation: [],
+          completed_patients: []
+        })
+      }
+      doctorsMap.get(key)!.in_consultation.push(patient)
+    })
+
+    // Procesar pacientes completados
+    queueData.value.completed_patients.forEach(patient => {
+      const key = `${patient.doctor_name}-${patient.specialty}`
+      if (!doctorsMap.has(key)) {
+        doctorsMap.set(key, {
+          doctor_name: patient.doctor_name,
+          specialty: patient.specialty,
+          scheduled_appointments: [],
+          waiting_patients: [],
+          in_consultation: [],
+          completed_patients: []
+        })
+      }
+      doctorsMap.get(key)!.completed_patients.push(patient)
+    })
+
+    // Convertir a array y ordenar por nombre del médico
+    doctorsQueueData.value = Array.from(doctorsMap.values())
+      .sort((a, b) => a.doctor_name.localeCompare(b.doctor_name))
   }
 
   const handleMarkArrival = (appointmentId: number) => {
@@ -235,6 +325,33 @@
     }
   }
 
+  const handleCompleteConsultation = async (queueId: number) => {
+    try {
+      await PatientQueueService.completePatient(queueId)
+      await loadQueue()
+    } catch (error) {
+      console.error('Error completing consultation:', error)
+    }
+  }
+
+  const handleMarkBeingCalled = async (queueId: number) => {
+    try {
+      await PatientQueueService.markBeingCalled(queueId)
+      await loadQueue()
+    } catch (error) {
+      console.error('Error marking patient as being called:', error)
+    }
+  }
+
+  const handleUnmarkBeingCalled = async (queueId: number) => {
+    try {
+      await PatientQueueService.unmarkBeingCalled(queueId)
+      await loadQueue()
+    } catch (error) {
+      console.error('Error unmarking patient as being called:', error)
+    }
+  }
+
   const openQueueDisplay = () => {
     const width = 1920
     const height = 1080
@@ -248,8 +365,37 @@
     )
   }
 
-  onMounted(() => {
-    loadQueue()
+  const loadDoctors = async () => {
+    try {
+      const doctorsData = await DoctorService.getDoctors()
+      doctors.value = doctorsData.map(doctor => ({
+        id: doctor.id,
+        name: `${doctor.first_name} ${doctor.last_name || ''}`.trim()
+      }))
+    } catch (error) {
+      console.error('Error loading doctors:', error)
+    }
+  }
+
+  const loadSpecialties = async () => {
+    try {
+      const specialtiesData = await SpecialtyService.getSpecialties()
+      specialties.value = specialtiesData.map(specialty => ({
+        id: specialty.id,
+        name: specialty.name
+      }))
+    } catch (error) {
+      console.error('Error loading specialties:', error)
+    }
+  }
+
+  onMounted(async () => {
+    await Promise.all([
+      loadQueue(),
+      loadDoctors(),
+      loadSpecialties()
+    ])
+    
     // Refrescar cada 30 segundos
     refreshInterval = window.setInterval(() => {
       loadQueue()
@@ -583,10 +729,31 @@
     box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
   }
 
-  .queue-sections {
+  .doctors-queue-sections {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+  }
+
+  .empty-doctors-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+    background: white;
+    border-radius: 12px;
+  }
+
+  .empty-doctors-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-doctors-state p {
+    font-size: 1.125rem;
+    margin: 0;
   }
 
   @media (max-width: 1200px) {
