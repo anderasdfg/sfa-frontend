@@ -195,6 +195,17 @@
     }
   }
 
+  // Helper para verificar si una cita es teleconsulta
+  const isTeleconsulta = (appointmentType: string): boolean => {
+    if (!appointmentType) return false
+    return appointmentType.toLowerCase() === 'teleconsulta'
+  }
+
+  // Helper para determinar si un doctor tiene citas presenciales
+  const hasPresencialAppointments = (doctor: DoctorQueueData): boolean => {
+    return doctor.scheduled_appointments.some(apt => !isTeleconsulta(apt.appointment_type))
+  }
+
   const groupDataByDoctor = () => {
     if (!queueData.value) {
       doctorsQueueData.value = []
@@ -267,9 +278,20 @@
       doctorsMap.get(key)!.completed_patients.push(patient)
     })
 
-    // Convertir a array y ordenar por nombre del médico
+    // Convertir a array y ordenar: primero doctores con presenciales, luego por nombre
     doctorsQueueData.value = Array.from(doctorsMap.values())
-      .sort((a, b) => a.doctor_name.localeCompare(b.doctor_name))
+      .sort((a, b) => {
+        const aHasPresencial = hasPresencialAppointments(a)
+        const bHasPresencial = hasPresencialAppointments(b)
+        
+        // Si uno tiene presenciales y el otro no, ordenar por eso
+        if (aHasPresencial !== bHasPresencial) {
+          return aHasPresencial ? -1 : 1
+        }
+        
+        // Si ambos son del mismo tipo, ordenar por nombre
+        return a.doctor_name.localeCompare(b.doctor_name)
+      })
   }
 
   const handleMarkArrival = (appointmentId: number) => {

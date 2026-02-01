@@ -1,6 +1,9 @@
 <template>
   <div class="video-meeting-button">
-    <button @click="goToConsultation" class="btn-video" :disabled="!canJoin">🎥 {{ buttonText }}</button>
+    <button @click="goToConsultation" class="btn-video" :disabled="!canJoin">
+      <i class="pi pi-video"></i>
+      {{ buttonText }}
+    </button>
   </div>
 </template>
 
@@ -47,7 +50,7 @@
   }
 
   .btn-video:hover:not(:disabled) {
-    background: #3182ce;
+    background: var(--color-sf-green-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }

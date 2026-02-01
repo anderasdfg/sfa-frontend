@@ -140,6 +140,14 @@
                 @click="handlePayment(appointment)"
                 class="p-button-success p-button-sm"
               />
+              <Button
+                v-if="isTeleconsulta(appointment) && appointment.video_meeting_url && !['reservada', 'realizada', 'cancelada'].includes(appointment.status?.toLowerCase())"
+                label="Ingresar a Consulta"
+                icon="pi pi-video"
+                size="small"
+                @click="goToVideoConsultation(appointment.video_meeting_url, appointment)"
+                class="btn-video-meeting p-button-sm"
+              />
             </div>
           </div>
         </div>
@@ -195,6 +203,7 @@
   import Dropdown from 'primevue/dropdown'
   import { formatTime } from '@/shared/lib/formatters'
   import { getDoctorName, getSpecialty, formatDate } from '@/utils/appointment.utils'
+  import { PatientQueueService } from '@/services/patientQueue.service'
 
   const router = useRouter()
   const route = useRoute()
@@ -319,6 +328,36 @@
   const canPayAppointment = (appointment: Appointment): boolean => {
     // Puede pagar si está en estado 'reservada' (no pagada)
     return appointment.status === 'reservada'
+  }
+
+  const isTeleconsulta = (appointment: Appointment): boolean => {
+    return appointment.modality?.toLowerCase() === 'virtual' || 
+           appointment.modality?.toLowerCase() === 'teleconsulta'
+  }
+
+  const goToVideoConsultation = async (url: string, appointment: Appointment) => {
+    if (!url) return
+
+    try {
+      // Si el paciente no ha marcado llegada, hacerlo automáticamente
+      if (!appointment.patient_arrived) {
+        await PatientQueueService.markArrival(appointment.id, {
+          arrival_time: new Date().toISOString()
+        })
+        
+        notifications.showSuccess(
+          'Llegada registrada',
+          'Tu llegada ha sido registrada automáticamente'
+        )
+      }
+
+      // Abrir la videoconsulta
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error('Error al procesar ingreso a consulta:', error)
+      // Aun con error, abrir la videoconsulta
+      window.open(url, '_blank')
+    }
   }
 
   // Funciones de acción
@@ -546,6 +585,26 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
+  }
+
+  .btn-video-meeting {
+    background: var(--color-sf-green-light);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .btn-video-meeting:hover {
+    background: var(--color-sf-green-dark);
+    transform: translateY(-1px);
   }
 
   /* Estado vacío */

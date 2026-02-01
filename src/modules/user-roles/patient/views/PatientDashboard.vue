@@ -29,7 +29,7 @@
             <h2 class="section-title">Mis Próximas Citas</h2>
             <p class="section-subtitle">Tienes {{ upcomingAppointmentsCount }} citas programadas</p>
           </div>
-          <button class="btn-link" @click="navigateToNewAppointment">
+          <button class="btn-link" @click="navigateToAppointments">
             Ver todas
             <i class="pi pi-arrow-right"></i>
           </button>
@@ -91,6 +91,14 @@
                 <i :class="getStatusIcon(appointment.status)"></i>
                 {{ getStatusLabel(appointment.status) }}
               </span>
+              <button 
+                v-if="isTeleconsulta(appointment) && appointment.video_meeting_url && !['reservada', 'realizada', 'cancelada'].includes(appointment.status?.toLowerCase())"
+                class="btn-video-meeting"
+                @click="goToVideoConsultation(appointment.video_meeting_url, appointment)"
+              >
+                <i class="pi pi-video"></i>
+                Ingresar a Consulta
+              </button>
               <button class="btn-details">Ver detalles</button>
             </div>
           </div>
@@ -159,6 +167,7 @@
   import { useAuthStore } from '@/stores/auth/authStore'
   import { formatDate, formatTime } from '@/shared/lib/formatters'
   import { usePatientAppointments } from '../composables/usePatientAppointments'
+  import { PatientQueueService } from '@/services/patientQueue.service'
 
   const router = useRouter()
   const authStore = useAuthStore()
@@ -189,6 +198,7 @@
 
   const upcomingAppointments = computed(() => {
     const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
     
     return myAppointments.value
       .filter(apt => {
@@ -205,8 +215,8 @@
           aptDate = new Date(dateString)
         }
         
-        // Filtrar solo citas futuras (comparando fecha Y hora completa)
-        const isUpcoming = aptDate > now
+        // Filtrar citas de hoy en adelante (no por hora, sino por día completo)
+        const isUpcoming = aptDate >= todayStart
         const isNotCompleted = apt.status?.toLowerCase() !== 'realizada'
         return isUpcoming && isNotCompleted
       })
@@ -338,6 +348,10 @@
     })
   }
 
+  const navigateToAppointments = () => {
+    router.push('/appointments')
+  }
+
   const navigateToNewAppointment = () => {
     router.push('/appointment-booking')
   }
@@ -348,6 +362,31 @@
 
   const navigateToPrescriptions = () => {
     router.push('/prescriptions')
+  }
+
+  const isTeleconsulta = (appointment: any) => {
+    return appointment.modality?.toLowerCase() === 'virtual' || 
+           appointment.modality?.toLowerCase() === 'teleconsulta'
+  }
+
+  const goToVideoConsultation = async (url: string, appointment: any) => {
+    if (!url) return
+
+    try {
+      // Si el paciente no ha marcado llegada, hacerlo automáticamente
+      if (!appointment.patient_arrived) {
+        await PatientQueueService.markArrival(appointment.id, {
+          arrival_time: new Date().toISOString()
+        })
+      }
+
+      // Abrir la videoconsulta
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error('Error al procesar ingreso a consulta:', error)
+      // Aun con error, abrir la videoconsulta
+      window.open(url, '_blank')
+    }
   }
 
   const loadPatientData = async () => {
@@ -693,6 +732,25 @@
 
   .btn-details:hover {
     background: #e2e8f0;
+  }
+
+  .btn-video-meeting {
+    padding: 0.3125rem 0.625rem;
+    background: var(--color-sf-green-light);
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .btn-video-meeting:hover {
+    background: var(--color-sf-green-dark);
   }
 
   /* Sidebar */

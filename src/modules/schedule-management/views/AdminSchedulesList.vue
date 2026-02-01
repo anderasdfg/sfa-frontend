@@ -94,7 +94,7 @@
                   severity="secondary"
                   outlined
                 />
-                <Button label="Hoy" @click="goToToday" severity="info" outlined class="ml-3" />
+                <Button label="Hoy" @click="handleGoToToday" severity="info" outlined class="ml-3" />
               </div>
             </div>
             <FullCalendar ref="calendarRef" :options="calendarOptions" />
@@ -199,6 +199,7 @@
   const calendarOptions = computed(() => ({
     plugins: [timeGridPlugin, interactionPlugin],
     initialView: currentView.value,
+    initialDate: currentWeek.value.start, // Sincronizar con el estado del composable
     headerToolbar: false as const, // Usamos nuestro propio header
     firstDay: 1,
     views: {
@@ -239,6 +240,41 @@
     changeSpecialty(selectedSpecialtyId.value)
   }
 
+  /**
+   * Verifica si una fecha es anterior al día actual
+   * @param date - Fecha a verificar
+   * @returns true si la fecha es pasada, false en caso contrario
+   */
+  const isPastDate = (date: Date): boolean => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const eventDate = new Date(date)
+    eventDate.setHours(0, 0, 0, 0)
+    return eventDate < today
+  }
+
+  /**
+   * Verifica si hay múltiples médicos seleccionados
+   * @returns true si hay 2 o más médicos seleccionados
+   */
+  const hasMultipleDoctorsSelected = (): boolean => {
+    return selectedDoctors.value.length >= 2
+  }
+
+  /**
+   * Determina si se debe mostrar el indicador de disponibilidad
+   * @param status - Estado del evento (available/occupied)
+   * @param eventDate - Fecha del evento
+   * @returns true si se debe mostrar el indicador
+   */
+  const shouldShowAvailabilityIndicator = (status: string, eventDate: Date): boolean => {
+    if (status !== 'available') {
+      return true // Siempre mostrar el indicador de ocupado
+    }
+    // No mostrar el punto verde si es fecha pasada o hay múltiples médicos
+    return !isPastDate(eventDate) && !hasMultipleDoctorsSelected()
+  }
+
   const renderEventContent = (eventInfo: any) => {
     const event = eventInfo.event
     const status = event.extendedProps.status
@@ -259,9 +295,9 @@
       hour12: false
     })
 
-    // Icono y texto según estado
-    const statusIcon = status === 'available' ? '🟢' : '🔒'
-    //const statusText = status === 'available' ? 'Disponible' : 'Ocupado'
+    // Determinar si mostrar el indicador según las reglas de negocio
+    const showIndicator = shouldShowAvailabilityIndicator(status, event.start)
+    const statusIcon = showIndicator ? (status === 'available' ? '🟢' : '🔒') : ''
 
     return {
       html: `
@@ -291,10 +327,18 @@
   // Navegación que se adapta a la vista
   const previousPeriod = () => {
     previousWeek()
+    if (calendarRef.value) {
+      const calendarApi = calendarRef.value.getApi()
+      calendarApi.prev()
+    }
   }
 
   const nextPeriod = () => {
     nextWeek()
+    if (calendarRef.value) {
+      const calendarApi = calendarRef.value.getApi()
+      calendarApi.next()
+    }
   }
 
   // Modal de creación
@@ -329,6 +373,15 @@
     if (clickedDate >= today) {
       selectedDate.value = clickedDate
       showCreateModal.value = true
+    }
+  }
+
+  // Sobrescribir goToToday para sincronizar con el calendario
+  const handleGoToToday = () => {
+    goToToday()
+    if (calendarRef.value) {
+      const calendarApi = calendarRef.value.getApi()
+      calendarApi.today()
     }
   }
 

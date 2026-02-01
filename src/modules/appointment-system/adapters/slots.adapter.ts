@@ -31,12 +31,18 @@ export const adaptSlotToTimeSlot = (slot: AppointmentSlot): TimeSlot => {
     hour12: false
   })
 
+  // Obtener la fecha en formato YYYY-MM-DD usando fecha local, no UTC
+  const year = scheduledDate.getFullYear()
+  const month = String(scheduledDate.getMonth() + 1).padStart(2, '0')
+  const day = String(scheduledDate.getDate()).padStart(2, '0')
+  const dateString = `${year}-${month}-${day}`
+
   return {
     id: slot.id,
     time: timeString,
     price: slot.price,
     available: slot.status === SlotStatus.DISPONIBLE,
-    date: scheduledDate.toISOString().split('T')[0],
+    date: dateString,
     schedule_modality: slot.schedule_modality === 'teleconsulta' ? AppointmentModality.TELECONSULTA : AppointmentModality.PRESENCIAL
   }
 }

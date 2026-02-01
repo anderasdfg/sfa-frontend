@@ -41,7 +41,11 @@
               <i class="pi pi-bell"></i>
               Recordar
             </button>
-            <button class="btn-mark-arrival" @click="emit('mark-arrival', patient.id)">
+            <button 
+              v-if="!isTeleconsulta(patient.appointment_type)"
+              class="btn-mark-arrival" 
+              @click="emit('mark-arrival', patient.id)"
+            >
               Marcar Llegada
             </button>
           </div>
@@ -89,7 +93,7 @@
             <span v-if="patient.payment_pending" class="badge payment-badge">PAGO PENDIENTE</span>
           </div>
 
-          <div class="patient-actions">
+          <div v-if="!isTeleconsulta(patient.appointment_type)" class="patient-actions">
             <button 
               v-if="!patient.being_called" 
               class="btn-mark-calling" 
@@ -138,7 +142,7 @@
             </div>
           </div>
           
-          <button class="btn-complete" @click="emit('complete-consultation', patient.queue_id)">
+          <button v-if="!isTeleconsulta(patient.appointment_type)" class="btn-complete" @click="emit('complete-consultation', patient.queue_id)">
             <i class="pi pi-check-circle"></i>
             Completar
           </button>
@@ -202,6 +206,12 @@ const emit = defineEmits<{
   'mark-being-called': [queueId: number]
   'unmark-being-called': [queueId: number]
 }>()
+
+// Helper para verificar si es teleconsulta
+const isTeleconsulta = (appointmentType: string): boolean => {
+  if (!appointmentType) return false
+  return appointmentType.toLowerCase() === 'teleconsulta'
+}
 
 const totalPatients = computed(() => 
   props.scheduledAppointments.length + 
@@ -702,6 +712,23 @@ const capitalizeFirst = (text: string): string => {
 
 .btn-call i {
   font-size: 0.875rem;
+}
+
+.teleconsult-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.teleconsult-badge i {
+  font-size: 1rem;
 }
 
 @media (max-width: 768px) {

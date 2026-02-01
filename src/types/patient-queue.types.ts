@@ -16,6 +16,7 @@ export interface WaitingPatient {
   doctor_name: string
   specialty: string
   appointment_time: string
+  appointment_type: string
   arrived_at: string
   waiting_minutes: number
   queue_position: number
@@ -31,6 +32,7 @@ export interface InConsultationPatient {
   patient_name: string
   doctor_name: string
   specialty: string
+  appointment_type: string
   consultation_room: string
   started_at: string
   consultation_minutes: number
