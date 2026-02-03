@@ -37,10 +37,6 @@
           </div>
 
           <div class="appointment-actions">
-            <button class="btn-reminder" @click="emit('send-reminder', patient.id)">
-              <i class="pi pi-bell"></i>
-              Recordar
-            </button>
             <button 
               v-if="!isTeleconsulta(patient.appointment_type)"
               class="btn-mark-arrival" 
@@ -90,7 +86,6 @@
               <span>En Espera</span>
             </div>
             <span v-if="patient.is_urgent" class="badge urgent-badge">URGENTE</span>
-            <span v-if="patient.payment_pending" class="badge payment-badge">PAGO PENDIENTE</span>
           </div>
 
           <div v-if="!isTeleconsulta(patient.appointment_type)" class="patient-actions">
@@ -200,7 +195,6 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'mark-arrival': [appointmentId: number]
-  'send-reminder': [appointmentId: number]
   'call-to-consultation': [queueId: number]
   'complete-consultation': [queueId: number]
   'mark-being-called': [queueId: number]
@@ -389,7 +383,6 @@ const capitalizeFirst = (text: string): string => {
   gap: 0.5rem;
 }
 
-.btn-reminder,
 .btn-mark-arrival {
   padding: 0.625rem 1rem;
   border: none;
@@ -401,20 +394,6 @@ const capitalizeFirst = (text: string): string => {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-}
-
-.btn-reminder {
-  background: white;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-}
-
-.btn-reminder:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
-}
-
-.btn-mark-arrival {
   background: #059669;
   color: white;
 }
@@ -748,7 +727,6 @@ const capitalizeFirst = (text: string): string => {
     width: 100%;
   }
 
-  .btn-reminder,
   .btn-mark-arrival,
   .btn-call,
   .btn-complete,

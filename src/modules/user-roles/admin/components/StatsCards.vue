@@ -59,7 +59,7 @@
   const props = defineProps<Props>()
 
   const waitingDetail = computed(() => {
-    return props.waitingPatients > 5 ? '+3 últimos 15 min' : 'En consulta'
+    return props.waitingPatients > 5 ? '+3 últimos 15 min' : 'En espera'
   })
 
   const waitTimeDetail = computed(() => {

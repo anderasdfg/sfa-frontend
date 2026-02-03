@@ -25,7 +25,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-value">{{ statistics.absences }}</div>
-          <div class="stat-label">Ausencias (No-Show)</div>
+          <div class="stat-label">Ausencias</div>
         </div>
       </div>
 
@@ -44,10 +44,6 @@
       <div class="summary-row">
         <span class="summary-label">Tasa de Asistencia:</span>
         <span class="summary-value success">{{ attendanceRate }}%</span>
-      </div>
-      <div class="summary-row">
-        <span class="summary-label">Eficiencia Operativa:</span>
-        <span class="summary-value info">{{ operationalEfficiency }}%</span>
       </div>
     </div>
   </div>
@@ -72,19 +68,9 @@
   })
 
   const attendanceRate = computed(() => {
-    const total = props.statistics.patients_attended + props.statistics.absences
+    const total = props.statistics.patients_attended + props.statistics.absences + props.statistics.occupied_rooms
     if (total === 0) return 0
-    return Math.round((props.statistics.patients_attended / total) * 100)
-  })
-
-  const operationalEfficiency = computed(() => {
-    // Cálculo simple basado en pacientes atendidos vs capacidad estimada
-    const estimatedCapacity = props.statistics.occupied_rooms * 8 // 8 pacientes por sala
-    if (estimatedCapacity === 0) return 0
-    return Math.min(
-      Math.round((props.statistics.patients_attended / estimatedCapacity) * 100),
-      100,
-    )
+    return Math.round(((props.statistics.patients_attended + props.statistics.occupied_rooms)  / total) * 100)
   })
 </script>
 

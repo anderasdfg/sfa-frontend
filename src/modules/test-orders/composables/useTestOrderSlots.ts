@@ -102,7 +102,28 @@ export function useTestOrderSlots() {
    * Filtra slots por fecha específica
    */
   const getSlotsByDate = (date: string): ProcessedSlot[] => {
-    return getProcessedSlots.value.filter(slot => slot.date === date)
+    return getProcessedSlots.value
+      .filter(slot => slot.date === date)
+      .filter(slot => {
+        // Solo filtrar los horarios del día de hoy que ya pasaron
+        const today = new Date().toISOString().split('T')[0]
+        
+        if (slot.date === today) {
+          // Obtener la hora actual en formato HH:mm
+          const now = new Date()
+          const currentTimeStr = now.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+          
+          // Comparar solo las horas en formato string
+          return slot.time > currentTimeStr
+        }
+        
+        // Si es un día futuro, mostrar todos los horarios
+        return true
+      })
   }
 
   /**

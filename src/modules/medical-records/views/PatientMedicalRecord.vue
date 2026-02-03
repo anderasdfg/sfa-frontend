@@ -206,17 +206,24 @@
                   >
                     <div class="test-header">
                       <span class="test-type">{{ test.test_type }}</span>
-                      <Tag
-                        v-if="test.result"
-                        value="Completado"
-                        severity="success"
-                      />
-                      <Tag v-else value="Pendiente" severity="warning" />
+                      <div class="test-status-actions">
+                        <Tag
+                          v-if="test.result"
+                          value="Completado"
+                          severity="success"
+                        />
+                        <Tag v-else value="Pendiente" severity="warning" />
+                        <Button
+                          v-if="test.result"
+                          label="Ver Detalles"
+                          icon="pi pi-eye"
+                          size="small"
+                          @click="viewTestResult(test.result)"
+                          class="p-button-success p-button-sm p-button-outlined"
+                        />
+                      </div>
                     </div>
                     <p class="test-description">{{ test.description }}</p>
-                    <div v-if="test.result" class="test-result">
-                      <strong>Resultado:</strong> {{ test.result }}
-                    </div>
                     <div v-if="test.test_date" class="test-date">
                       <i class="pi pi-calendar"></i>
                       <span>{{ formatDate(test.test_date) }}</span>
@@ -238,20 +245,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de resultados -->
+    <TestResultModal
+      :visible="showResultModal"
+      :test-order-id="selectedTestResultId"
+      @update:visible="showResultModal = $event"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import { useMedicalRecordStore } from '@/stores/medicalRecord/medicalRecordStore'
   import { useAuthStore } from '@/stores/auth/authStore'
   import ProgressSpinner from 'primevue/progressspinner'
   import Button from 'primevue/button'
   import Card from 'primevue/card'
   import Tag from 'primevue/tag'
+  import TestResultModal from '../../test-orders/components/TestResultModal.vue'
 
   const medicalRecordStore = useMedicalRecordStore()
   const authStore = useAuthStore()
+
+  // Estado del modal de resultados
+  const showResultModal = ref(false)
+  const selectedTestResultId = ref<number | null>(null)
 
   // Computed
   const medicalRecord = computed(() => medicalRecordStore.currentMedicalRecord)
@@ -310,6 +329,11 @@
   const extractBloodType = (notes: string): string => {
     const match = notes?.match(/Grupo sanguíneo:\s*([A-Z][+-]?)/i)
     return match ? match[1] : 'No especificado'
+  }
+
+  const viewTestResult = (testResultId: number | string) => {
+    selectedTestResultId.value = typeof testResultId === 'string' ? parseInt(testResultId) : testResultId
+    showResultModal.value = true
   }
 
   // Lifecycle
@@ -670,6 +694,12 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
+  }
+
+  .test-status-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .test-type {

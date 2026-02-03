@@ -36,19 +36,22 @@
           </div>
           <div class="bar-label">
             <div class="label-dot in-consultation"></div>
-            <span>En Consulta</span>
+            <span>Consulta</span>
           </div>
         </div>
 
         <div class="bar-item">
           <div class="bar-container">
-            <div class="bar-fill busy" :style="{ height: getBarHeight(availability.busy) }">
+            <div
+              class="bar-fill busy"
+              :style="{ height: getBarHeight(availability.busy) }"
+            >
               <span class="bar-value">{{ availability.busy }}</span>
             </div>
           </div>
           <div class="bar-label">
             <div class="label-dot busy"></div>
-            <span>Ocupado</span>
+            <span>Ausentes</span>
           </div>
         </div>
       </div>
@@ -85,7 +88,7 @@
 
   const occupancyRate = computed(() => {
     if (totalDoctors.value === 0) return 0
-    const occupied = props.availability.in_consultation + props.availability.busy
+    const occupied = props.availability.in_consultation
     return Math.round((occupied / totalDoctors.value) * 100)
   })
 
@@ -188,7 +191,7 @@
   }
 
   .bar-fill.in-consultation {
-    background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
   }
 
   .bar-fill.busy {
@@ -221,7 +224,7 @@
   }
 
   .label-dot.in-consultation {
-    background: #f59e0b;
+    background: #2563eb;
   }
 
   .label-dot.busy {

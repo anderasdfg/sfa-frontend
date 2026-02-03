@@ -116,7 +116,6 @@
           :in-consultation-patients="doctorData.in_consultation"
           :completed-patients="doctorData.completed_patients"
           @mark-arrival="handleMarkArrival"
-          @send-reminder="handleSendReminder"
           @call-to-consultation="handleCallToConsultation"
           @complete-consultation="handleCompleteConsultation"
           @mark-being-called="handleMarkBeingCalled"
@@ -327,14 +326,6 @@
       await loadQueue()
     } catch (error) {
       console.error('Error marking arrival:', error)
-    }
-  }
-
-  const handleSendReminder = async (appointmentId: number) => {
-    try {
-      await PatientQueueService.sendReminder(appointmentId)
-    } catch (error) {
-      console.error('Error sending reminder:', error)
     }
   }
 
