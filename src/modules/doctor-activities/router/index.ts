@@ -17,6 +17,15 @@ const doctorActivitiesRoutes: RouteRecordRaw[] = [
           roles: ['doctor', 'admin'],
           title: 'Mis Citas'
         }
+      },
+      {
+        path: 'my-schedule',
+        name: 'DoctorMySchedule',
+        component: () => import('../views/DoctorMySchedule.vue'),
+        meta: {
+          roles: ['doctor', 'admin'],
+          title: 'Mi Horario'
+        }
       }
     ]
   }

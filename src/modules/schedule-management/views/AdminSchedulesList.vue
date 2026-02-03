@@ -57,24 +57,21 @@
               <!-- View Type Selector -->
               <div class="view-selector">
                 <Button
-                  label="1 día"
+                  label="Día"
+                  :class="{ 'p-button-outlined': currentView !== 'timeGridDay' }"
                   @click="changeView('timeGridDay')"
-                  :severity="currentView === 'timeGridDay' ? 'info' : 'secondary'"
-                  :outlined="currentView !== 'timeGridDay'"
                   size="small"
                 />
                 <Button
                   label="3 días"
+                  :class="{ 'p-button-outlined': currentView !== 'timeGrid3Days' }"
                   @click="changeView('timeGrid3Days')"
-                  :severity="currentView === 'timeGrid3Days' ? 'info' : 'secondary'"
-                  :outlined="currentView !== 'timeGrid3Days'"
                   size="small"
                 />
                 <Button
                   label="Semana"
+                  :class="{ 'p-button-outlined': currentView !== 'timeGridWeek' }"
                   @click="changeView('timeGridWeek')"
-                  :severity="currentView === 'timeGridWeek' ? 'info' : 'secondary'"
-                  :outlined="currentView !== 'timeGridWeek'"
                   size="small"
                 />
               </div>
@@ -82,16 +79,16 @@
               <!-- Navigation -->
               <div class="week-navigation">
                 <Button
-                  icon="pi pi-chevron-left"
+                  icon="pi pi-angle-left"
                   @click="previousPeriod"
-                  severity="secondary"
+                  class="nav-button"
                   outlined
                 />
                 <span class="current-week">{{ currentPeriodLabel }}</span>
                 <Button
-                  icon="pi pi-chevron-right"
+                  icon="pi pi-angle-right"
                   @click="nextPeriod"
-                  severity="secondary"
+                  class="nav-button"
                   outlined
                 />
                 <Button label="Hoy" @click="handleGoToToday" severity="info" outlined class="ml-3" />
@@ -471,6 +468,10 @@
     color: #495057;
     min-width: 150px;
     text-align: center;
+  }
+
+  .nav-button {
+    border-radius: 6px;
   }
 
   .schedules-content {
