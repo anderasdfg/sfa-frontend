@@ -168,7 +168,7 @@
     // Refrescar cada 30 segundos
     refreshInterval = window.setInterval(() => {
       loadDashboard()
-    }, 30000)
+    }, 150 * 1000)
   })
 
   onUnmounted(() => {
