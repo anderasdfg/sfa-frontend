@@ -7,7 +7,7 @@
             <i class="pi pi-folder-open"></i>
             Historiales Médicos
           </h1>
-          <p class="page-subtitle">Buscar y acceder a historiales médicos de pacientes</p>
+          <p class="page-subtitle">Accede a los historiales médicos de tus pacientes</p>
         </div>
       </div>
     </div>
@@ -15,12 +15,12 @@
     <Card class="search-card">
       <template #content>
         <div class="search-section">
-          <h3 class="search-title">Buscar Historia Clínica</h3>
-          <div class="search-form">
+          <h3 class="search-title">Buscar Historia Clínica por DNI</h3>
+          <div class="search-controls">
             <IconField iconPosition="left" class="search-field">
               <InputIcon class="pi pi-search" />
               <InputText
-                v-model="searchDNI"
+                v-model="dniSearch"
                 placeholder="Ingrese el DNI del paciente..."
                 class="search-input"
                 @keyup.enter="searchMedicalRecord"
@@ -31,126 +31,138 @@
               icon="pi pi-search"
               @click="searchMedicalRecord"
               :loading="searching"
-              severity="success"
+              :disabled="!dniSearch.trim()"
             />
           </div>
-          <small v-if="searchError" class="error-text">{{ searchError }}</small>
         </div>
       </template>
     </Card>
 
-    <div v-if="searchResult" class="result-section">
-      <Card class="result-card">
-        <template #content>
-          <div class="patient-header">
-            <div class="patient-info-section">
-              <div class="patient-avatar">
-                <i class="pi pi-user"></i>
-              </div>
-              <div class="patient-details">
-                <h2 class="patient-name">{{ searchResult.patient.full_name }}</h2>
-                <div class="patient-meta">
-                  <span class="meta-item">
-                    <i class="pi pi-id-card"></i>
-                    {{ searchResult.patient.document_type }}: {{ searchResult.patient.document_number }}
-                  </span>
-                  <span class="meta-item">
-                    <i class="pi pi-calendar"></i>
-                    {{ calculateAge(searchResult.patient.birth_date) }} años
-                  </span>
-                  <span class="meta-item">
-                    <i class="pi pi-venus-mars"></i>
-                    {{ searchResult.patient.gender }}
-                  </span>
-                </div>
-              </div>
+    <Card v-if="medicalRecord" class="medical-record-card">
+      <template #content>
+        <div class="record-header">
+          <div class="patient-info-section">
+            <div class="patient-avatar">
+              <i class="pi pi-user"></i>
             </div>
-            <div class="record-actions">
-              <Button
-                label="Ver Historia Completa"
-                icon="pi pi-folder-open"
-                @click="viewFullRecord"
-                severity="success"
-                size="large"
-              />
+            <div class="patient-details">
+              <h2 class="patient-name">{{ medicalRecord.patient.full_name }}</h2>
+              <div class="patient-meta">
+                <span class="meta-item">
+                  <i class="pi pi-id-card"></i>
+                  {{ medicalRecord.patient.document_type }}: {{ medicalRecord.patient.document_number }}
+                </span>
+                <span class="meta-item">
+                  <i class="pi pi-venus-mars"></i>
+                  {{ medicalRecord.patient.gender }}
+                </span>
+                <span class="meta-item">
+                  <i class="pi pi-calendar"></i>
+                  {{ calculateAge(medicalRecord.patient.birth_date) }} años
+                </span>
+              </div>
             </div>
           </div>
+          <div class="record-actions">
+            <Button
+              label="Ver Historia Completa"
+              icon="pi pi-eye"
+              @click="viewFullRecord"
+              severity="success"
+            />
+          </div>
+        </div>
 
-          <Divider />
+        <Divider />
 
-          <div class="record-summary">
-            <div class="summary-item">
-              <span class="summary-label">N° Historia Clínica</span>
-              <span class="summary-value">{{ searchResult.record_number }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">Total de Consultas</span>
-              <span class="summary-value">{{ searchResult.consultations?.length || 0 }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">Última Consulta</span>
-              <span class="summary-value">
-                {{ searchResult.consultations?.length > 0
-                  ? formatDate(searchResult.consultations[0].consultation_date)
+        <div class="record-summary">
+          <div class="summary-item">
+            <span class="summary-label">N° Historia Clínica</span>
+            <span class="summary-value">{{ medicalRecord.record_number }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Total de Consultas</span>
+            <span class="summary-value">{{ medicalRecord.consultations?.length || 0 }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Última Consulta</span>
+            <span class="summary-value">
+              {{
+                medicalRecord.consultations && medicalRecord.consultations.length > 0 && getLastConsultation()
+                  ? formatDate(getLastConsultation()!.consultation_date)
                   : 'Sin consultas'
-                }}
-              </span>
-            </div>
+              }}
+            </span>
           </div>
+        </div>
 
-          <div v-if="searchResult.consultations && searchResult.consultations.length > 0" class="recent-consultations">
-            <h3 class="section-title">
-              <i class="pi pi-file-edit"></i>
-              Consultas Recientes
-            </h3>
-            <div class="consultations-grid">
-              <Card
-                v-for="consultation in recentConsultations"
-                :key="consultation.id"
-                class="consultation-card"
-              >
-                <template #content>
+        <div v-if="medicalRecord.consultations && medicalRecord.consultations.length > 0" class="recent-consultations">
+          <h3 class="section-title">
+            <i class="pi pi-file-edit"></i>
+            Últimas Consultas
+          </h3>
+          <div class="consultations-preview">
+            <Card
+              v-for="consultation in getRecentConsultations()"
+              :key="consultation.id"
+              class="consultation-preview-card"
+            >
+              <template #content>
+                <div class="consultation-preview-header">
                   <div class="consultation-date">
                     <i class="pi pi-calendar"></i>
-                    {{ formatDate(consultation.consultation_date) }}
+                    <span>{{ formatDateTime(consultation.consultation_date) }}</span>
                   </div>
-                  <div class="consultation-doctor">
-                    <i class="pi pi-user-md"></i>
-                    {{ consultation.doctor.full_name }}
+                  <Tag :value="consultation.doctor.specialty" severity="info" />
+                </div>
+                <div class="consultation-preview-content">
+                  <div class="preview-item">
+                    <strong>Motivo:</strong>
+                    <span>{{ consultation.chief_complaint || 'No especificado' }}</span>
                   </div>
-                  <div class="consultation-complaint">
-                    <strong>Motivo:</strong> {{ consultation.chief_complaint || 'No especificado' }}
+                  <div v-if="consultation.diagnoses && consultation.diagnoses.length > 0" class="preview-item">
+                    <strong>Diagnósticos:</strong>
+                    <div class="diagnoses-tags">
+                      <Tag
+                        v-for="diagnosis in consultation.diagnoses.slice(0, 2)"
+                        :key="diagnosis.id"
+                        :value="diagnosis.cie10_code"
+                        severity="success"
+                      />
+                      <Tag
+                        v-if="consultation.diagnoses.length > 2"
+                        :value="`+${consultation.diagnoses.length - 2} más`"
+                        severity="secondary"
+                      />
+                    </div>
                   </div>
-                  <div v-if="consultation.diagnoses.length > 0" class="consultation-diagnoses">
-                    <Tag
-                      v-for="diagnosis in consultation.diagnoses.slice(0, 2)"
-                      :key="diagnosis.id"
-                      :value="diagnosis.cie10_code"
-                      severity="info"
-                      class="diagnosis-tag"
-                    />
-                  </div>
-                </template>
-              </Card>
-            </div>
+                </div>
+              </template>
+            </Card>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <div v-else-if="!searching && searchAttempted" class="empty-state-card">
+      <Card>
+        <template #content>
+          <div class="empty-state">
+            <i class="pi pi-inbox"></i>
+            <p>No se encontró historia clínica para el DNI ingresado</p>
           </div>
         </template>
       </Card>
-    </div>
-
-    <div v-if="!searchResult && !searching" class="empty-state">
-      <i class="pi pi-search empty-icon"></i>
-      <p class="empty-text">Ingrese el DNI de un paciente para buscar su historia clínica</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useToast } from 'primevue/usetoast'
   import { MedicalRecordService } from '@/services/medicalRecord.service'
-  import type { MedicalRecord, MedicalRecordConsultation } from '@/types/medicalRecord.types'
+  import type { MedicalRecord } from '@/types/medicalRecord.types'
   import Button from 'primevue/button'
   import Card from 'primevue/card'
   import InputText from 'primevue/inputtext'
@@ -162,36 +174,29 @@
   const router = useRouter()
   const toast = useToast()
 
-  const searchDNI = ref('')
+  const dniSearch = ref('')
   const searching = ref(false)
-  const searchError = ref('')
-  const searchResult = ref<MedicalRecord | null>(null)
-
-  const recentConsultations = computed(() => {
-    if (!searchResult.value?.consultations) return []
-    return searchResult.value.consultations
-      .sort((a: MedicalRecordConsultation, b: MedicalRecordConsultation) => new Date(b.consultation_date).getTime() - new Date(a.consultation_date).getTime())
-      .slice(0, 3)
-  })
+  const searchAttempted = ref(false)
+  const medicalRecord = ref<MedicalRecord | null>(null)
 
   const searchMedicalRecord = async () => {
-    searchError.value = ''
-
-    if (!searchDNI.value.trim()) {
-      searchError.value = 'Por favor ingrese un DNI'
-      return
-    }
-
-    if (searchDNI.value.length < 8) {
-      searchError.value = 'El DNI debe tener al menos 8 dígitos'
+    if (!dniSearch.value.trim()) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'Por favor ingrese un DNI para buscar',
+        life: 3000
+      })
       return
     }
 
     searching.value = true
-    try {
-      const response = await MedicalRecordService.getMedicalRecordByDocument(searchDNI.value.trim())
-      searchResult.value = response.data
+    searchAttempted.value = true
+    medicalRecord.value = null
 
+    try {
+      const response = await MedicalRecordService.getMedicalRecordByDocument(dniSearch.value.trim())
+      medicalRecord.value = response.data
       toast.add({
         severity: 'success',
         summary: 'Éxito',
@@ -199,9 +204,6 @@
         life: 3000
       })
     } catch (error: any) {
-      searchError.value = error.message || 'No se encontró la historia clínica'
-      searchResult.value = null
-
       toast.add({
         severity: 'error',
         summary: 'Error',
@@ -214,8 +216,8 @@
   }
 
   const viewFullRecord = () => {
-    if (searchResult.value) {
-      router.push(`/medical-records/patient/${searchResult.value.patient.document_number}`)
+    if (medicalRecord.value) {
+      router.push(`/medical-records/patient/${medicalRecord.value.patient.document_number}`)
     }
   }
 
@@ -237,6 +239,35 @@
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const formatDateTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const getLastConsultation = () => {
+    if (!medicalRecord.value?.consultations || medicalRecord.value.consultations.length === 0) {
+      return null
+    }
+    return [...medicalRecord.value.consultations].sort((a: any, b: any) => {
+      return new Date(b.consultation_date).getTime() - new Date(a.consultation_date).getTime()
+    })[0]
+  }
+
+  const getRecentConsultations = () => {
+    if (!medicalRecord.value?.consultations) return []
+    return [...medicalRecord.value.consultations]
+      .sort((a: any, b: any) => {
+        return new Date(b.consultation_date).getTime() - new Date(a.consultation_date).getTime()
+      })
+      .slice(0, 3)
   }
 </script>
 
@@ -284,20 +315,20 @@
   }
 
   .search-section {
-    padding: 1rem;
+    padding: 1rem 0;
   }
 
   .search-title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: #1e293b;
     margin: 0 0 1rem 0;
   }
 
-  .search-form {
+  .search-controls {
     display: flex;
     gap: 1rem;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .search-field {
@@ -308,27 +339,16 @@
     width: 100%;
   }
 
-  .error-text {
-    color: #ef4444;
-    font-size: 0.875rem;
-    display: block;
-    margin-top: 0.5rem;
+  .medical-record-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  .result-section {
-    margin-top: 2rem;
-  }
-
-  .result-card {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-
-  .patient-header {
+  .record-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
   .patient-info-section {
@@ -339,41 +359,40 @@
   }
 
   .patient-avatar {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .patient-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    flex: 1;
   }
 
   .patient-name {
     font-size: 1.5rem;
     font-weight: 700;
     color: #1e293b;
-    margin: 0;
+    margin: 0 0 0.5rem 0;
   }
 
   .patient-meta {
     display: flex;
     gap: 1.5rem;
-    font-size: 0.95rem;
-    color: #64748b;
+    flex-wrap: wrap;
   }
 
   .meta-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.9rem;
   }
 
   .record-actions {
@@ -385,10 +404,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 2rem;
-    padding: 1.5rem;
-    background: #f8fafc;
-    border-radius: 8px;
-    margin-top: 1.5rem;
+    padding: 1.5rem 0;
   }
 
   .summary-item {
@@ -422,14 +438,23 @@
     margin: 0 0 1rem 0;
   }
 
-  .consultations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  .consultations-preview {
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
   }
 
-  .consultation-card {
+  .consultation-preview-card {
     border-left: 4px solid #059669;
+  }
+
+  .consultation-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
   }
 
   .consultation-date {
@@ -438,47 +463,48 @@
     gap: 0.5rem;
     font-weight: 600;
     color: #059669;
-    margin-bottom: 0.5rem;
   }
 
-  .consultation-doctor {
+  .consultation-preview-content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .preview-item {
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
     color: #475569;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
   }
 
-  .consultation-complaint {
-    color: #64748b;
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
+  .preview-item strong {
+    color: #1e293b;
   }
 
-  .consultation-diagnoses {
+  .diagnoses-tags {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
   }
 
-  .diagnosis-tag {
-    font-size: 0.75rem;
+  .empty-state-card {
+    margin-top: 2rem;
   }
 
   .empty-state {
     text-align: center;
-    padding: 4rem 2rem;
-    color: #94a3b8;
+    padding: 3rem;
+    color: #64748b;
   }
 
-  .empty-icon {
-    font-size: 4rem;
+  .empty-state i {
+    font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
   }
 
-  .empty-text {
+  .empty-state p {
     font-size: 1.125rem;
     margin: 0;
   }
@@ -488,7 +514,16 @@
       padding: 1rem;
     }
 
-    .patient-header {
+    .header-content {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search-controls {
+      flex-direction: column;
+    }
+
+    .record-header {
       flex-direction: column;
       align-items: stretch;
     }
@@ -501,14 +536,6 @@
     .patient-meta {
       flex-direction: column;
       gap: 0.5rem;
-    }
-
-    .search-form {
-      flex-direction: column;
-    }
-
-    .consultations-grid {
-      grid-template-columns: 1fr;
     }
 
     .record-summary {

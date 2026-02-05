@@ -7,7 +7,7 @@
             <i class="pi pi-users"></i>
             Mis Pacientes
           </h1>
-          <p class="page-subtitle">Pacientes asignados a mi atención</p>
+          <p class="page-subtitle">Gestiona tus pacientes asignados</p>
         </div>
       </div>
     </div>
@@ -22,8 +22,26 @@
                 v-model="searchQuery"
                 placeholder="Buscar por nombre, DNI o email..."
                 class="search-input"
+                @keyup.enter="handleSearch"
               />
             </IconField>
+            <Button
+              label="Buscar por DNI"
+              icon="pi pi-search"
+              @click="searchByDNI"
+              :disabled="!searchQuery || loading"
+              class="search-dni-btn"
+            />
+          </div>
+          <div class="filter-section">
+            <Dropdown
+              v-model="statusFilter"
+              :options="statusOptions"
+              option-label="label"
+              option-value="value"
+              placeholder="Estado"
+              class="status-filter"
+            />
           </div>
         </div>
 
@@ -79,9 +97,9 @@
             </template>
           </Column>
 
-          <Column field="birth_date" header="Edad" sortable>
+          <Column field="birth_date" header="Fecha de Nacimiento" sortable>
             <template #body="{ data }">
-              {{ data.birth_date ? calculateAge(data.birth_date) + ' años' : 'N/A' }}
+              {{ data.birth_date ? formatDate(data.birth_date) : 'N/A' }}
             </template>
           </Column>
 
@@ -89,7 +107,7 @@
             <template #body="{ data }">
               <div class="action-buttons">
                 <Button
-                  icon="pi pi-folder-open"
+                  icon="pi pi-file"
                   severity="success"
                   text
                   rounded
@@ -119,6 +137,7 @@
   import InputText from 'primevue/inputtext'
   import IconField from 'primevue/iconfield'
   import InputIcon from 'primevue/inputicon'
+  import Dropdown from 'primevue/dropdown'
   import Tag from 'primevue/tag'
 
   const router = useRouter()
@@ -128,11 +147,22 @@
   const loading = ref(false)
   const patients = ref<Patient[]>([])
   const searchQuery = ref('')
+  const statusFilter = ref('all')
+
+  const statusOptions = [
+    { label: 'Todos', value: 'all' },
+    { label: 'Activo', value: 'activo' },
+    { label: 'Inactivo', value: 'inactivo' }
+  ]
 
   const filteredPatients = computed(() => {
     let result = patients.value
 
-    if (searchQuery.value) {
+    if (statusFilter.value !== 'all') {
+      result = result.filter(p => p.status === statusFilter.value)
+    }
+
+    if (searchQuery.value && patients.value.length > 0) {
       const query = searchQuery.value.toLowerCase()
       result = result.filter(
         p =>
@@ -149,9 +179,9 @@
   const loadMyPatients = async () => {
     loading.value = true
     try {
-      const doctorId = authStore.user?.id
-      if (doctorId) {
-        const data = await PatientService.getPatients(doctorId)
+      const user = authStore.user
+      if (user?.id) {
+        const data = await PatientService.getPatients(user.id)
         patients.value = Array.isArray(data) ? data : (data as any).data || []
       }
     } catch (error: any) {
@@ -166,19 +196,57 @@
     }
   }
 
-  const viewMedicalRecord = (patient: Patient) => {
-    router.push(`/medical-records/patient/${patient.document_number}`)
+  const searchByDNI = async () => {
+    if (!searchQuery.value.trim()) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'Por favor ingrese un DNI para buscar',
+        life: 3000
+      })
+      return
+    }
+
+    loading.value = true
+    try {
+      const patient = await PatientService.getPatientByDNI(searchQuery.value.trim())
+      if (patient) {
+        patients.value = [patient]
+        toast.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Paciente encontrado',
+          life: 3000
+        })
+      } else {
+        patients.value = []
+        toast.add({
+          severity: 'info',
+          summary: 'Sin resultados',
+          detail: 'No se encontró un paciente con ese DNI',
+          life: 3000
+        })
+      }
+    } catch (error: any) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: error.message || 'No se pudo buscar el paciente',
+        life: 3000
+      })
+    } finally {
+      loading.value = false
+    }
   }
 
-  const calculateAge = (birthDate: string): number => {
-    const birth = new Date(birthDate)
-    const today = new Date()
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
+  const handleSearch = () => {
+    if (searchQuery.value.trim().length >= 8) {
+      searchByDNI()
     }
-    return age
+  }
+
+  const viewMedicalRecord = (patient: Patient) => {
+    router.push(`/medical-records/patient/${patient.document_number}`)
   }
 
   const getGenderLabel = (gender: string) => {
@@ -203,6 +271,15 @@
       O: 'warning'
     }
     return severities[gender] || 'secondary'
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
 
   onMounted(() => {
@@ -264,10 +341,25 @@
   .search-section {
     flex: 1;
     min-width: 300px;
+    display: flex;
+    gap: 0.5rem;
   }
 
   .search-input {
-    width: 100%;
+    flex: 1;
+  }
+
+  .search-dni-btn {
+    white-space: nowrap;
+  }
+
+  .filter-section {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .status-filter {
+    min-width: 150px;
   }
 
   .patients-table {
@@ -357,6 +449,7 @@
 
     .search-section {
       width: 100%;
+      flex-direction: column;
     }
   }
 </style>

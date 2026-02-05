@@ -288,18 +288,29 @@
 
   // Methods
   const loadMedicalRecord = async () => {
+    const user = authStore.user
     const patientId = route.params.patientId as string
 
-    if (patientId) {
-      await medicalRecordStore.fetchMedicalRecordByDocument(patientId)
-    } else {
-      const user = authStore.user
+    // Si es un doctor o admin, usar el parámetro de la ruta (DNI)
+    // Si es un paciente, usar su propio document_number
+    let documentNumber: string
+
+    if (authStore.hasRole('doctor') || authStore.hasRole('admin')) {
+      // Doctor o admin accediendo al historial de un paciente
+      documentNumber = patientId
+    } else if (authStore.hasRole('patient')) {
+      // Paciente accediendo a su propio historial
       if (!user?.document_number) {
         medicalRecordStore.error = 'No se encontró el número de documento del usuario'
         return
       }
-      await medicalRecordStore.fetchMedicalRecordByDocument(user.document_number)
+      documentNumber = user.document_number
+    } else {
+      medicalRecordStore.error = 'No tiene permisos para acceder a esta historia clínica'
+      return
     }
+
+    await medicalRecordStore.fetchMedicalRecordByDocument(documentNumber)
   }
 
   const calculateAge = (birthDate: string): number => {

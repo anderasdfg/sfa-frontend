@@ -7,7 +7,6 @@ const ConsultationLayout = () => import('@/core/layouts/ConsultationLayout.vue')
 // Views
 const MedicalConsultation = () => import('../views/MedicalConsultation.vue')
 const PatientMedicalRecord = () => import('../views/PatientMedicalRecord.vue')
-const MedicalRecordsList = () => import('../views/MedicalRecordsList.vue')
 
 const medicalRecordsRoutes: RouteRecordRaw[] = [
   // Rutas de historiales médicos
@@ -22,11 +21,11 @@ const medicalRecordsRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'MedicalRecordsList',
-        component: MedicalRecordsList
+        component: () => import('../views/MedicalRecordsList.vue')
       }
     ]
   },
-  // Ruta para ver la historia clínica del paciente
+  // Ruta para ver la historia clínica del paciente (acceso por paciente con su ID o por doctor con DNI)
   {
     path: '/medical-records/patient/:patientId',
     name: 'PatientMedicalRecord',
