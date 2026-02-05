@@ -7,6 +7,7 @@ const ConsultationLayout = () => import('@/core/layouts/ConsultationLayout.vue')
 // Views
 const MedicalConsultation = () => import('../views/MedicalConsultation.vue')
 const PatientMedicalRecord = () => import('../views/PatientMedicalRecord.vue')
+const MedicalRecordsList = () => import('../views/MedicalRecordsList.vue')
 
 const medicalRecordsRoutes: RouteRecordRaw[] = [
   // Rutas de historiales médicos
@@ -17,7 +18,13 @@ const medicalRecordsRoutes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['doctor', 'admin']
     },
-    children: []
+    children: [
+      {
+        path: '',
+        name: 'MedicalRecordsList',
+        component: MedicalRecordsList
+      }
+    ]
   },
   // Ruta para ver la historia clínica del paciente
   {
@@ -26,7 +33,7 @@ const medicalRecordsRoutes: RouteRecordRaw[] = [
     component: MainLayout,
     meta: {
       requiresAuth: true,
-      roles: ['patient'],
+      roles: ['patient', 'doctor', 'admin'],
       title: 'Historia Clínica'
     },
     children: [

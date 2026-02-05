@@ -257,6 +257,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue'
+  import { useRoute } from 'vue-router'
   import { useMedicalRecordStore } from '@/stores/medicalRecord/medicalRecordStore'
   import { useAuthStore } from '@/stores/auth/authStore'
   import ProgressSpinner from 'primevue/progressspinner'
@@ -265,6 +266,7 @@
   import Tag from 'primevue/tag'
   import TestResultModal from '../../test-orders/components/TestResultModal.vue'
 
+  const route = useRoute()
   const medicalRecordStore = useMedicalRecordStore()
   const authStore = useAuthStore()
 
@@ -286,13 +288,18 @@
 
   // Methods
   const loadMedicalRecord = async () => {
-    const user = authStore.user
-    if (!user?.document_number) {
-      medicalRecordStore.error = 'No se encontró el número de documento del usuario'
-      return
-    }
+    const patientId = route.params.patientId as string
 
-    await medicalRecordStore.fetchMedicalRecordByDocument(user.document_number)
+    if (patientId) {
+      await medicalRecordStore.fetchMedicalRecordByDocument(patientId)
+    } else {
+      const user = authStore.user
+      if (!user?.document_number) {
+        medicalRecordStore.error = 'No se encontró el número de documento del usuario'
+        return
+      }
+      await medicalRecordStore.fetchMedicalRecordByDocument(user.document_number)
+    }
   }
 
   const calculateAge = (birthDate: string): number => {

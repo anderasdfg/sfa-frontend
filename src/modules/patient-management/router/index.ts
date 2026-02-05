@@ -13,6 +13,15 @@ const patientRoutes: RouteRecordRaw[] = [
       roles: ['doctor', 'admin', 'receptionist']
     },
     children: [
+      {
+        path: 'my-patients',
+        name: 'MyPatients',
+        component: () => import('../views/MyPatients.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['doctor']
+        }
+      }
       // Rutas futuras para gestión de pacientes
       // {
       //   path: '',
